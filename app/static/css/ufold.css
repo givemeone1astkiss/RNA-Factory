@@ -1,0 +1,231 @@
+/* UFold specific styles - similar to BPFold */
+.ufold-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.ufold-results .result-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all 0.3s ease;
+}
+
+.ufold-results .result-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.ufold-results .result-item h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ufold-results .result-item h6 i {
+    color: var(--accent-primary);
+}
+
+.ufold-results .sequence-info {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+}
+
+.ufold-results .sequence-text {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: var(--bg-primary);
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    word-break: break-all;
+    line-height: 1.4;
+    color: var(--code-text);
+    margin-bottom: 0.5rem;
+}
+
+.ufold-results .sequence-info-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+.ufold-results .sequence-length {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    background: var(--accent-info);
+    color: white;
+}
+
+.ufold-results .confidence-score {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    background: var(--bg-primary);
+    color: white;
+}
+
+.ufold-results .structure-result {
+    margin-bottom: 0;
+}
+
+.ufold-results .structure-result h6 {
+    margin-bottom: 0.75rem;
+}
+
+.ufold-results .structure-display {
+    margin: 1rem;
+    overflow-x: auto;
+    overflow-y: auto;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    background: var(--accent-success);
+}
+
+.ufold-results .structure-text {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+    color: var(--code-text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 80px;
+    background: var(--bg-primary);
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+/* Download actions */
+.download-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.download-actions .btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.download-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+/* UFold model info enhancements */
+.model-info .ufold-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.model-info .ufold-features .feature-tag {
+    background: var(--accent-primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* UFold input interface enhancements */
+.ufold-input-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.ufold-input-options .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ufold-input-options .form-check-input {
+    margin: 0;
+}
+
+.ufold-input-options .form-check-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+/* UFold status indicator */
+.ufold-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.ufold-status .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-warning);
+    animation: pulse 2s infinite;
+}
+
+.ufold-status .status-indicator.ready {
+    background: var(--accent-success);
+    animation: none;
+}
+
+.ufold-status .status-indicator.error {
+    background: var(--accent-danger);
+    animation: none;
+}
+
+.ufold-status .status-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Responsive design for UFold */
+@media (max-width: 768px) {
+    .ufold-results .result-item {
+        padding: 1rem;
+    }
+    
+    .ufold-results .sequence-text,
+    .ufold-results .structure-text {
+        font-size: 0.8rem;
+    }
+    
+    .ufold-input-options {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .ufold-results .result-actions {
+        justify-content: center;
+    }
+}
