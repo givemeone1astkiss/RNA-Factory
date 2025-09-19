@@ -1,17 +1,16 @@
-/* BPFold specific styles */
-.bpfold-results {
+/* RNAformer specific styles */
+.rnaformer-results {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
 }
 
-.bpfold-results .sequence-info {
+.rnaformer-results .sequence-info {
     margin-bottom: 1.5rem;
     padding: 1rem;
 }
 
-.bpfold-results .sequence-text {
+.rnaformer-results .sequence-text {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     background: var(--bg-primary);
@@ -24,15 +23,14 @@
     margin-bottom: 0.5rem;
 }
 
-.bpfold-results .sequence-info-stats {
+.rnaformer-results .sequence-info-stats {
     display: flex;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
     flex-wrap: wrap;
-    flex-direction: column;
 }
 
-.bpfold-results .sequence-length {
+.rnaformer-results .sequence-length {
     font-size: 0.8rem;
     font-weight: 500;
     padding: 0.25rem 0.5rem;
@@ -42,25 +40,15 @@
     color: white;
 }
 
-.bpfold-results .confidence-score {
-    font-size: 0.8rem;
-    font-weight: 500;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    display: inline-block;
-    background: var(--accent-success);
-    color: white;
-}
-
-.bpfold-results .structure-result {
+.rnaformer-results .structure-result {
     margin-bottom: 0;
 }
 
-.bpfold-results .structure-result h6 {
+.rnaformer-results .structure-result h6 {
     margin-bottom: 0.75rem;
 }
 
-.bpfold-results .structure-display {
+.rnaformer-results .structure-display {
     padding: 1rem;
     margin: 1rem;
     overflow-x: auto;
@@ -70,7 +58,7 @@
     border: 1px solid var(--border-color);
 }
 
-.bpfold-results .structure-text {
+.rnaformer-results .structure-text {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     line-height: 1.4;
@@ -102,15 +90,15 @@
     box-shadow: 0 4px 8px var(--shadow-color);
 }
 
-/* BPFold model info enhancements */
-.model-info .bpfold-features {
+/* RNAformer model info enhancements */
+.model-info .rnaformer-features {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 0.5rem;
     margin-top: 1rem;
 }
 
-.model-info .bpfold-features .feature-tag {
+.model-info .rnaformer-features .feature-tag {
     background: var(--accent-primary);
     color: white;
     padding: 0.25rem 0.75rem;
@@ -120,32 +108,8 @@
     text-align: center;
 }
 
-/* BPFold input interface enhancements */
-.bpfold-input-options {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.bpfold-input-options .form-check {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.bpfold-input-options .form-check-input {
-    margin: 0;
-}
-
-.bpfold-input-options .form-check-label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-/* BPFold status indicator */
-.bpfold-status {
+/* RNAformer status indicator */
+.rnaformer-status {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -155,7 +119,7 @@
     margin-bottom: 1rem;
 }
 
-.bpfold-status .status-indicator {
+.rnaformer-status .status-indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -163,43 +127,39 @@
     animation: pulse 2s infinite;
 }
 
-.bpfold-status .status-indicator.ready {
+.rnaformer-status .status-indicator.ready {
     background: var(--accent-success);
     animation: none;
 }
 
-.bpfold-status .status-indicator.error {
+.rnaformer-status .status-indicator.error {
     background: var(--accent-danger);
     animation: none;
 }
 
-.bpfold-status .status-text {
+.rnaformer-status .status-text {
     font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
-/* Responsive design for BPFold */
+/* Responsive design for RNAformer */
 @media (max-width: 768px) {
-    .bpfold-results .result-item {
+    .rnaformer-results .result-item {
         padding: 1rem;
     }
     
-    .bpfold-results .sequence-text,
-    .bpfold-results .structure-text {
+    .rnaformer-results .sequence-text,
+    .rnaformer-results .structure-text {
         font-size: 0.8rem;
     }
     
-    .bpfold-results .sequence-info-stats {
-        gap: 0.5rem;
-    }
-    
-    .bpfold-input-options {
+    .rnaformer-results .sequence-info-stats {
         flex-direction: column;
         gap: 0.5rem;
     }
     
-    .bpfold-results .result-actions {
+    .rnaformer-results .result-actions {
         justify-content: center;
     }
 }

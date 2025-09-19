@@ -23,8 +23,6 @@ services:
       - ./models:/app/models
       - ./run.py:/app/run.py
       - ./config.py:/app/config.py
-      # Mount uploads directory
-      - ./app/static/uploads:/app/app/static/uploads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

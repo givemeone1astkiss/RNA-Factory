@@ -15,8 +15,7 @@ def create_app(config_name="default"):
     # Load configuration
     app.config.from_object(config[config_name])
 
-    # Ensure upload directory exists
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    # Ensure model directory exists
     os.makedirs(app.config["MODEL_FOLDER"], exist_ok=True)
 
     # Register blueprints
@@ -24,14 +23,16 @@ def create_app(config_name="default"):
     from app.api.bpfold_routes import bpfold_bp
     from app.api.ufold_routes import ufold_bp
     from app.api.mxfold2_routes import mxfold2_bp
+    from app.api.rnamigos2_routes import rnamigos2_bp
+    from app.api.rnaformer_routes import rnaformer_bp
     from app.api.model_config_routes import model_config_bp
-    from app.api.zhmolgraph_routes import zhmolgraph_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
     app.register_blueprint(bpfold_bp, url_prefix="/api/bpfold")
     app.register_blueprint(ufold_bp, url_prefix="/api/ufold")
     app.register_blueprint(mxfold2_bp, url_prefix="/api/mxfold2")
-    app.register_blueprint(zhmolgraph_bp, url_prefix="/api/zhmolgraph")
+    app.register_blueprint(rnamigos2_bp, url_prefix="/api/rnamigos2")
+    app.register_blueprint(rnaformer_bp, url_prefix="/api/rnaformer")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -61,7 +62,7 @@ def preload_models(app):
                 "name": "BPFold",
                 "type": "rna_structure",
                 "category": "structure_prediction",
-                "category_name": "2nd Structure Prediction",
+                "category_name": "Structure Prediction",
                 "description": "BPFold is a deep learning model for RNA secondary structure prediction via base pair motif energy. It provides excellent generalizability on unseen RNA families.",
                 "input_types": ["fasta", "text"],
                 "output_types": ["secondary_structure", "base_pairs", "confidence", "energy"],
@@ -87,7 +88,7 @@ def preload_models(app):
                 "name": "UFold",
                 "type": "rna_structure",
                 "category": "structure_prediction",
-                "category_name": "2nd Structure Prediction",
+                "category_name": "Structure Prediction",
                 "description": "UFold is a deep learning-based method for RNA secondary structure prediction using image-like sequence representation and Fully Convolutional Networks (FCNs).",
                 "input_types": ["fasta", "text"],
                 "output_types": ["secondary_structure", "ct_format", "bpseq_format", "structure_figure"],
@@ -114,7 +115,7 @@ def preload_models(app):
                 "name": "MXFold2",
                 "type": "rna_structure",
                 "category": "structure_prediction",
-                "category_name": "2nd Structure Prediction",
+                "category_name": "Structure Prediction",
                 "description": "MXFold2 is a deep learning-based method for RNA secondary structure prediction using thermodynamic integration.",
                 "input_types": ["fasta", "text"],
                 "output_types": ["secondary_structure", "dot_bracket", "energy"],
@@ -137,90 +138,59 @@ def preload_models(app):
                 "environment_path": "/home/huaizhi/Software/.venv_mxfold2"
             },
             {
-                "id": "zhmolgraph",
-                "name": "ZHMolGraph",
-                "type": "rna_protein_interaction",
+                "id": "rnamigos2",
+                "name": "RNAmigos2",
+                "type": "rna_interaction",
                 "category": "interaction_prediction",
-                "category_name": "RNA-Protein Interaction",
-                "description": "ZHMolGraph is an advanced pipeline that integrates graph neural network sampling strategy and unsupervised large language models to enhance binding predictions for novel RNAs and proteins.",
-                "input_types": ["fasta", "text"],
-                "output_types": ["interaction_probability", "prediction", "confidence"],
-                "model_path": "utils/wrappers/zhmolgraph_wrapper.py",
-                "weights_path": "models/ZHMolGraph",
-                "input_description": "Supports FASTA file or text input for both RNA and protein sequences",
-                "output_description": "Outputs RNA-Protein interaction probability, prediction confidence, and binding strength",
-                "github_url": "https://github.com/ZHMolGraph/ZHMolGraph",
-                "paper_url": "https://doi.org/10.1038/s41467-025-59389-8",
+                "category_name": "Interaction Prediction",
+                "description": "RNAmigos2 is a virtual screening tool for RNA-ligand interaction prediction using deep graph learning. It ranks chemical compounds based on their binding potential to RNA targets.",
+                "input_types": ["mmcif", "smiles"],
+                "output_types": ["interaction_scores", "binding_affinity"],
+                "model_path": "utils/wrappers/rnamigos2_wrapper.py",
+                "weights_path": "models/rnamigos2",
+                "input_description": "Requires mmCIF structure file, binding site residues, and SMILES strings of ligands",
+                "output_description": "Outputs interaction scores (0-1) for each ligand, with higher scores indicating better binding potential",
+                "github_url": "https://github.com/cgoliver/rnamigos2",
+                "paper_url": "https://www.nature.com/articles/s41467-025-57852-0",
                 "features": [
-                    "Graph Neural Network based prediction",
-                    "RNA-Protein interaction prediction",
-                    "High accuracy prediction",
-                    "Support for novel sequences",
-                    "Integration with large language models"
+                    "Deep graph learning",
+                    "Virtual screening",
+                    "Fast inference (~10 seconds)",
+                    "High enrichment factors",
+                    "Structure-based prediction",
+                    "Multiple ligand support"
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_zhmolgraph"
+                "environment_path": "/home/huaizhi/Software/.venv_rnamigos2"
             },
             {
-                "id": "deeprpi",
-                "name": "DeepRPI",
-                "type": "rna_protein_interaction",
-                "category": "interaction_prediction",
-                "category_name": "Interaction Prediction",
-                "description": "DeepRPI is a deep learning model specifically designed for predicting RNA-protein interactions.",
-                "input_types": ["fasta", "text"],
-                "output_types": ["binding_affinity", "binding_sites", "interaction_score"],
-                "model_path": "models/deep_rpi.py",
-                "weights_path": "models/deep_rpi.pth",
-                "input_description": "Input RNA and protein FASTA files or sequence text separately",
-                "output_description": "Output binding affinity, binding sites and interaction scores",
-            },
-            {
-                "id": "rnampnn",
-                "name": "RNA-MPNN",
+                "id": "rnaformer",
+                "name": "RNAformer",
                 "type": "rna_structure",
-                "category": "sequence_design",
-                "category_name": "Sequence Design",
-                "description": "RNA-MPNN is a graph neural network-based RNA structure prediction model that can learn from 3D structural information in PDB files.",
-                "input_types": ["pdb"],
-                "output_types": ["3d_structure", "coordinates", "confidence"],
-                "model_path": "models/rna_mpnn.py",
-                "weights_path": "models/rna_mpnn.pth",
-                "input_description": "Input PDB format 3D structure file",
-                "output_description": "Output predicted 3D structure, coordinates and confidence",
-                "github_url": "https://github.com/givemeone1astkiss/RNA-MPNN",
-                "paper_url": "https://github.com/givemeone1astkiss/RNA-MPNN",
-                "architecture_image": "static/images/rnampnn.jpg",
-            },
-            {
-                "id": "rdesign",
-                "name": "RDesign",
-                "type": "rna_design",
-                "category": "sequence_design",
-                "category_name": "Sequence Design",
-                "description": "RDesign is an AI-powered RNA sequence design tool that can generate RNA sequences with specific structural and functional properties.",
-                "input_types": ["fasta", "text", "pdb"],
-                "output_types": ["designed_sequence", "structure_prediction", "confidence"],
-                "model_path": "models/rdesign.py",
-                "weights_path": "models/rdesign.pth",
-                "input_description": "Supports FASTA, text, or PDB format input",
-                "output_description": "Outputs designed RNA sequences with structural predictions",
-            },
-            {
-                "id": "gardn",
-                "name": "GARDN",
-                "type": "rna_generation",
-                "category": "sequence_generation",
-                "category_name": "Sequence Generation",
-                "description": "GARDN (Generative AI for RNA Design and Navigation) is a generative model that can create novel RNA sequences with desired properties.",
-                "input_types": ["text", "fasta"],
-                "output_types": ["generated_sequence", "property_prediction", "diversity_score"],
-                "model_path": "models/gardn.py",
-                "weights_path": "models/gardn.pth",
-                "input_description": "Supports text prompts or FASTA file input",
-                "output_description": "Outputs generated RNA sequences with property predictions",
-            },
+                "category": "structure_prediction",
+                "category_name": "Structure Prediction",
+                "description": "RNAformer is a simple yet effective deep learning model for RNA secondary structure prediction using a two-dimensional latent space, axial attention, and recycling mechanisms.",
+                "input_types": ["fasta", "text"],
+                "output_types": ["secondary_structure", "dot_bracket", "ct_format"],
+                "model_path": "utils/wrappers/rnaformer_wrapper.py",
+                "weights_path": "models/RNAformer",
+                "input_description": "Supports FASTA file or RNA sequence text input",
+                "output_description": "Outputs RNA secondary structure in dot-bracket notation and CT format",
+                "github_url": "https://github.com/automl/RNAformer",
+                "paper_url": "https://arxiv.org/abs/2307.10073",
+                "features": [
+                    "Deep learning-based prediction",
+                    "Two-dimensional latent space",
+                    "Axial attention mechanism",
+                    "Recycling in latent space",
+                    "High accuracy on benchmarks",
+                    "Single model approach"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/huaizhi/Software/.venv_rnaformer"
+            }
         ]
 
         # Store model configuration in application context

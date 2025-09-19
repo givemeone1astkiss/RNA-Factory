@@ -679,32 +679,66 @@ body {
 }
 
 .upload-content i {
-    font-size: 3rem;
-    color: var(--accent-primary);
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
 }
 
 .upload-content p {
+    margin: 0.5rem 0;
     color: var(--text-primary);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    transition: color 0.3s ease;
+    font-weight: 500;
+    font-size: 1rem;
 }
 
 .upload-content small {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    transition: color 0.3s ease;
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
-.file-info {
-    background: #e8f5e8;
-    border: 1px solid #c3e6cb;
-    border-radius: 10px;
+/* File info display - consistent with RNAmigos2 */
+.file-info-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     padding: 1rem;
-    margin-top: 1rem;
-    color: #155724;
-    font-weight: 500;
+    background: var(--success-bg);
+    border: 2px solid var(--success-color);
+    border-radius: 8px;
+    color: var(--success-color);
+}
+
+.file-info-content i {
+    font-size: 1.5rem;
+    color: var(--success-color);
+}
+
+.file-details {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.file-size {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.btn-remove-file {
+    background: none;
+    border: none;
+    color: var(--success-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-remove-file:hover {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 /* Text Input */
@@ -715,14 +749,15 @@ body {
 .text-input-area textarea {
     width: 100%;
     min-height: 120px;
-    height: 100% !important;
+    height: auto;
     border: 2px solid var(--border-color);
     border-radius: 15px;
     padding: 1rem;
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     line-height: 1.5;
-    resize: vertical;
+    resize: none;
+    overflow: hidden;
     transition: border-color 0.3s ease;
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -879,7 +914,6 @@ body {
     background: var(--bg-secondary);
     border-radius: 15px;
     padding: 1.5rem;
-    border-left: 4px solid var(--accent-primary);
     transition: all 0.3s ease;
 }
 
@@ -1720,6 +1754,25 @@ body {
 
 [data-theme="dark"] .result-value {
     color: var(--text-primary);
+}
+
+/* Dark theme support for file upload */
+[data-theme="dark"] .file-info-content {
+    background: var(--success-bg);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+[data-theme="dark"] .file-info-content i {
+    color: var(--success-color);
+}
+
+[data-theme="dark"] .btn-remove-file {
+    color: var(--success-color);
+}
+
+[data-theme="dark"] .btn-remove-file:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .table th {

@@ -12,7 +12,8 @@
     <link href="/static/css/bpfold.css" rel="stylesheet">
     <link href="/static/css/ufold.css" rel="stylesheet">
     <link href="/static/css/mxfold2.css" rel="stylesheet">
-    <link href="/static/css/zhmolgraph.css" rel="stylesheet">
+    <link href="/static/css/rnaformer.css" rel="stylesheet">
+    <link href="/static/css/rnamigos2.css" rel="stylesheet">
 </head>
 <body>
     <!-- Loading Page -->
@@ -151,11 +152,11 @@
                                     <h6>Upload File</h6>
                                 </div>
                                 <div class="file-upload-area" id="fileUploadArea">
-                                    <input type="file" id="inputFile" accept=".fasta,.fa,.pdb,.txt" class="file-input">
                                     <div class="upload-content">
                                         <i class="fas fa-cloud-upload-alt"></i>
                                         <p>Click or drag files here</p>
                                         <small id="fileAcceptInfo">Supports FASTA, TXT formats</small>
+                                        <input type="file" id="inputFile" accept=".fasta,.fa,.txt" style="display: none;">
                                     </div>
                                 </div>
                                 <div id="fileInfo" class="file-info" style="display: none;"></div>
@@ -168,7 +169,7 @@
                                     <h6>Text Input</h6>
                                 </div>
                                 <div class="text-input-area">
-                                    <textarea id="inputText" rows="6" placeholder="Enter RNA sequence or other text data..."></textarea>
+                                    <textarea id="inputText" rows="6" placeholder="Enter RNA sequence (A, C, G, U) or other text data..."></textarea>
                                 </div>
                             </div>
 
@@ -189,72 +190,60 @@
                                 </div>
                             </div>
 
-                            <!-- DeepRPI Specific Input Area -->
-                            <div class="input-method deep-rpi-input" id="deepRpiInput" style="display: none;">
-                                <div class="method-header">
-                                    <i class="fas fa-dna"></i>
-                                    <h6>Protein Sequence Input</h6>
+                            <!-- RNAmigos2 Specific Input Area -->
+                            <div class="input-method rnamigos2-input" id="rnamigos2Input" style="display: none;">
+                                <!-- Structure Input Section -->
+                                <div class="rnamigos2-section">
+                                    <div class="method-header">
+                                        <i class="fas fa-cube"></i>
+                                        <h6>RNA Structure (mmCIF)</h6>
+                                    </div>
+                                    <div class="file-upload-area" id="rnamigos2FileUpload">
+                                        <div class="upload-content">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <p>Click or drag mmCIF files here</p>
+                                            <small>CIF, mmCIF supported</small>
+                                            <input type="file" id="rnamigos2FileInput" accept=".cif,.mmcif" style="display: none;">
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="text-input-area">
-                                    <textarea id="proteinInputText" rows="4" placeholder="Enter protein sequence..."></textarea>
+
+                                <!-- Binding Site Section -->
+                                <div class="rnamigos2-section">
+                                    <div class="method-header">
+                                        <i class="fas fa-bullseye"></i>
+                                        <h6>Binding Site Residues</h6>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="residue-input-area">
+                                            <textarea id="rnamigos2Residues" rows="5" placeholder="Enter residue identifiers, one per line or comma-separated&#10;Example:&#10;A.20&#10;A.19&#10;A.18"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ligands Section -->
+                                <div class="rnamigos2-section smiles-section">
+                                    <div class="method-header">
+                                        <i class="fas fa-flask"></i>
+                                        <h6>Ligand SMILES</h6>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="file-upload-area" id="rnamigos2SmilesFileUpload">
+                                            <div class="upload-content">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <p>Click or drag SMILES files here</p>
+                                                <small>TXT supported</small>
+                                                <input type="file" id="rnamigos2SmilesFileInput" accept=".txt" style="display: none;">
+                                            </div>
+                                        </div>
+                                        <div class="text-input-area">
+                                            <textarea id="rnamigos2SmilesText" rows="6" placeholder="Enter SMILES strings, one per line&#10;Example:&#10;CCC[S@](=O)c1ccc2[nH]/c(=N\C(=O)OC)[nH]c2c1&#10;O=C(O)[C@@H](O)c1ccccc1"></textarea>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- ZHMolGraph RNA Input Area -->
-                            <div class="input-method zhmolgraph-rna-input" id="zhmolgraphRnaInput" style="display: none;">
-                                <div class="method-header">
-                                    <i class="fas fa-dna"></i>
-                                    <h6>RNA Sequence</h6>
-                                </div>
-                                
-                                <!-- RNA Text Input -->
-                                <div class="sequence-input-group">
-                                    <label class="sequence-label">Text Input</label>
-                                    <textarea id="zhmolgraphRnaText" rows="6" placeholder="Enter RNA sequence (A, U, C, G)..."></textarea>
-                                </div>
-                                
-                                <!-- RNA File Upload -->
-                                <div class="file-upload-group">
-                                    <label class="file-upload-label">Or upload file</label>
-                                    <div class="file-upload-area" id="zhmolgraphRnaUploadArea">
-                                        <input type="file" id="zhmolgraphRnaFile" accept=".fasta,.fa,.txt" class="file-input">
-                                        <div class="upload-content">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <p>Click or drag RNA file here</p>
-                                            <small>Supports FASTA, TXT formats</small>
-                                        </div>
-                                    </div>
-                                    <div id="zhmolgraphRnaFileInfo" class="file-info" style="display: none;"></div>
-                                </div>
-                            </div>
 
-                            <!-- ZHMolGraph Protein Input Area -->
-                            <div class="input-method zhmolgraph-protein-input" id="zhmolgraphProteinInput" style="display: none;">
-                                <div class="method-header">
-                                    <i class="fas fa-atom"></i>
-                                    <h6>Protein Sequence</h6>
-                                </div>
-                                
-                                <!-- Protein Text Input -->
-                                <div class="sequence-input-group">
-                                    <label class="sequence-label">Text Input</label>
-                                    <textarea id="zhmolgraphProteinText" rows="6" placeholder="Enter protein sequence (20 standard amino acids)..."></textarea>
-                                </div>
-                                
-                                <!-- Protein File Upload -->
-                                <div class="file-upload-group">
-                                    <label class="file-upload-label">Or upload file</label>
-                                    <div class="file-upload-area" id="zhmolgraphProteinUploadArea">
-                                        <input type="file" id="zhmolgraphProteinFile" accept=".fasta,.fa,.txt" class="file-input">
-                                        <div class="upload-content">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <p>Click or drag protein file here</p>
-                                            <small>Supports FASTA, TXT formats</small>
-                                        </div>
-                                    </div>
-                                    <div id="zhmolgraphProteinFileInfo" class="file-info" style="display: none;"></div>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="action-buttons">

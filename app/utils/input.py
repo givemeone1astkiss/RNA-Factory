@@ -712,77 +712,76 @@ def extract_protein_sequences_from_fasta(file_path: Union[str, Path]) -> List[st
     return [seq['sequence'] for seq in parsed_sequences]
 
 
-def validate_zhmolgraph_input(rna_sequences: List[str], protein_sequences: List[str], 
-                             min_rna_length: int = 1, max_rna_length: int = 10000,
-                             min_protein_length: int = 1, max_protein_length: int = 10000) -> Tuple[List[str], List[str]]:
+def validate_rnamigos2_input(data: Dict) -> Dict[str, Union[bool, str]]:
     """
-    Validate sequences for ZHMolGraph model input with length constraints.
+    Validate RNAmigos2 input data.
     
     Args:
-        rna_sequences: List of RNA sequences
-        protein_sequences: List of protein sequences
-        min_rna_length: Minimum RNA sequence length
-        max_rna_length: Maximum RNA sequence length
-        min_protein_length: Minimum protein sequence length
-        max_protein_length: Maximum protein sequence length
-        
+        data: Dictionary containing input data with keys:
+            - cif_content: mmCIF structure content (string)
+            - residue_list: List of binding site residue identifiers (list)
+            - smiles_list: List of SMILES strings (list)
+    
     Returns:
-        Tuple of (valid_rna_sequences, valid_protein_sequences)
-        
-    Raises:
-        InputValidationError: If no valid sequences found
+        Dictionary with 'valid' boolean and 'error' string if invalid
     """
-    if not rna_sequences or not protein_sequences:
-        raise InputValidationError("Both RNA and protein sequences are required")
-    
-    if len(rna_sequences) != len(protein_sequences):
-        raise InputValidationError("Number of RNA sequences must match number of protein sequences")
-    
-    valid_rna_sequences = []
-    valid_protein_sequences = []
-    invalid_reasons = []
-    
-    for i, (rna_seq, protein_seq) in enumerate(zip(rna_sequences, protein_sequences)):
-        # Validate RNA sequence
-        if not validate_rna_sequence(rna_seq):
-            invalid_reasons.append(f"RNA sequence {i+1}: Invalid nucleotides")
-            continue
+    try:
+        # Check required fields
+        if 'cif_content' not in data:
+            return {"valid": False, "error": "Missing cif_content field"}
         
-        rna_len = len(rna_seq.strip())
-        if rna_len < min_rna_length:
-            invalid_reasons.append(f"RNA sequence {i+1}: Too short ({rna_len} < {min_rna_length})")
-            continue
+        if 'residue_list' not in data:
+            return {"valid": False, "error": "Missing residue_list field"}
         
-        if rna_len > max_rna_length:
-            invalid_reasons.append(f"RNA sequence {i+1}: Too long ({rna_len} > {max_rna_length})")
-            continue
+        if 'smiles_list' not in data:
+            return {"valid": False, "error": "Missing smiles_list field"}
         
-        # Validate protein sequence
-        if not validate_protein_sequence(protein_seq):
-            invalid_reasons.append(f"Protein sequence {i+1}: Invalid amino acids")
-            continue
+        # Validate CIF content
+        cif_content = data['cif_content']
+        if not isinstance(cif_content, str) or not cif_content.strip():
+            return {"valid": False, "error": "CIF content must be a non-empty string"}
         
-        protein_len = len(protein_seq.strip())
-        if protein_len < min_protein_length:
-            invalid_reasons.append(f"Protein sequence {i+1}: Too short ({protein_len} < {min_protein_length})")
-            continue
+        # Check for basic mmCIF structure
+        if 'data_' not in cif_content.lower():
+            return {"valid": False, "error": "Invalid mmCIF format: missing data_ block"}
         
-        if protein_len > max_protein_length:
-            invalid_reasons.append(f"Protein sequence {i+1}: Too long ({protein_len} > {max_protein_length})")
-            continue
+        # Validate residue list
+        residue_list = data['residue_list']
+        if not isinstance(residue_list, list) or len(residue_list) == 0:
+            return {"valid": False, "error": "residue_list must be a non-empty list"}
         
-        valid_rna_sequences.append(rna_seq.strip().upper())
-        valid_protein_sequences.append(protein_seq.strip().upper())
-    
-    if not valid_rna_sequences:
-        error_msg = "No valid sequence pairs found for ZHMolGraph input. "
-        if invalid_reasons:
-            error_msg += f"Issues: {'; '.join(invalid_reasons[:3])}"
-            if len(invalid_reasons) > 3:
-                error_msg += f" and {len(invalid_reasons) - 3} more"
-        raise InputValidationError(error_msg)
-    
-    if invalid_reasons:
-        logger.warning(f"Found {len(invalid_reasons)} invalid sequence pairs: {'; '.join(invalid_reasons[:3])}")
-    
-    return valid_rna_sequences, valid_protein_sequences
+        # Validate residue format (e.g., "A.20", "B.15")
+        residue_pattern = re.compile(r'^[A-Za-z0-9]+\.\d+$')
+        for residue in residue_list:
+            if not isinstance(residue, str) or not residue_pattern.match(residue):
+                return {"valid": False, "error": f"Invalid residue format: {residue}. Expected format: 'A.20'"}
+        
+        # Validate SMILES list
+        smiles_list = data['smiles_list']
+        if not isinstance(smiles_list, list) or len(smiles_list) == 0:
+            return {"valid": False, "error": "smiles_list must be a non-empty list"}
+        
+        # Basic SMILES validation (check for common characters)
+        smiles_pattern = re.compile(r'^[A-Za-z0-9@\[\]()=#\\/+-]+$')
+        for i, smiles in enumerate(smiles_list):
+            if not isinstance(smiles, str) or not smiles.strip():
+                return {"valid": False, "error": f"SMILES {i+1} must be a non-empty string"}
+            
+            # Basic character validation
+            if not smiles_pattern.match(smiles.strip()):
+                return {"valid": False, "error": f"Invalid SMILES format at position {i+1}: {smiles}"}
+        
+        # Check reasonable limits
+        if len(smiles_list) > 1000:
+            return {"valid": False, "error": "Too many SMILES strings (maximum 1000)"}
+        
+        if len(residue_list) > 50:
+            return {"valid": False, "error": "Too many residues (maximum 50)"}
+        
+        return {"valid": True}
+        
+    except Exception as e:
+        logger.error(f"RNAmigos2 input validation error: {e}")
+        return {"valid": False, "error": f"Validation error: {str(e)}"}
+
+

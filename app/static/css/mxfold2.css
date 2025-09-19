@@ -2,35 +2,8 @@
 .mxfold2-results {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     margin-bottom: 2rem;
-}
-
-.mxfold2-results .result-item {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px var(--shadow-color);
-    transition: all 0.3s ease;
-}
-
-.mxfold2-results .result-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px var(--shadow-color);
-}
-
-.mxfold2-results .result-item h6 {
-    color: var(--text-primary);
-    font-weight: 600;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.mxfold2-results .result-item h6 i {
-    color: var(--accent-primary);
 }
 
 .mxfold2-results .sequence-info {

@@ -7,7 +7,6 @@ class Config:
 
     # Base paths
     BASE_DIR = Path(__file__).parent
-    UPLOAD_FOLDER = BASE_DIR / "app" / "static" / "uploads"
     MODEL_FOLDER = BASE_DIR / "models"
 
 
