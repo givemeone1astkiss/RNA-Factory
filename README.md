@@ -1,175 +1,205 @@
 # RNA-Factory
 
-一个基于 AI 的 RNA 序列设计和分析平台，使用 DeepSeek API 进行智能序列生成和优化。
+A comprehensive web platform for RNA analysis, structure prediction, and interaction prediction, featuring an AI-powered design assistant with multimodal RAG capabilities.
 
-## 🚀 快速开始
+## Overview
 
-### 使用 GitLab CI/CD 自动部署（推荐）
+RNA-Factory is an integrated platform that combines multiple state-of-the-art RNA analysis models with an intelligent AI assistant to provide comprehensive RNA research capabilities. The platform supports RNA secondary structure prediction, RNA-ligand interaction prediction, and offers an AI-powered design assistant with retrieval-augmented generation (RAG) for multimodal document processing.
 
-1. **克隆项目**
+## Features
 
+### 🤖 AI Design Assistant
+
+The platform includes a sophisticated AI assistant powered by LangGraph that provides:
+
+- **Intelligent RNA Design Guidance**: Expert assistance for RNA sequence design, structure optimization, and functional analysis
+- **Multimodal RAG System**: Advanced retrieval-augmented generation supporting both text and image documents
+- **Document Processing**: Automatic processing of PDFs, images, and text documents with OCR capabilities
+- **Contextual Knowledge**: Access to extensive RNA research literature and databases
+- **Interactive Design Workflows**: Step-by-step guidance for complex RNA design tasks
+
+### 🧬 Supported Models
+
+#### Structure Prediction Models
+
+**BPFold**
+- Deep learning model for RNA secondary structure prediction via base pair motif energy
+- Supports canonical and non-canonical base pairs
+- Provides confidence scoring and multiple output formats (CSV, BPSEQ, CT, DBN)
+- [GitHub](https://github.com/heqin-zhu/BPfold) | [Paper](https://doi.org/10.1038/s41467-025-60048-1)
+
+**UFold**
+- Deep learning-based method using image-like sequence representation and Fully Convolutional Networks
+- Fast inference (~160ms per sequence)
+- Supports sequences up to 1600bp
+- [GitHub](https://github.com/uci-cbcl/UFold) | [Paper](https://doi.org/10.1093/nar/gkab1074)
+
+**MXFold2**
+- Deep learning-based method with thermodynamic integration
+- High accuracy and fast prediction
+- Supports long sequences
+- [GitHub](https://github.com/mxfold/mxfold2) | [Paper](https://doi.org/10.1038/s41467-021-21194-4)
+
+**RNAformer**
+- Simple yet effective deep learning model using two-dimensional latent space
+- Features axial attention mechanism and recycling in latent space
+- High accuracy on benchmarks with single model approach
+- [GitHub](https://github.com/automl/RNAformer) | [Paper](https://arxiv.org/abs/2307.10073)
+
+#### Interaction Prediction Models
+
+**RNAmigos2**
+- Virtual screening tool for RNA-ligand interaction prediction using deep graph learning
+- Ranks chemical compounds based on binding potential to RNA targets
+- Fast inference (~10 seconds) with high enrichment factors
+- [GitHub](https://github.com/cgoliver/rnamigos2) | [Paper](https://www.nature.com/articles/s41467-025-57852-0)
+
+### 🔧 Platform Capabilities
+
+- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings
+- **Unified Interface**: Consistent user experience across all models
+- **Real-time Processing**: Fast analysis with progress tracking
+- **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, and more
+- **Batch Processing**: Support for multiple sequences and ligands
+- **Download Options**: Individual files or ZIP archives for batch results
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Code Structure
+
+```
+RNA-Factory/
+├── app/                          # Main application package
+│   ├── __init__.py              # Flask app factory and model configuration
+│   ├── api/                     # API routes and endpoints
+│   │   ├── bpfold_routes.py     # BPFold API endpoints
+│   │   ├── ufold_routes.py      # UFold API endpoints
+│   │   ├── mxfold2_routes.py    # MXFold2 API endpoints
+│   │   ├── rnaformer_routes.py  # RNAformer API endpoints
+│   │   ├── rnamigos2_routes.py  # RNAmigos2 API endpoints
+│   │   ├── copilot_routes.py    # AI assistant API endpoints
+│   │   └── model_config_routes.py # Model configuration endpoints
+│   ├── copilot/                 # AI assistant and RAG system
+│   │   ├── copilot.py           # LangGraph-based AI assistant
+│   │   ├── rag.py               # Multimodal RAG system
+│   │   └── prompts.py           # AI prompts and templates
+│   ├── static/                  # Frontend assets
+│   │   ├── index.html           # Main web interface
+│   │   ├── css/                 # Stylesheets
+│   │   └── js/                  # JavaScript functionality
+│   └── utils/                   # Utility modules
+│       ├── wrappers/            # Model wrapper classes
+│       ├── input.py             # Input validation and processing
+│       └── output.py            # Output formatting and file generation
+├── models/                      # Model directories and weights
+├── data/                        # Sample data and documents
+├── config.py                    # Application configuration
+├── run.py                       # Application entry point
+└── pyproject.toml              # Python dependencies
+```
+
+## Key Components
+
+### AI Assistant (`app/copilot/`)
+
+The AI assistant is built using LangGraph and provides:
+
+- **Query Classification**: Automatically categorizes user queries (RNA design, general bioinformatics, off-topic)
+- **Tool Integration**: Seamless integration with platform models and external tools
+- **Context Management**: Maintains conversation context and user preferences
+- **Response Generation**: Generates structured, actionable responses
+
+### RAG System (`app/copilot/rag.py`)
+
+The multimodal RAG system features:
+
+- **Document Processing**: Supports PDF, image, and text documents
+- **OCR Capabilities**: Extracts text from images and PDFs using Tesseract
+- **Vector Storage**: Uses ChromaDB for efficient document retrieval
+- **Multimodal Embeddings**: CLIP-based embeddings for image-text understanding
+- **Semantic Search**: Advanced retrieval based on semantic similarity
+
+### Model Wrappers (`app/utils/wrappers/`)
+
+Each model has a dedicated wrapper that:
+
+- **Environment Management**: Handles virtual environment setup and activation
+- **Input Processing**: Validates and preprocesses input data
+- **Model Execution**: Runs model inference with proper error handling
+- **Output Parsing**: Converts model outputs to standardized formats
+
+### API Layer (`app/api/`)
+
+RESTful API endpoints for:
+
+- **Model Predictions**: Individual endpoints for each model
+- **File Processing**: Upload and processing of various file formats
+- **Result Download**: CT file generation and batch download
+- **AI Assistant**: Chat interface and document processing
+
+## Getting Started
+
+1. **Clone the repository**
    ```bash
-   git clone https://gitlab.com/your-username/rna-factory.git
-   cd rna-factory
+   git clone https://github.com/your-username/RNA-Factory.git
+   cd RNA-Factory
    ```
 
-2. **配置 GitLab CI/CD 变量**
-
-   - 在 GitLab 项目设置中配置必要的环境变量
-   - 参考 [GitLab 部署指南](GITLAB_DEPLOYMENT.md)
-
-3. **推送代码触发部署**
+2. **Install dependencies**
    ```bash
-   git push origin develop  # 部署到测试环境
-   git push origin main     # 部署到生产环境
+   pip install -e .
    ```
 
-### 本地开发
-
-1. **安装依赖**
-
+3. **Set up model environments**
    ```bash
-   pip install -r requirements.txt
+   # Each model requires its own virtual environment
+   # The platform will automatically set up environments on first use
    ```
 
-2. **设置环境变量**
-
-   ```bash
-   cp env.example .env
-   # 编辑 .env 文件，设置你的API密钥
-   ```
-
-3. **运行应用**
+4. **Run the application**
    ```bash
    python run.py
    ```
 
-## 🏗️ 项目结构
+5. **Access the platform**
+   Open your browser and navigate to `http://localhost:5000`
 
-```
-rna-factory/
-├── app/                    # Flask应用主目录
-│   ├── static/            # 静态文件
-│   ├── templates/         # HTML模板
-│   ├── __init__.py        # Flask应用初始化
-│   ├── routes.py          # 路由定义
-│   ├── models.py          # 数据模型
-│   └── utils.py           # 工具函数
-├── models/                 # AI模型相关
-├── tests/                  # 测试文件
-├── docker-compose.yml      # Docker Compose配置
-├── Dockerfile             # Docker镜像构建
-├── .gitlab-ci.yml         # GitLab CI/CD配置
-└── requirements.txt        # Python依赖
-```
+## Usage
 
-## 🔧 技术栈
+### Structure Prediction
 
-- **后端**: Flask, Python 3.11+
-- **AI 服务**: DeepSeek API
-- **容器化**: Docker, Docker Compose
-- **CI/CD**: GitLab CI/CD
-- **监控**: Prometheus, Grafana
-- **数据库**: SQLite (可扩展)
+1. Select a structure prediction model (BPFold, UFold, MXFold2, or RNAformer)
+2. Input RNA sequences via text or upload FASTA files
+3. Run analysis and view results
+4. Download results in various formats (CT, BPSEQ, dot-bracket)
 
-## 📋 功能特性
+### Interaction Prediction
 
-- 🤖 AI 驱动的 RNA 序列设计
-- 🔬 序列分析和优化
-- 📊 可视化结果展示
-- 🚀 自动化部署和监控
-- 🔒 安全的环境变量管理
+1. Select RNAmigos2 for interaction prediction
+2. Upload mmCIF structure file
+3. Specify binding site residues
+4. Input SMILES strings of ligands
+5. Run analysis to get interaction scores
 
-## 🚀 部署
+### AI Assistant
 
-### GitLab CI/CD 自动部署
+1. Access the AI assistant from the main interface
+2. Ask questions about RNA design, structure analysis, or general bioinformatics
+3. Upload documents for multimodal analysis
+4. Get expert guidance and recommendations
 
-项目配置了完整的 GitLab CI/CD 流水线：
+## Contributing
 
-- **测试阶段**: 自动运行单元测试
-- **构建阶段**: 构建 Docker 镜像
-- **部署阶段**: 自动部署到测试/生产环境
+We welcome contributions to RNA-Factory! Please feel free to submit issues, feature requests, or pull requests.
 
-详细配置请参考 [GitLab 部署指南](GITLAB_DEPLOYMENT.md)
+## License
 
-### Docker 部署
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```bash
-# 构建镜像
-docker build -t rna-factory .
+## Contact
 
-# 运行容器
-docker run -p 8000:8000 rna-factory
-```
+**Author**: Huaizhi Wang  
+**Email**: realwiseking@outlook.com
 
-### Docker Compose 部署
+## Acknowledgments
 
-```bash
-# 启动所有服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
-```
-
-## 🧪 测试
-
-```bash
-# 运行所有测试
-python -m pytest tests/ -v
-
-# 运行特定测试
-python -m pytest tests/test_routes.py -v
-```
-
-## 📚 API 文档
-
-### 主要端点
-
-- `POST /api/design` - 设计新的 RNA 序列
-- `GET /api/sequences` - 获取序列列表
-- `GET /api/sequences/<id>` - 获取特定序列详情
-- `PUT /api/sequences/<id>` - 更新序列
-- `DELETE /api/sequences/<id>` - 删除序列
-
-### 请求示例
-
-```bash
-curl -X POST http://localhost:8000/api/design \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_function": "ribozyme",
-    "constraints": {
-      "length": 100,
-      "gc_content": 0.5
-    }
-  }'
-```
-
-## 🔒 环境变量
-
-| 变量名                 | 描述              | 默认值                     |
-| ---------------------- | ----------------- | -------------------------- |
-| `DEEPSEEK_API_KEY`     | DeepSeek API 密钥 | 必需                       |
-| `DEEPSEEK_API_BASE`    | API 基础 URL      | `https://api.deepseek.com` |
-| `DEEPSEEK_API_VERSION` | API 版本          | `v1`                       |
-| `FLASK_ENV`            | Flask 环境        | `production`               |
-| `SECRET_KEY`           | Flask 密钥        | 必需                       |
-
-## 🤝 贡献
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 📞 支持
-
-- 创建 [Issue](https://gitlab.com/your-username/rna-factory/-/issues)
-- 查看 [GitLab 部署指南](GITLAB_DEPLOYMENT.md)
-- 联系维护团队
+We thank the developers of the integrated models and the open-source community for their valuable contributions to RNA research and machine learning.
