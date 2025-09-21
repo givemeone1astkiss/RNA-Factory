@@ -54,14 +54,33 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Fast inference (~10 seconds) with high enrichment factors
 - [GitHub](https://github.com/cgoliver/rnamigos2) | [Paper](https://www.nature.com/articles/s41467-025-57852-0)
 
+#### De Novo Design Models
+
+**Mol2Aptamer**
+- Deep learning model for generating RNA aptamers from small molecule SMILES
+- Uses transformer-based architecture with BPE tokenization
+- Generates high-quality RNA sequences with thermodynamic validation
+- Supports customizable generation parameters (temperature, top-k, top-p)
+- [Paper](https://doi.org/10.1038/s41467-024-48793-1)
+
+**RNAFlow**
+- Flow matching model for protein-conditioned RNA sequence-structure design
+- Integrates RNA inverse folding model and RoseTTAFold2NA
+- Generates RNA sequences and structures conditioned on protein targets
+- Supports customizable RNA length and sample generation
+- [GitHub](https://github.com/divnori/rnaflow) | [Paper](https://arxiv.org/abs/2405.18768)
+
 ### 🔧 Platform Capabilities
 
-- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings
-- **Unified Interface**: Consistent user experience across all models
+- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences
+- **Unified Interface**: Consistent user experience across all models with standardized input areas
 - **Real-time Processing**: Fast analysis with progress tracking
-- **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, and more
-- **Batch Processing**: Support for multiple sequences and ligands
-- **Download Options**: Individual files or ZIP archives for batch results
+- **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, PDB, and more
+- **Batch Processing**: Support for multiple sequences, ligands, and protein targets
+- **Download Options**: Individual files, ZIP archives, or CSV exports for batch results
+- **Smart File Upload**: Intelligent file handling with content validation and format detection
+- **Adaptive UI**: Dynamic input areas that adjust to content and file uploads
+- **Dark Mode Support**: Complete dark theme with consistent styling across all components
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## Code Structure
@@ -76,6 +95,8 @@ RNA-Factory/
 │   │   ├── mxfold2_routes.py    # MXFold2 API endpoints
 │   │   ├── rnaformer_routes.py  # RNAformer API endpoints
 │   │   ├── rnamigos2_routes.py  # RNAmigos2 API endpoints
+│   │   ├── mol2aptamer_routes.py # Mol2Aptamer API endpoints
+│   │   ├── rnaflow_routes.py    # RNAFlow API endpoints
 │   │   ├── copilot_routes.py    # AI assistant API endpoints
 │   │   └── model_config_routes.py # Model configuration endpoints
 │   ├── copilot/                 # AI assistant and RAG system
@@ -139,7 +160,7 @@ RESTful API endpoints for:
 ## Getting Started
 
 1. **Clone the repository**
-   ```bash
+```bash
    git clone https://github.com/your-username/RNA-Factory.git
    cd RNA-Factory
    ```
@@ -147,16 +168,16 @@ RESTful API endpoints for:
 2. **Install dependencies**
    ```bash
    pip install -e .
-   ```
+```
 
 3. **Set up model environments**
-   ```bash
+```bash
    # Each model requires its own virtual environment
    # The platform will automatically set up environments on first use
    ```
 
 4. **Run the application**
-   ```bash
+```bash
    python run.py
    ```
 
@@ -179,6 +200,22 @@ RESTful API endpoints for:
 3. Specify binding site residues
 4. Input SMILES strings of ligands
 5. Run analysis to get interaction scores
+
+### De Novo Design
+
+#### Mol2Aptamer
+1. Select Mol2Aptamer for aptamer generation
+2. Input small molecule SMILES string (via text or file upload)
+3. Configure generation parameters (number of sequences, max length, temperature, etc.)
+4. Run analysis to generate RNA aptamers
+5. View results with thermodynamic validation and download CSV files
+
+#### RNAFlow
+1. Select RNAFlow for protein-conditioned RNA design
+2. Input protein sequence (via text or file upload)
+3. Specify desired RNA length and number of samples
+4. Run analysis to generate RNA sequences and structures
+5. View results with confidence scores and download PDB structures
 
 ### AI Assistant
 

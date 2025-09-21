@@ -3,7 +3,7 @@ name = "software"
 version = "0.1.0"
 description = "This is the software project 'RNA-Factory' for iGEM team PekingHSC 2025."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "dotenv>=0.9.9",
     "flask>=3.1.2",
@@ -14,7 +14,7 @@ dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.2",
     "requests>=2.32.5",
-    "torch>=2.8.0",
+    "torch>=2.5.1",
     "pypdf>=4.0.0",
     "faiss-cpu>=1.7.4",
     "sentence-transformers>=2.2.2",
@@ -28,3 +28,15 @@ dependencies = [
     "pytesseract>=0.3.13",
     "bpfold>=0.2.8",
 ]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["data*", "temp*", "models*", "*.venv*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.html", "*.css", "*.js", "*.json", "*.yaml", "*.yml"]
