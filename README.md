@@ -61,7 +61,6 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Uses transformer-based architecture with BPE tokenization
 - Generates high-quality RNA sequences with thermodynamic validation
 - Supports customizable generation parameters (temperature, top-k, top-p)
-- [Paper](https://doi.org/10.1038/s41467-024-48793-1)
 
 **RNAFlow**
 - Flow matching model for protein-conditioned RNA sequence-structure design
@@ -163,7 +162,7 @@ RESTful API endpoints for:
 ```bash
    git clone https://github.com/your-username/RNA-Factory.git
    cd RNA-Factory
-   ```
+```
 
 2. **Install dependencies**
    ```bash
@@ -174,12 +173,12 @@ RESTful API endpoints for:
 ```bash
    # Each model requires its own virtual environment
    # The platform will automatically set up environments on first use
-   ```
+```
 
 4. **Run the application**
 ```bash
    python run.py
-   ```
+```
 
 5. **Access the platform**
    Open your browser and navigate to `http://localhost:5000`
