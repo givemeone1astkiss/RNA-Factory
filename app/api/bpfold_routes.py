@@ -23,10 +23,7 @@ def get_bpfold_wrapper():
     """Get or initialize BPFold wrapper"""
     global bpfold_wrapper
     if bpfold_wrapper is None:
-        bpfold_wrapper = BPFoldWrapper(
-            model_path="/home/huaizhi/Software/models/BPfold/model_predict",
-            environment_path="/home/huaizhi/Software/.venv_bpfold"
-        )
+        bpfold_wrapper = BPFoldWrapper()
     return bpfold_wrapper
 
 @bpfold_bp.route('/info', methods=['GET'])
@@ -96,7 +93,7 @@ def predict_structures():
         # Run prediction
         wrapper = get_bpfold_wrapper()
         result = wrapper.predict(
-            sequences=valid_sequences,
+            rna_sequences=valid_sequences,
             output_format=output_format,
             ignore_nc=ignore_nc
         )
@@ -178,7 +175,7 @@ def predict_from_file():
             # Run prediction
             wrapper = get_bpfold_wrapper()
             result = wrapper.predict(
-                sequences=sequences,
+                rna_sequences=sequences,
                 output_format=output_format,
                 ignore_nc=ignore_nc
             )

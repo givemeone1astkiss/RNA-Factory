@@ -14,6 +14,9 @@
     <link href="/static/css/mxfold2.css" rel="stylesheet">
     <link href="/static/css/rnaformer.css" rel="stylesheet">
     <link href="/static/css/rnamigos2.css" rel="stylesheet">
+    <link href="/static/css/mol2aptamer.css" rel="stylesheet">
+    <link href="/static/css/rnaflow.css" rel="stylesheet">
+    <link href="/static/css/standard-input.css" rel="stylesheet">
 </head>
 <body>
     <!-- Loading Page -->
@@ -145,31 +148,22 @@
                     </div>
                     <div class="card-body">
                         <div class="input-methods">
-                            <!-- File Upload -->
-                            <div class="input-method" id="generalFileUpload">
+                            <!-- RNA Sequences Input Section -->
+                            <div class="input-method" id="rnaSequencesInput">
                                 <div class="method-header">
-                                    <i class="fas fa-file-upload"></i>
-                                    <h6>Upload File</h6>
+                                    <i class="fas fa-dna"></i>
+                                    <h6>RNA Sequences</h6>
                                 </div>
-                                <div class="file-upload-area" id="fileUploadArea">
-                                    <div class="upload-content">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                        <p>Click or drag files here</p>
-                                        <small id="fileAcceptInfo">Supports FASTA, TXT formats</small>
+                                <div class="standard-input-area single-block" id="rnaSequencesInputArea">
+                                    <div class="unified-input-area" id="rnaSequencesUnifiedInput">
+                                        <div class="input-placeholder" id="rnaSequencesPlaceholder">
+                                            <i class="fas fa-edit"></i>
+                                            <p>Click to enter RNA sequences or drag files here</p>
+                                            <small id="fileAcceptInfo">FASTA, TXT supported</small>
+                                        </div>
+                                        <textarea id="inputText" rows="6" placeholder="Enter SMILES strings&#10;Example:&#10;AGUCUCUA&#10;CGAUCGUACGUACGU" style="display: none;"></textarea>
                                         <input type="file" id="inputFile" accept=".fasta,.fa,.txt" style="display: none;">
                                     </div>
-                                </div>
-                                <div id="fileInfo" class="file-info" style="display: none;"></div>
-                            </div>
-
-                            <!-- Text Input -->
-                            <div class="input-method" id="generalTextInput">
-                                <div class="method-header">
-                                    <i class="fas fa-keyboard"></i>
-                                    <h6>Text Input</h6>
-                                </div>
-                                <div class="text-input-area">
-                                    <textarea id="inputText" rows="6" placeholder="Enter RNA sequence (A, C, G, U) or other text data..."></textarea>
                                 </div>
                             </div>
 
@@ -177,7 +171,7 @@
                             <div class="input-method bpfold-options" id="bpfoldOptions" style="display: none;">
                                 <div class="method-header">
                                     <i class="fas fa-cog"></i>
-                                    <h6>Options</h6>
+                                    <h6>Options & Settings</h6>
                                 </div>
                                 <div class="options-area">
                                     <div class="form-group">
@@ -196,7 +190,7 @@
                                 <div class="rnamigos2-section">
                                     <div class="method-header">
                                         <i class="fas fa-cube"></i>
-                                        <h6>RNA Structure (mmCIF)</h6>
+                                        <h6>RNA Structure</h6>
                                     </div>
                                     <div class="file-upload-area" id="rnamigos2FileUpload">
                                         <div class="upload-content">
@@ -214,9 +208,15 @@
                                         <i class="fas fa-bullseye"></i>
                                         <h6>Binding Site Residues</h6>
                                     </div>
-                                    <div class="input-row">
-                                        <div class="residue-input-area">
-                                            <textarea id="rnamigos2Residues" rows="5" placeholder="Enter residue identifiers, one per line or comma-separated&#10;Example:&#10;A.20&#10;A.19&#10;A.18"></textarea>
+                                    <div class="standard-input-area single-block" id="rnamigos2ResiduesInputArea">
+                                        <div class="unified-input-area" id="rnamigos2ResiduesUnifiedInput">
+                                            <div class="input-placeholder" id="rnamigos2ResiduesPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter binding site residues or drag files here</p>
+                                                <small>TXT supported</small>
+                                            </div>
+                                            <textarea id="rnamigos2Residues" rows="5" placeholder="Enter residue identifiers, one per line or comma-separated&#10;Example:&#10;A.20&#10;A.19&#10;A.18" style="display: none;"></textarea>
+                                            <input type="file" id="rnamigos2ResiduesFileInput" accept=".txt" style="display: none;">
                                         </div>
                                     </div>
                                 </div>
@@ -227,17 +227,115 @@
                                         <i class="fas fa-flask"></i>
                                         <h6>Ligand SMILES</h6>
                                     </div>
-                                    <div class="input-row">
-                                        <div class="file-upload-area" id="rnamigos2SmilesFileUpload">
-                                            <div class="upload-content">
-                                                <i class="fas fa-cloud-upload-alt"></i>
-                                                <p>Click or drag SMILES files here</p>
+                                    <div class="standard-input-area single-block" id="rnamigos2SmilesInputArea">
+                                        <div class="unified-input-area" id="rnamigos2SmilesUnifiedInput">
+                                            <div class="input-placeholder" id="rnamigos2SmilesPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter SMILES or drag files here</p>
                                                 <small>TXT supported</small>
-                                                <input type="file" id="rnamigos2SmilesFileInput" accept=".txt" style="display: none;">
                                             </div>
+                                            <textarea id="rnamigos2SmilesText" rows="6" placeholder="Enter SMILES strings&#10;Example:&#10;CCC[S@](=O)c1ccc2&#10;O=C(O)[C@@H](O)c1ccccc1" style="display: none;"></textarea>
+                                            <input type="file" id="rnamigos2SmilesFileInput" accept=".txt" style="display: none;">
                                         </div>
-                                        <div class="text-input-area">
-                                            <textarea id="rnamigos2SmilesText" rows="6" placeholder="Enter SMILES strings, one per line&#10;Example:&#10;CCC[S@](=O)c1ccc2[nH]/c(=N\C(=O)OC)[nH]c2c1&#10;O=C(O)[C@@H](O)c1ccccc1"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RNAFlow Specific Input Area -->
+                            <div class="rnaflow-input" id="rnaflowInput" style="display: none;">
+                                <!-- Protein Sequence Input Section -->
+                                <div class="rnaflow-section input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-dna"></i>
+                                        <h6>Protein Sequence</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="rnaflowProteinInputArea">
+                                        <div class="unified-input-area" id="rnaflowProteinUnifiedInput">
+                                            <div class="input-placeholder" id="rnaflowProteinPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter protein sequence or drag files here</p>
+                                                <small>FASTA, TXT supported</small>
+                                            </div>
+                                            <textarea id="rnaflowProteinSequence" rows="4" placeholder="Enter protein sequence&#10;Example:&#10;MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL" style="display: none;"></textarea>
+                                            <input type="file" id="rnaflowProteinFileInput" accept=".fasta,.fa,.txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RNA Design Parameters Section -->
+                                <div class="rnaflow-section">
+                                    <div class="method-header">
+                                        <i class="fas fa-cogs"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="rnaflow-parameters">
+                                        <div class="rnaflow-parameter">
+                                            <label for="rnaflowRnaLength">RNA Length</label>
+                                            <input type="number" id="rnaflowRnaLength" min="5" max="200" value="20" placeholder="20">
+                                        </div>
+                                        <div class="rnaflow-parameter">
+                                            <label for="rnaflowNumSamples">Number of Samples</label>
+                                            <input type="number" id="rnaflowNumSamples" min="1" max="10" value="3" placeholder="3">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mol2Aptamer Specific Input Area -->
+                            <div class="mol2aptamer-input" id="mol2aptamerInput" style="display: none;">
+                                <!-- SMILES Input Section -->
+                                <div class="mol2aptamer-section input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-flask"></i>
+                                        <h6>Ligand SMILES</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="mol2aptamerSmilesInputArea">
+                                        <div class="unified-input-area" id="mol2aptamerSmilesUnifiedInput">
+                                            <div class="input-placeholder" id="mol2aptamerSmilesPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter SMILES or drag files here</p>
+                                                <small>TXT supported</small>
+                                            </div>
+                                            <textarea id="mol2aptamerSmiles" rows="4" placeholder="Enter SMILES string&#10;Example:&#10;CC1=CC2=C(CC1)C(=CC3=C2C(=CO3)C)C" style="display: none;"></textarea>
+                                            <input type="file" id="mol2aptamerSmilesFileInput" accept=".txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Generation Parameters -->
+                                <div class="mol2aptamer-section input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cog"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="parameters-grid">
+                                        <div class="parameter-group">
+                                            <label for="mol2aptamerNumSequences">Number of Sequences</label>
+                                            <input type="number" id="mol2aptamerNumSequences" value="10" min="1" max="100" class="form-control">
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="mol2aptamerMaxLength">Max Length</label>
+                                            <input type="number" id="mol2aptamerMaxLength" value="50" min="10" max="200" class="form-control">
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="mol2aptamerTemperature">Temperature</label>
+                                            <input type="number" id="mol2aptamerTemperature" value="1.0" min="0.1" max="2.0" step="0.1" class="form-control">
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="mol2aptamerTopK">Top-K</label>
+                                            <input type="number" id="mol2aptamerTopK" value="50" min="1" max="100" class="form-control">
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="mol2aptamerTopP">Top-P</label>
+                                            <input type="number" id="mol2aptamerTopP" value="0.9" min="0.1" max="1.0" step="0.1" class="form-control">
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="mol2aptamerStrategy">Sampling Strategy</label>
+                                            <select id="mol2aptamerStrategy" class="form-control">
+                                                <option value="greedy">Greedy</option>
+                                                <option value="top_k">Top-K</option>
+                                                <option value="top_p">Top-P</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>

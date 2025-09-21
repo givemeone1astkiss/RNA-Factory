@@ -292,8 +292,6 @@ body {
     background: transparent;
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 1rem;
     height: fit-content;
     position: sticky;
     top: 2rem;
@@ -559,11 +557,11 @@ body {
     padding: 2rem;
 }
 
+
 .input-methods {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 2rem;
-    margin-bottom: 2rem;
 }
 
 .input-method {
@@ -591,13 +589,6 @@ body {
     transition: color 0.3s ease;
 }
 
-/* BPFold Specific Options Styles */
-.bpfold-options {
-    grid-column: 1 / -1;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 2px solid var(--border-color);
-}
 
 .options-area {
     padding: 0.75rem;
@@ -648,6 +639,9 @@ body {
     cursor: pointer;
     position: relative;
     background: var(--bg-secondary);
+    height: auto; /* Auto height based on content */
+    display: flex;
+    flex-direction: column;
 }
 
 .file-upload-area:hover {
@@ -662,6 +656,38 @@ body {
     background: var(--active-bg);
     transform: scale(1.02);
     box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+/* File upload area content */
+.file-upload-area .upload-content {
+    height: auto; /* Auto height based on content */
+    min-height: 120px; /* Minimum height for usability */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem; /* Add padding to prevent content from touching edges */
+    box-sizing: border-box;
+    gap: 0.5rem; /* Add gap between elements */
+}
+
+.file-upload-area .upload-content i {
+    font-size: 2rem; /* Ensure icon is visible */
+    margin-bottom: 0.25rem;
+}
+
+.file-upload-area .upload-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.file-upload-area .upload-content small {
+    margin: 0;
+    font-size: 0.75rem;
+    text-align: center;
+    opacity: 0.8;
 }
 
 .file-input {
@@ -744,23 +770,29 @@ body {
 /* Text Input */
 .text-input-area {
     position: relative;
+    height: auto; /* Auto height, will be set by JavaScript */
+    display: flex;
+    flex-direction: column;
+    min-height: 120px; /* Ensure minimum height matches file upload area */
 }
 
 .text-input-area textarea {
-    width: 100%;
-    min-height: 120px;
-    height: auto;
+    flex: 1; /* Fill the entire text-input-area */
+    min-height: 120px; /* Match file upload area minimum height */
+    height: auto; /* Auto height, will be adjusted by JavaScript */
+    resize: none; /* Disable manual resize to maintain consistency */
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow: hidden; /* Hide scrollbar, let content expand */
     border: 2px solid var(--border-color);
     border-radius: 15px;
-    padding: 1rem;
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     line-height: 1.5;
-    resize: none;
-    overflow: hidden;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease, height 0.2s ease;
     background: var(--bg-primary);
     color: var(--text-primary);
+    max-height: none; /* Allow unlimited height growth */
 }
 
 .text-input-area textarea:focus {
@@ -792,7 +824,6 @@ body {
     gap: 1rem;
     justify-content: center;
     padding-top: 1rem;
-    border-top: 2px solid var(--border-color);
 }
 
 .action-buttons .btn {

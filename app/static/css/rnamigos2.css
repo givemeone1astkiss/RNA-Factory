@@ -1,19 +1,30 @@
 /* RNAmigos2 Specific Styles */
 
+.rnamigos2-input {
+    width: 100%;
+    max-width: none;
+    grid-column: 1 / -1; /* Span across all columns */
+}
+
 .rnamigos2-section {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    width: 100%;
 }
 
 .rnamigos2-input .input-row {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: flex-start;
+    width: 100%;
 }
 
 .rnamigos2-input .file-upload-area {
-    flex: 1;
+    flex: 1; /* Equal width with text input area */
+    height: 180px; /* Fixed height to match standard-input-area */
+    display: flex;
+    flex-direction: column;
     min-width: 200px;
 }
 
@@ -23,13 +34,18 @@
 
 .rnamigos2-input .smiles-section .input-row {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: flex-start;
+    width: 100%;
 }
 
 .rnamigos2-input .text-input-area {
-    flex: 1;
+    flex: 1; /* Equal width with file upload area */
+    height: auto; /* Auto height, will be set by JavaScript */
+    display: flex;
+    flex-direction: column;
     min-width: 200px;
+    min-height: 180px; /* Ensure minimum height matches file upload area */
 }
 
 .rnamigos2-input .text-input-area label {
@@ -40,8 +56,13 @@
 }
 
 .rnamigos2-input .text-input-area textarea {
-    width: 100%;
-    padding: 0.75rem;
+    flex: 1; /* Fill the entire text-input-area */
+    min-height: 180px; /* Match file upload area minimum height */
+    height: auto; /* Auto height, will be adjusted by JavaScript */
+    resize: none; /* Disable manual resize to maintain consistency */
+    padding: 0.75rem; /* Add padding for better text spacing */
+    box-sizing: border-box;
+    overflow: hidden; /* Hide scrollbar, let content expand */
     border: 1px solid var(--border-color);
     border-radius: 6px;
     background: var(--input-bg);
@@ -49,10 +70,6 @@
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 0.9rem;
     line-height: 1.4;
-    resize: none;
-    overflow: hidden;
-    min-height: 120px;
-    height: auto;
     transition: border-color 0.3s ease;
 }
 
@@ -72,6 +89,38 @@
     cursor: pointer;
     position: relative;
     background: var(--bg-secondary);
+}
+
+/* File upload area content */
+.rnamigos2-input .file-upload-area .upload-content {
+    height: 100%; /* Fill the entire file upload area */
+    min-height: 180px; /* Minimum height for usability */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem; /* Add padding to prevent content from touching edges */
+    box-sizing: border-box;
+    gap: 0.5rem; /* Add gap between elements */
+}
+
+.rnamigos2-input .file-upload-area .upload-content i {
+    font-size: 2rem; /* Ensure icon is visible */
+    margin-bottom: 0.25rem;
+}
+
+.rnamigos2-input .file-upload-area .upload-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.rnamigos2-input .file-upload-area .upload-content small {
+    margin: 0;
+    font-size: 0.75rem;
+    text-align: center;
+    opacity: 0.8;
 }
 
 .rnamigos2-input .file-upload-area:hover {
@@ -112,15 +161,14 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: var(--success-bg);
-    border: 2px solid var(--success-color);
+    border: 2px solid #28a745;
     border-radius: 8px;
-    color: var(--success-color);
+    color: #28a745;
 }
 
 .rnamigos2-input .file-upload-area .file-info-content i {
     font-size: 1.5rem;
-    color: var(--success-color);
+    color: #28a745;
 }
 
 .rnamigos2-input .file-upload-area .file-details {
@@ -171,7 +219,7 @@
     line-height: 1.4;
     resize: none;
     overflow: hidden;
-    min-height: 120px;
+    min-height: 180px;
     height: auto;
     transition: border-color 0.3s ease;
 }
@@ -182,54 +230,52 @@
     box-shadow: 0 0 0 2px var(--primary-light);
 }
 
-/* Results Display Styles */
+/* Results Display Styles - BPFold style for summary, RNAmigos2 style for table */
 .rnamigos2-results {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.rnamigos2-results .results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* BPFold style for summary information (圆角彩色块方式) */
+.rnamigos2-results .sequence-info {
     margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
 }
 
-.rnamigos2-results .results-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
+.rnamigos2-results .sequence-info-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.rnamigos2-results .results-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+.rnamigos2-results .sequence-length {
+    display: inline-block;
+    background: var(--accent-primary);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    min-width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.rnamigos2-results .summary-item {
-    background: var(--card-bg);
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    text-align: center;
+/* 为每条信息分配不同的颜色 */
+.rnamigos2-results .sequence-info-stats .sequence-length:nth-child(1) {
+    background: #28a745; /* 绿色 - Best Score */
 }
 
-.rnamigos2-results .summary-item .summary-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
+.rnamigos2-results .sequence-info-stats .sequence-length:nth-child(2) {
+    background: #ffc107; /* 黄色 - Worst Score */
 }
 
-.rnamigos2-results .summary-item .summary-value {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--primary-color);
+.rnamigos2-results .sequence-info-stats .sequence-length:nth-child(3) {
+    background: #17a2b8; /* 青色 - Average Score */
+}
+
+.rnamigos2-results .sequence-info-stats .sequence-length:nth-child(4) {
+    background: #6f42c1; /* 紫色 - Total Ligands */
 }
 
 .rnamigos2-results .interactions-table {
@@ -248,7 +294,7 @@
     background: var(--primary-color);
     color: white;
     padding: 0.75rem 1rem;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     font-size: 0.9rem;
 }
@@ -257,6 +303,7 @@
     padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.9rem;
+    text-align: center;
 }
 
 .rnamigos2-results .interactions-table tr:last-child td {
@@ -268,6 +315,7 @@
     font-size: 0.8rem;
     max-width: 300px;
     word-break: break-all;
+    text-align: center;
 }
 
 .rnamigos2-results .interactions-table .score-cell {
@@ -287,17 +335,52 @@
     color: #dc3545;
 }
 
+/* Wide screen optimizations */
+@media (min-width: 1600px) {
+    .rnamigos2-input .input-row {
+        gap: 2rem;
+    }
+    
+    .rnamigos2-input .smiles-section .input-row {
+        gap: 2rem;
+    }
+    
+    .rnamigos2-input .file-upload-area {
+        min-width: 300px;
+    }
+    
+    .rnamigos2-input .text-input-area {
+        min-width: 300px;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .rnamigos2-input .input-row {
         flex-direction: column;
         gap: 1rem;
+        align-items: stretch; /* Ensure full width on mobile */
     }
     
     .rnamigos2-input .file-upload-area,
     .rnamigos2-input .text-input-area,
     .rnamigos2-input .residue-input-area {
         min-width: unset;
+        width: 100%;
+    }
+    
+    .rnamigos2-input .file-upload-area {
+        height: 180px; /* Keep fixed height on mobile */
+    }
+    
+    .rnamigos2-input .file-upload-area .upload-content {
+        min-height: 180px; /* Consistent minimum height */
+        padding: 0.75rem; /* Reduced padding for mobile */
+    }
+    
+    .rnamigos2-input .text-input-area textarea {
+        min-height: 180px; /* Match file upload area */
+        padding: 0.5rem; /* Reduced padding for mobile */
     }
     
     .rnamigos2-results .results-summary {

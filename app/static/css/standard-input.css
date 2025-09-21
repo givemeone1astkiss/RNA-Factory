@@ -1,0 +1,463 @@
+/* Standard Input Area - 通用输入区域样式 */
+.standard-input-area {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    height: auto !important;
+    min-height: auto !important;
+    width: 100%;
+}
+
+.standard-input-area .file-upload-area {
+    width: 50%;
+    height: 180px;
+    border: 2px dashed var(--border-color);
+    border-radius: 15px;
+    padding: 1rem;
+    text-align: center;
+    background: var(--bg-secondary);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.standard-input-area .file-upload-area:hover {
+    border-color: var(--accent-primary);
+    background: var(--hover-bg);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+.standard-input-area .file-upload-area.dragover {
+    border-color: var(--accent-primary);
+    background: var(--active-bg);
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.standard-input-area .file-upload-area .upload-content {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    gap: 0.5rem;
+}
+
+.standard-input-area .file-upload-area .upload-content i {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.standard-input-area .file-upload-area .upload-content p {
+    margin: 0.5rem 0;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.standard-input-area .file-upload-area .upload-content small {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.standard-input-area .file-upload-area .file-info-content {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    color: #28a745;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.standard-input-area .file-upload-area .file-info-content i {
+    font-size: 1.5rem;
+    color: #28a745;
+}
+
+.standard-input-area .file-upload-area .file-details {
+    flex: 1;
+}
+
+.standard-input-area .file-upload-area .file-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #28a745;
+}
+
+.standard-input-area .file-upload-area .file-size {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    color: #6c757d;
+}
+
+.standard-input-area .file-upload-area .btn-remove-file {
+    background: none;
+    border: none;
+    color: #28a745;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    font-size: 1rem;
+}
+
+.standard-input-area .file-upload-area .btn-remove-file:hover {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.standard-input-area .file-upload-area:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.standard-input-area .file-upload-area:disabled:hover {
+    border-color: var(--border-color);
+    background: var(--bg-secondary);
+    transform: none;
+    box-shadow: none;
+}
+
+.standard-input-area .text-input-area {
+    width: 50%;
+    display: block !important;
+    height: auto !important;
+    min-height: auto !important;
+}
+
+.standard-input-area .text-input-area textarea {
+    width: 100% !important;
+    min-height: 180px !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 12px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    resize: none !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+    transition: all 0.3s ease !important;
+    field-sizing: content !important;
+}
+
+.standard-input-area .text-input-area textarea:focus {
+    outline: none !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1) !important;
+}
+
+.standard-input-area .text-input-area textarea::placeholder {
+    color: var(--text-muted) !important;
+    font-style: italic !important;
+}
+
+.standard-input-area .text-input-area textarea:disabled {
+    opacity: 0.6 !important;
+    cursor: pointer !important;
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.standard-input-area .text-input-area textarea:disabled:hover {
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .standard-input-area .file-upload-area {
+    background: var(--bg-secondary-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .file-info-content {
+    background: #2d3748;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .file-info-content i {
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .file-name {
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .file-size {
+    color: #a0aec0;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .btn-remove-file {
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .btn-remove-file:hover {
+    background: rgba(40, 167, 69, 0.2);
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area:disabled:hover {
+    border-color: var(--border-color-dark);
+    background: var(--bg-secondary-dark);
+    transform: none;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .standard-input-area .text-input-area textarea:disabled:hover {
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area:hover {
+    background: var(--hover-bg-dark);
+    border-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .upload-content {
+    color: var(--text-muted-dark);
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .upload-content p {
+    color: var(--text-primary-dark);
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area .upload-content small {
+    color: var(--text-muted-dark);
+}
+
+[data-theme="dark"] .standard-input-area .text-input-area textarea {
+    background: var(--input-bg-dark) !important;
+    border-color: var(--border-color-dark) !important;
+    color: var(--text-primary-dark) !important;
+}
+
+[data-theme="dark"] .standard-input-area .text-input-area textarea::placeholder {
+    color: var(--text-muted-dark) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .standard-input-area {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .standard-input-area .file-upload-area,
+    .standard-input-area .text-input-area {
+        width: 100%;
+    }
+    
+    .standard-input-area .file-upload-area .upload-content {
+        min-height: 100px;
+        padding: 1rem;
+    }
+    
+    .standard-input-area .text-input-area textarea {
+        min-height: 100px !important;
+    }
+}
+
+/* Single block mode - unified input area */
+.standard-input-area.single-block {
+    display: block;
+}
+
+.standard-input-area.single-block .unified-input-area {
+    position: relative;
+    width: 100%;
+    min-height: 180px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.standard-input-area.single-block .unified-input-area:hover {
+    border-color: var(--accent-primary);
+    background: var(--hover-bg);
+}
+
+.standard-input-area.single-block .unified-input-area.dragover {
+    border-color: var(--accent-primary);
+    background: var(--accent-light);
+}
+
+.standard-input-area.single-block .input-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.standard-input-area.single-block .input-placeholder i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--accent-primary);
+}
+
+.standard-input-area.single-block .input-placeholder p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.standard-input-area.single-block .input-placeholder small {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.standard-input-area.single-block .unified-input-area textarea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    resize: none;
+    padding: 1rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    outline: none;
+    cursor: text;
+}
+
+.standard-input-area.single-block .unified-input-area textarea:focus {
+    outline: none;
+}
+
+/* File info display in single block mode - matching RNAmigos2 style */
+.standard-input-area.single-block .file-info-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    color: #28a745;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.standard-input-area.single-block .file-info-content i {
+    font-size: 1.5rem;
+    color: #28a745;
+}
+
+.standard-input-area.single-block .file-details {
+    flex: 1;
+}
+
+.standard-input-area.single-block .file-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.standard-input-area.single-block .file-size {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.standard-input-area.single-block .btn-remove-file {
+    background: none;
+    border: none;
+    color: var(--success-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.standard-input-area.single-block .btn-remove-file:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode for single block */
+[data-theme="dark"] .standard-input-area.single-block .unified-input-area {
+    background: var(--input-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .unified-input-area:hover {
+    background: var(--hover-bg-dark);
+    border-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .unified-input-area.dragover {
+    background: var(--accent-light-dark);
+    border-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .input-placeholder {
+    color: var(--text-muted-dark);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .input-placeholder p {
+    color: var(--text-primary-dark);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .input-placeholder small {
+    color: var(--text-muted-dark);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .unified-input-area textarea {
+    background: transparent;
+    color: var(--text-primary-dark);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .file-info-content {
+    background: #2d3748;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area.single-block .file-info-content i {
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area.single-block .file-name {
+    color: #28a745;
+}
+
+[data-theme="dark"] .standard-input-area.single-block .file-size {
+    color: #a0aec0;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .standard-input-area.single-block .btn-remove-file {
+    color: var(--success-color);
+}
+
+[data-theme="dark"] .standard-input-area.single-block .btn-remove-file:hover {
+    background: rgba(255, 255, 255, 0.1);
+}

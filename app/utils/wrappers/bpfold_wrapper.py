@@ -9,6 +9,7 @@ import tempfile
 import logging
 from typing import Dict, Any, List
 import shutil
+from ..path_manager import get_model_path, get_venv_path
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class BPFoldWrapper:
             model_path: Path to BPFold model checkpoints
             environment_path: Path to uv virtual environment for BPFold
         """
-        self.model_path = model_path or "/home/huaizhi/Software/models/BPfold/model_predict"
-        self.environment_path = environment_path or "/home/huaizhi/Software/.venv_bpfold"
+        self.model_path = model_path or get_model_path("BPfold") + "/model_predict"
+        self.environment_path = environment_path or get_venv_path(".venv_bpfold")
         self.temp_dir = None
         
         # Validate model path
@@ -86,7 +87,8 @@ class BPFoldWrapper:
             
         try:
             logger.info("Downloading BPFold model...")
-            model_dir = "/home/huaizhi/Software/models/BPfold"
+            from ..path_manager import get_model_path
+            model_dir = get_model_path("BPfold")
             os.makedirs(model_dir, exist_ok=True)
             
             # Download model
@@ -111,13 +113,13 @@ class BPFoldWrapper:
             logger.error(f"Unexpected error downloading BPFold model: {e}")
             return False
     
-    def predict(self, sequences: List[str], output_format: str = "ct", 
+    def predict(self, rna_sequences: List[str], output_format: str = "ct", 
                 ignore_nc: bool = False) -> Dict[str, Any]:
         """
         Predict RNA secondary structures using BPFold
         
         Args:
-            sequences: List of RNA sequences
+            rna_sequences: List of RNA sequences
             output_format: Output format (csv, bpseq, ct, dbn)
             ignore_nc: Whether to ignore non-canonical pairs
             
@@ -145,7 +147,7 @@ class BPFoldWrapper:
             
             # Write sequences to FASTA file
             with open(input_file, 'w') as f:
-                for i, seq in enumerate(sequences):
+                for i, seq in enumerate(rna_sequences):
                     f.write(f">sequence_{i+1}\n{seq}\n")
             
             # Prepare BPFold command using uv virtual environment
@@ -179,7 +181,7 @@ class BPFoldWrapper:
                 }
             
             # Parse results
-            results = self._parse_results(output_dir, sequences, output_format)
+            results = self._parse_results(output_dir, rna_sequences, output_format)
             
             return {
                 "success": True,
@@ -200,7 +202,7 @@ class BPFoldWrapper:
                 shutil.rmtree(self.temp_dir)
                 self.temp_dir = None
     
-    def _parse_results(self, output_dir: str, sequences: List[str], 
+    def _parse_results(self, output_dir: str, rna_sequences: List[str], 
                       output_format: str) -> List[Dict[str, Any]]:
         """Parse BPFold output results"""
         results = []
@@ -219,16 +221,16 @@ class BPFoldWrapper:
                     lines = content.strip().split('\n')
                     if len(lines) > 1:  # Skip header
                         for i, line in enumerate(lines[1:], 1):  # Skip header line
-                            if i <= len(sequences):
+                            if i <= len(rna_sequences):
                                 results.append({
-                                    "sequence": sequences[i-1],
+                                    "sequence": rna_sequences[i-1],
                                     "format": "csv",
                                     "data": line
                                 })
             
             elif output_format == "bpseq":
                 # Parse BPSEQ results
-                for i, seq in enumerate(sequences):
+                for i, seq in enumerate(rna_sequences):
                     bpseq_file = os.path.join(output_dir, f"sequence_{i+1}.bpseq")
                     if os.path.exists(bpseq_file):
                         with open(bpseq_file, 'r') as f:
@@ -241,7 +243,7 @@ class BPFoldWrapper:
             
             elif output_format == "ct":
                 # Parse CT results
-                for i, seq in enumerate(sequences):
+                for i, seq in enumerate(rna_sequences):
                     ct_file = os.path.join(output_dir, f"sequence_{i+1}.ct")
                     if os.path.exists(ct_file):
                         with open(ct_file, 'r') as f:
@@ -254,7 +256,7 @@ class BPFoldWrapper:
             
             elif output_format == "dbn":
                 # Parse DBN results
-                for i, seq in enumerate(sequences):
+                for i, seq in enumerate(rna_sequences):
                     dbn_file = os.path.join(output_dir, f"sequence_{i+1}.dbn")
                     if os.path.exists(dbn_file):
                         with open(dbn_file, 'r') as f:

@@ -25,6 +25,8 @@ def create_app(config_name="default"):
     from app.api.mxfold2_routes import mxfold2_bp
     from app.api.rnamigos2_routes import rnamigos2_bp
     from app.api.rnaformer_routes import rnaformer_bp
+    from app.api.mol2aptamer_routes import mol2aptamer_bp
+    from app.api.rnaflow_routes import rnaflow_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -33,6 +35,8 @@ def create_app(config_name="default"):
     app.register_blueprint(mxfold2_bp, url_prefix="/api/mxfold2")
     app.register_blueprint(rnamigos2_bp, url_prefix="/api/rnamigos2")
     app.register_blueprint(rnaformer_bp, url_prefix="/api/rnaformer")
+    app.register_blueprint(mol2aptamer_bp, url_prefix="/api/mol2aptamer")
+    app.register_blueprint(rnaflow_bp, url_prefix="/api/rnaflow")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -190,6 +194,58 @@ def preload_models(app):
                 "environment_required": True,
                 "environment_type": "uv",
                 "environment_path": "/home/huaizhi/Software/.venv_rnaformer"
+            },
+            {
+                "id": "mol2aptamer",
+                "name": "Mol2Aptamer",
+                "type": "rna_design",
+                "category": "de_novo_design",
+                "category_name": "De Novo Design",
+                "description": "Mol2Aptamer is a deep learning model for de novo RNA aptamer design from small molecule SMILES strings. It generates RNA sequences that can bind to specific small molecules using transformer architecture and BPE tokenization.",
+                "input_types": ["smiles"],
+                "output_types": ["rna_sequences", "aptamer_candidates"],
+                "model_path": "utils/wrappers/mol2aptamer_wrapper.py",
+                "weights_path": "models/Mol2Aptamer",
+                "input_description": "Requires SMILES string of small molecule and generation parameters",
+                "output_description": "Outputs generated RNA aptamer sequences with length and ΔG information",
+                "features": [
+                    "De novo RNA aptamer design",
+                    "Transformer architecture",
+                    "BPE tokenization",
+                    "Multiple sampling strategies",
+                    "RNAfold integration",
+                    "Customizable generation parameters"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/huaizhi/Software/.venv_mol2aptamer"
+            },
+            {
+                "id": "rnaflow",
+                "name": "RNAFlow",
+                "type": "rna_design",
+                "category": "de_novo_design",
+                "category_name": "De Novo Design",
+                "description": "RNAFlow is a flow matching model for protein-conditioned RNA sequence-structure design. It integrates an RNA inverse folding model and a pre-trained RosettaFold2NA network for generation of RNA sequences and structures.",
+                "input_types": ["protein_sequence", "protein_coordinates", "rna_length"],
+                "output_types": ["rna_sequences", "rna_structures"],
+                "model_path": "utils/wrappers/rnaflow_wrapper.py",
+                "weights_path": "models/rnaflow",
+                "input_description": "Requires protein sequence, protein coordinates, and desired RNA length",
+                "output_description": "Outputs designed RNA sequences and structures for protein binding",
+                "github_url": "https://github.com/divnori/rnaflow",
+                "paper_url": "https://arxiv.org/abs/2405.18768",
+                "features": [
+                    "Flow matching-based design",
+                    "Protein-conditioned generation",
+                    "RNA inverse folding integration",
+                    "RosettaFold2NA network",
+                    "Sequence and structure co-design",
+                    "High-quality RNA-protein complexes"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/huaizhi/Software/.venv_rnaflow"
             }
         ]
 

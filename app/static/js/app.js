@@ -1,5 +1,3 @@
-// RNA Model Integration Platform Frontend JavaScript
-
 // Global variables
 let availableModels = [];
 let currentModel = null;
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
     showLoadingPage();
     initializeApp();
     initializeTheme();
-    initializeMultimodalRAG();
 });
 
 // Show loading page with simplified animation
@@ -63,27 +60,20 @@ async function initializeApp() {
         }
         
         bindEvents();
-        initializeRNAmigos2FileUploads();
+        // All file uploads now handled by standard-input-area
+        
+        // Initialize general input area height synchronization
+        // Height management now handled by standard-input-area
+        
+        // Initialize standard input areas (only for visible elements)
+        setTimeout(() => {
+            // Structure Prediction RNA Sequences (always visible) - single block mode
+            initializeSingleBlockInput('rnaSequencesUnifiedInput', 'inputText', 'inputFile', 'rnaSequencesPlaceholder');
+        }, 500);
     } catch (error) {
-
         showNotification('Application initialization failed', 'error');
     }
 }
-
-// Initialize Multimodal RAG functionality
-function initializeMultimodalRAG() {
-    try {
-        // RAG functionality is now integrated into the AI assistant automatically
-        // No additional UI buttons needed - the system will automatically use data files
-
-    } catch (error) {
-
-    }
-}
-
-// RAG functionality is now automatically integrated into the AI assistant
-// The system will automatically use documents from the data directory when answering questions
-// No additional UI buttons are needed as the integration is seamless
 
 // Update send button based on AI responding state
 function updateSendButton() {
@@ -160,74 +150,21 @@ function setTheme(theme) {
 // Load available models
 async function loadAvailableModels() {
     try {
-        // Try to load models from API first
-
+        // Load models from API
         const response = await fetch('/api/models');
         
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.models) {
-                availableModels = data.models;
-
-                return;
-            }
+        if (!response.ok) {
+            throw new Error(`Failed to load models from API: ${response.status} ${response.statusText}`);
         }
         
-        // Fallback to hardcoded models if API fails
-
-        availableModels = [
-            {
-                id: 'bpfold',
-                name: 'BPFold',
-                category: 'structure_prediction',
-                category_name: 'Structure Prediction',
-                status: 'available',
-                description: 'Deep generalizable prediction of RNA secondary structure via base pair motif energy',
-                version: '0.2.0',
-                accuracy: '90%',
-                github_url: 'https://github.com/heqin-zhu/BPfold',
-                paper_url: 'https://doi.org/10.1038/s41467-025-60048-1'
-            },
-            {
-                id: 'ufold',
-                name: 'UFold',
-                category: 'structure_prediction',
-                category_name: 'Structure Prediction',
-                status: 'available',
-                description: 'Fast and Accurate RNA Secondary Structure Prediction with Deep Learning',
-                version: '1.3',
-                accuracy: '92%',
-                github_url: 'https://github.com/uci-cbcl/UFold',
-                paper_url: 'https://doi.org/10.1093/nar/gkab1074'
-            },
-            {
-                id: 'mxfold2',
-                name: 'MXFold2',
-                category: 'structure_prediction',
-                category_name: 'Structure Prediction',
-                status: 'available',
-                description: 'RNA secondary structure prediction using deep learning with thermodynamic integration',
-                version: '0.1.2',
-                accuracy: '91%',
-                github_url: 'https://github.com/mxfold/mxfold2',
-                paper_url: 'https://doi.org/10.1038/s41467-021-21194-4'
-            },
-            {
-                id: 'rnamigos2',
-                name: 'RNAmigos2',
-                category: 'interaction_prediction',
-                category_name: 'Interaction Prediction',
-                status: 'available',
-                description: 'RNA-ligand interaction prediction using deep graph learning for virtual screening',
-                version: '2.0',
-                accuracy: 'High enrichment',
-                github_url: 'https://github.com/cgoliver/rnamigos2',
-                paper_url: 'https://doi.org/10.1038/s41467-025-60048-1'
-            }
-        ];
+        const data = await response.json();
+        if (!data.success || !data.models) {
+            throw new Error('Invalid response format from API');
+        }
+        
+        availableModels = data.models;
 
     } catch (error) {
-
         throw error;
     }
 }
@@ -300,7 +237,6 @@ function selectModel(modelId) {
     }
     
     if (!currentModel) {
-
         return;
     }
     
@@ -331,95 +267,41 @@ function selectModel(modelId) {
     }, 100);
     });
     
-    // Selected model
 }
 
 // Clear input areas when switching models
 function clearInputAreas() {
-    // Clear main text input
-    const inputText = document.getElementById('inputText');
-    if (inputText) {
-        inputText.value = '';
-        // Reset textarea height
-        autoResizeTextarea(inputText);
-    }
-
-    // Clear file input and file info display
-    const inputFile = document.getElementById('inputFile');
-    if (inputFile) {
-        inputFile.value = '';
-    }
+    // inputText and inputFile are now handled by resetAllStandardInputAreas
     
-    // Clear general file upload area
-    const uploadArea = document.getElementById('fileUploadArea');
-    if (uploadArea) {
-        // Hide file info and show upload content
-        const fileInfo = uploadArea.querySelector('.file-info');
-        if (fileInfo) {
-            fileInfo.style.display = 'none';
-        }
-        
-        const uploadContent = uploadArea.querySelector('.upload-content');
-        if (uploadContent) {
-            uploadContent.style.display = 'block';
-        }
-    }
+    // rnaSequencesFileUpload area is now handled by resetAllStandardInputAreas
     
-    // Clear RNAmigos2 specific inputs
+    // Clear RNAmigos2 specific inputs (non-standard-input-area elements only)
     const rnamigos2Input = document.getElementById('rnamigos2Input');
     if (rnamigos2Input) {
-        // Clear CIF file input
-        const cifFileInput = document.getElementById('rnamigos2FileInput');
-        if (cifFileInput) {
-            cifFileInput.value = '';
-        }
-        
-        // Clear CIF file display
-        const cifUploadArea = document.getElementById('rnamigos2FileUpload');
-        if (cifUploadArea) {
-            const cifFileInfo = cifUploadArea.querySelector('.file-info');
-            if (cifFileInfo) {
-                cifFileInfo.style.display = 'none';
-            }
-            const cifUploadContent = cifUploadArea.querySelector('.upload-content');
-            if (cifUploadContent) {
-                cifUploadContent.style.display = 'block';
-            }
-        }
-        
-        // Clear SMILES file input
-        const smilesFileInput = document.getElementById('rnamigos2SmilesFileInput');
-        if (smilesFileInput) {
-            smilesFileInput.value = '';
-        }
-        
-        // Clear SMILES file display
-        const smilesUploadArea = document.getElementById('rnamigos2SmilesFileUpload');
-        if (smilesUploadArea) {
-            const smilesFileInfo = smilesUploadArea.querySelector('.file-info');
-            if (smilesFileInfo) {
-                smilesFileInfo.style.display = 'none';
-            }
-            const smilesUploadContent = smilesUploadArea.querySelector('.upload-content');
-            if (smilesUploadContent) {
-                smilesUploadContent.style.display = 'block';
-            }
-        }
-        
-        // Clear text inputs
-        const residuesElement = document.getElementById('rnamigos2Residues');
-        if (residuesElement) {
-            residuesElement.value = '';
-            autoResizeTextarea(residuesElement);
-        }
-        
-        const smilesTextElement = document.getElementById('rnamigos2SmilesText');
-        if (smilesTextElement) {
-            smilesTextElement.value = '';
-            autoResizeTextarea(smilesTextElement);
-        }
+        // Note: rnamigos2Residues now uses standard-input-area single-block mode
+        // It will be handled by resetAllStandardInputAreas()
     }
     
+    
+    // Clear Mol2Aptamer specific inputs (parameters only, input areas handled by standard-input-area)
+    const mol2aptamerInput = document.getElementById('mol2aptamerInput');
+    if (mol2aptamerInput) {
+        // Reset parameters to default values
+        document.getElementById('mol2aptamerNumSequences').value = '10';
+        document.getElementById('mol2aptamerMaxLength').value = '50';
+        document.getElementById('mol2aptamerTemperature').value = '1.0';
+        document.getElementById('mol2aptamerTopK').value = '50';
+        document.getElementById('mol2aptamerTopP').value = '0.9';
+        document.getElementById('mol2aptamerStrategy').value = 'greedy';
+    }
+    
+    // Clear RNAFlow specific inputs (parameters only, input areas handled by standard-input-area)
+    const rnaflowInput = document.getElementById('rnaflowInput');
+    if (rnaflowInput) {
+        // Reset parameters to default values
+        document.getElementById('rnaflowRnaLength').value = '20';
+        document.getElementById('rnaflowNumSamples').value = '3';
+    }
     
     // Clear any result sections
     const resultSection = document.getElementById('resultSection');
@@ -438,6 +320,134 @@ function clearInputAreas() {
     if (ignoreNonCanonical) {
         ignoreNonCanonical.checked = false;
     }
+    
+    // Reset all standard-input-area components
+    resetAllStandardInputAreas();
+}
+
+// Reset all standard-input-area components to initial state
+function resetAllStandardInputAreas() {
+    // Reset RNAmigos2 CIF file upload (old HTML structure)
+    const rnamigos2FileUpload = document.getElementById('rnamigos2FileUpload');
+    const rnamigos2FileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (rnamigos2FileUpload && rnamigos2FileInput) {
+        // Clear file input
+        rnamigos2FileInput.value = '';
+        
+        // Hide file info and show upload content
+        const fileInfo = rnamigos2FileUpload.querySelector('.file-info-content');
+        if (fileInfo) {
+            fileInfo.style.display = 'none';
+        }
+        
+        const uploadContent = rnamigos2FileUpload.querySelector('.upload-content');
+        if (uploadContent) {
+            uploadContent.style.display = 'flex';
+        }
+        
+        // Clear stored file content
+        rnamigos2FileUpload.removeAttribute('data-file-content');
+        
+        // Re-initialize the CIF file upload
+        setTimeout(() => {
+            initializeRNAmigos2CifFileUpload();
+        }, 100);
+    }
+    
+    // Reset single block input areas
+    const singleBlockAreas = document.querySelectorAll('.standard-input-area.single-block');
+    singleBlockAreas.forEach(area => {
+        const unifiedInput = area.querySelector('.unified-input-area');
+        const textarea = area.querySelector('textarea');
+        const fileInput = area.querySelector('input[type="file"]');
+        const placeholder = area.querySelector('.input-placeholder');
+        
+        if (unifiedInput && textarea && fileInput && placeholder) {
+            // Clear file input
+            fileInput.value = '';
+            
+            // Clear stored file content
+            unifiedInput.removeAttribute('data-file-content');
+            
+            // Remove file info
+            const fileInfo = unifiedInput.querySelector('.file-info-content');
+            if (fileInfo) {
+                fileInfo.remove();
+            }
+            
+            // Show placeholder
+            placeholder.style.display = 'block';
+            
+            // Hide textarea
+            textarea.style.display = 'none';
+            textarea.value = '';
+            
+            // Re-initialize the single block input area
+            const unifiedInputId = unifiedInput.id;
+            const textareaId = textarea.id;
+            const fileInputId = fileInput.id;
+            const placeholderId = placeholder.id;
+            
+            setTimeout(() => {
+                initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, placeholderId);
+            }, 50);
+        }
+    });
+    
+    // Reset traditional standard-input-area containers (if any remain)
+    const standardInputAreas = document.querySelectorAll('.standard-input-area:not(.single-block)');
+    standardInputAreas.forEach(area => {
+        const fileUpload = area.querySelector('.file-upload-area');
+        const textarea = area.querySelector('textarea');
+        const fileInput = area.querySelector('input[type="file"]');
+        
+        if (fileUpload && textarea && fileInput) {
+            // Reset file input
+            fileInput.value = '';
+            
+            // Hide file info and show upload content
+            const fileInfo = fileUpload.querySelector('.file-info-content');
+            if (fileInfo) {
+                fileInfo.style.display = 'none';
+            }
+            
+            const uploadContent = fileUpload.querySelector('.upload-content');
+            if (uploadContent) {
+                uploadContent.style.display = 'flex';
+            }
+            
+            // Clear stored file content
+            fileUpload.removeAttribute('data-file-content');
+            
+            // Reset textarea
+            textarea.value = '';
+            textarea.disabled = false;
+            textarea.style.cursor = '';
+            textarea.style.opacity = '';
+            
+            // Reset placeholder
+            const originalPlaceholder = textarea.getAttribute('data-original-placeholder');
+            if (originalPlaceholder) {
+                textarea.placeholder = originalPlaceholder;
+            }
+            
+            // Reset file upload area state
+            fileUpload.style.pointerEvents = '';
+            fileUpload.style.opacity = '';
+            fileUpload.style.cursor = '';
+            fileUpload.removeAttribute('data-disabled');
+            
+            // Re-initialize the standard input area after reset
+            const containerId = area.id;
+            const textareaId = textarea.id;
+            const fileInputId = fileInput.id;
+            const fileUploadId = fileUpload.id;
+            
+            // Note: Traditional standard-input-area re-initialization removed
+            // All input areas now use single-block mode
+        }
+    });
 }
 
 // Update model selection state
@@ -455,7 +465,6 @@ function updateModelSelection() {
 // Switch to selected model
 function switchToModel(modelId) {
     if (!modelId) {
-
         return;
     }
     
@@ -576,21 +585,23 @@ function updateModelInfo() {
 function adjustInputInterface() {
     const bpfoldOptions = document.getElementById('bpfoldOptions');
     const rnamigos2Input = document.getElementById('rnamigos2Input');
+    const mol2aptamerInput = document.getElementById('mol2aptamerInput');
+    const rnaflowInput = document.getElementById('rnaflowInput');
     const fileAcceptInfo = document.getElementById('fileAcceptInfo');
     
     // Get general input areas by ID
-    const fileUploadArea = document.getElementById('generalFileUpload');
-    const textInputArea = document.getElementById('generalTextInput');
+    const rnaSequencesInput = document.getElementById('rnaSequencesInput');
     
     if (!fileAcceptInfo) return;
     
     // Hide all model-specific inputs first
     if (bpfoldOptions) bpfoldOptions.style.display = 'none';
     if (rnamigos2Input) rnamigos2Input.style.display = 'none';
+    if (mol2aptamerInput) mol2aptamerInput.style.display = 'none';
+    if (rnaflowInput) rnaflowInput.style.display = 'none';
     
     // Show general input areas by default
-    if (fileUploadArea) fileUploadArea.style.display = 'flex';
-    if (textInputArea) textInputArea.style.display = 'flex';
+    if (rnaSequencesInput) rnaSequencesInput.style.display = 'flex';
     
     if (currentModel.id === 'bpfold') {
         // BPFold model has specific options
@@ -608,15 +619,52 @@ function adjustInputInterface() {
         // RNAmigos2 model has specific input interface
         if (rnamigos2Input) rnamigos2Input.style.display = 'flex';
         // Hide general input areas for RNAmigos2
-        if (fileUploadArea) fileUploadArea.style.display = 'none';
-        if (textInputArea) textInputArea.style.display = 'none';
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
         fileAcceptInfo.textContent = 'Supports mmCIF, SMILES formats';
+        
+        // Initialize RNAmigos2 input areas when model is selected
+        setTimeout(() => {
+            // CIF file input area (uses old HTML structure)
+            initializeRNAmigos2CifFileUpload();
+            
+            // SMILES input area (uses single block mode)
+            initializeSingleBlockInput('rnamigos2SmilesUnifiedInput', 'rnamigos2SmilesText', 'rnamigos2SmilesFileInput', 'rnamigos2SmilesPlaceholder');
+            
+            // Binding Site Residues input area (uses single block mode)
+            initializeSingleBlockInput('rnamigos2ResiduesUnifiedInput', 'rnamigos2Residues', 'rnamigos2ResiduesFileInput', 'rnamigos2ResiduesPlaceholder');
+        }, 100);
     } else if (currentModel.id === 'rnaformer') {
         // RNAformer model uses general input interface (same as MXFold2)
         fileAcceptInfo.textContent = 'Supports FASTA, TXT formats';
+    } else if (currentModel.id === 'mol2aptamer') {
+        // Mol2Aptamer model has specific input interface
+        if (mol2aptamerInput) mol2aptamerInput.style.display = 'flex';
+        // Hide general input areas for Mol2Aptamer
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports SMILES format';
+        
+        // Initialize Mol2Aptamer single block input area when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('mol2aptamerSmilesUnifiedInput', 'mol2aptamerSmiles', 'mol2aptamerSmilesFileInput', 'mol2aptamerSmilesPlaceholder');
+        }, 100);
+    } else if (currentModel.id === 'rnaflow') {
+        // RNAFlow model has specific input interface
+        if (rnaflowInput) {
+            rnaflowInput.style.display = 'flex';
+        }
+        // Hide general input areas for RNAFlow
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports protein sequence input and RNA design parameters';
+        
+        // Initialize RNAFlow single block input area when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('rnaflowProteinUnifiedInput', 'rnaflowProteinSequence', 'rnaflowProteinFileInput', 'rnaflowProteinPlaceholder');
+        }, 100);
     } else {
-        // Other models
+        // Other models (BPFold, UFold, MXFold2, RNAformer)
         fileAcceptInfo.textContent = 'Supports FASTA, TXT formats';
+        
+        // Height management now handled by standard-input-area
     }
 }
 
@@ -716,6 +764,7 @@ function bindEvents() {
             uploadArea.classList.remove('dragover');
         });
     }
+    
 }
 
 // Handle file selection
@@ -792,6 +841,9 @@ function displayFileInfo(file) {
         `;
         fileInfo.style.display = 'block';
     }
+    
+    // Sync heights after file info display
+    // Height management now handled by standard-input-area
 }
 
 // Remove general file
@@ -815,6 +867,9 @@ function removeGeneralFile() {
             uploadContent.style.display = 'block';
         }
     }
+    
+    // Sync heights after file removal
+    // Height management now handled by standard-input-area
 }
 
 // Format file size
@@ -836,11 +891,22 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, skip general input validation as it has its own validation
-    if (currentModel.id !== 'rnamigos2') {
+    // For RNAmigos2, Mol2Aptamer, and RNAFlow, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
+        
+        // For BPFold, also check standard-input-area for file content
+        if (currentModel.id === 'bpfold') {
+            const fileUpload = document.getElementById('rnaSequencesFileUpload');
+            if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
+                const fileContent = fileUpload.getAttribute('data-file-content').trim();
+                if (fileContent && !inputText) {
+                    inputText = fileContent;
+                }
+            }
+        }
 
         if (!inputFile && !inputText) {
             showNotification('Please provide input data (file or text)', 'warning');
@@ -911,6 +977,28 @@ async function runAnalysis() {
             if (result.success) {
                 displayResults(result);
                 addToHistory(currentModel, inputFile ? inputFile.name : inputText, result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
+        } else if (currentModel.id === 'mol2aptamer') {
+            const response = await runMol2AptamerAnalysis();
+            const result = await response.json();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'Mol2Aptamer Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
+        } else if (currentModel.id === 'rnaflow') {
+            const response = await runRNAFlowAnalysis();
+            const result = await response.json();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'RNAFlow Analysis', result);
                 showNotification('Analysis completed!', 'success');
             } else {
                 throw new Error(result.error);
@@ -988,62 +1076,16 @@ function displayResults(result) {
         html = displayRNAmigos2Results(result.results);
     } else if (currentModel.id === 'rnaformer') {
         html = displayRNAformerResults(result.results);
+    } else if (currentModel.id === 'mol2aptamer') {
+        html = displayMol2AptamerResults(result);
+    } else if (currentModel.id === 'rnaflow') {
+        html = displayRNAFlowResults(result);
     } else {
         html = displayDefaultResults(result.result);
     }
     
     resultContent.innerHTML = html;
     showResultSection(); // Always show result section after displaying results
-}
-
-// Display MFold results
-
-// Display RNA-MPNN results
-function displayRNAMPNNResults(result) {
-    if (result.error) {
-        return `<div class="alert alert-danger">${result.error}</div>`;
-    }
-    
-    return `
-        <div class="result-grid">
-            <div class="result-item">
-                <h6><i class="fas fa-cube"></i>Structure Type</h6>
-                <div class="result-value">${result.structure_type}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-chart-line"></i>Confidence</h6>
-                <div class="result-value">${(result.confidence_score * 100).toFixed(1)}%</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-dna"></i>Structure</h6>
-                <div class="result-value">${result.secondary_structure}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-link"></i>Tertiary Contacts</h6>
-                <div class="result-value">${result.tertiary_contacts}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-ruler"></i>RMSD</h6>
-                <div class="result-value">${result.structural_metrics.rmsd} Å</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-exclamation-triangle"></i>Clash Score</h6>
-                <div class="result-value">${result.structural_metrics.clash_score}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-shapes"></i>Geometry Score</h6>
-                <div class="result-value">${result.structural_metrics.geometry_score}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-star"></i>Quality Assessment</h6>
-                <div class="result-value">${result.quality_assessment}</div>
-            </div>
-            <div class="result-item" style="grid-column: 1 / -1;">
-                <h6><i class="fas fa-dna"></i>Predicted Motifs</h6>
-                <div class="result-value">${result.predicted_motifs.join(', ')}</div>
-            </div>
-        </div>
-    `;
 }
 
 // Display default results
@@ -1079,23 +1121,30 @@ function displayRNAmigos2Results(results) {
     // Store results globally for download functionality
     window.currentRNAmigos2Results = results;
     
+    // Calculate score statistics
+    const scores = interactions.map(interaction => interaction.score || 0);
+    const bestScore = Math.max(...scores);
+    const worstScore = Math.min(...scores);
+    const avgScore = (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(3);
+    
     let html = '<div class="rnamigos2-results">';
     
-    // Add summary information similar to other models
+    // Summary information in BPFold style (圆角彩色块方式)
     html += `
         <div class="result-item">
-            <h6><i class="fas fa-flask"></i>RNA-Ligand Interaction Predictions</h6>
+            <h6><i class="fas fa-flask"></i>Design Results</h6>
             <div class="sequence-info">
                 <div class="sequence-info-stats">
-                    <div class="sequence-length">Total Ligands: ${summary.total_ligands || interactions.length}</div>
-                    <div class="sequence-length">Best Score: ${(summary.best_score || 0).toFixed(3)}</div>
-                    <div class="sequence-length">Average Score: ${(summary.average_score || 0).toFixed(3)}</div>
+                    <div class="sequence-length">Best Score: ${bestScore.toFixed(3)}</div>
+                    <div class="sequence-length">Worst Score: ${worstScore.toFixed(3)}</div>
+                    <div class="sequence-length">Average Score: ${avgScore}</div>
+                    <div class="sequence-length">Total Ligands: ${interactions.length}</div>
                 </div>
             </div>
         </div>
     `;
     
-    // Add interactions table
+    // Add interactions table with centered text
     const tableRows = interactions.map((interaction, index) => {
         const score = interaction.score || 0;
         let scoreClass = 'score-low';
@@ -1104,9 +1153,9 @@ function displayRNAmigos2Results(results) {
         
         return `
             <tr>
-                <td>${index + 1}</td>
-                <td class="smiles-cell">${interaction.smiles || 'N/A'}</td>
-                <td class="score-cell ${scoreClass}">${score.toFixed(3)}</td>
+                <td class="text-center">${index + 1}</td>
+                <td class="smiles-cell text-center">${interaction.smiles || 'N/A'}</td>
+                <td class="score-cell ${scoreClass} text-center">${score.toFixed(3)}</td>
             </tr>
         `;
     }).join('');
@@ -1119,9 +1168,9 @@ function displayRNAmigos2Results(results) {
                     <table>
                         <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>SMILES</th>
-                                <th>Score</th>
+                                <th class="text-center">Rank</th>
+                                <th class="text-center">SMILES</th>
+                                <th class="text-center">Score</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1390,111 +1439,6 @@ function updateModelArchitecture(currentModel) {
     }
 }
 
-// Display AlphaFold3 results
-function displayAlphaFold3Results(result) {
-    if (result.error) {
-        return `<div class="alert alert-danger">${result.error}</div>`;
-    }
-    
-    return `
-        <div class="result-grid">
-            <div class="result-item">
-                <h6><i class="fas fa-cube"></i>Structure</h6>
-                <div class="result-value">${result.tertiary_structure || 'Generated'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-chart-line"></i>Confidence</h6>
-                <div class="result-value">${(result.confidence_score * 100).toFixed(1)}%</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-ruler"></i>RMSD</h6>
-                <div class="result-value">${result.structural_metrics?.rmsd || 'N/A'} Å</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-star"></i>Quality Score</h6>
-                <div class="result-value">${result.quality_score || 'N/A'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-download"></i>Structure Files</h6>
-                <div class="result-value">
-                    <a href="#" class="btn btn-sm btn-primary">Download PDB</a>
-                    <a href="#" class="btn btn-sm btn-outline-primary">Download CIF</a>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Display RDesign results
-function displayRDesignResults(result) {
-    if (result.error) {
-        return `<div class="alert alert-danger">${result.error}</div>`;
-    }
-    
-    return `
-        <div class="result-grid">
-            <div class="result-item">
-                <h6><i class="fas fa-dna"></i>Designed Sequence</h6>
-                <div class="result-value">${result.designed_sequence || 'N/A'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-chart-line"></i>Design Quality</h6>
-                <div class="result-value">${(result.design_quality * 100).toFixed(1)}%</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-cube"></i>Target Structure</h6>
-                <div class="result-value">${result.target_structure || 'N/A'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-check-circle"></i>Sequence Validation</h6>
-                <div class="result-value">${result.sequence_validation || 'Passed'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-download"></i>Output Files</h6>
-                <div class="result-value">
-                    <a href="#" class="btn btn-sm btn-primary">Download FASTA</a>
-                    <a href="#" class="btn btn-sm btn-outline-primary">Download Structure</a>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Display GRADN results
-function displayGRADNResults(result) {
-    if (result.error) {
-        return `<div class="alert alert-danger">${result.error}</div>`;
-    }
-    
-    return `
-        <div class="result-grid">
-            <div class="result-item">
-                <h6><i class="fas fa-magic"></i>Generated Sequence</h6>
-                <div class="result-value">${result.generated_sequence || 'N/A'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-chart-line"></i>Generation Quality</h6>
-                <div class="result-value">${(result.generation_quality * 100).toFixed(1)}%</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-random"></i>Diversity Score</h6>
-                <div class="result-value">${result.diversity_score || 'N/A'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-check-circle"></i>Sequence Validity</h6>
-                <div class="result-value">${result.sequence_validity || 'Passed'}</div>
-            </div>
-            <div class="result-item">
-                <h6><i class="fas fa-download"></i>Output Files</h6>
-                <div class="result-value">
-                    <a href="#" class="btn btn-sm btn-primary">Download FASTA</a>
-                    <a href="#" class="btn btn-sm btn-outline-primary">Batch Download</a>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
 // Global functions
 window.selectModel = selectModel;
 window.runAnalysis = runAnalysis;
@@ -1515,8 +1459,6 @@ let isAIAssistantOpen = false;
 // Toggle AI Assistant sidebar
 function toggleAIAssistant() {
     const aiSidebar = document.getElementById('aiSidebar');
-    const aiStatusIndicator = document.getElementById('aiStatusIndicator');
-    const aiStatusText = document.getElementById('aiStatusText');
     
     if (isAIAssistantOpen) {
         aiSidebar.classList.remove('active');
@@ -1967,15 +1909,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Auto-resize textarea function
+// Auto-resize textarea function (simplified for general use)
 function autoResizeTextarea(textarea) {
     function adjustHeight() {
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
+        // Check if this is a standard input area textarea
+        const isStandardInputArea = textarea.closest('.standard-input-area');
+        
+        if (isStandardInputArea) {
+            // Standard input areas handle their own height management
+            // Don't interfere with the standard input area logic
+            return;
+        } else {
+            // For general input areas (BPFold, UFold, MXFold2, RNAformer), sync heights
+            const isGeneralTextarea = textarea.closest('#rnaSequencesInput');
+            if (isGeneralTextarea) {
+                // Height management now handled by standard-input-area
+                return; // Don't call adjustHeight() again to avoid conflicts
+            } else {
+                // For other textareas, use the original logic
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+        }
     }
     
-    // Initial adjustment
-    adjustHeight();
+    // Initial adjustment (only for non-general textareas)
+    if (!textarea.closest('#rnaSequencesInput')) {
+        adjustHeight();
+    } else {
+        // Height management now handled by standard-input-area
+    }
     
     // Adjust on input
     textarea.addEventListener('input', adjustHeight);
@@ -2443,7 +2406,7 @@ function displayMXFold2Results(results) {
     
     results.forEach((result, index) => {
         // Get dot-bracket notation and energy from result data
-        const dotBracket = result.data || '';
+        const dotBracket = result.structure || '';
         const energy = result.energy || null;
         
         html += `
@@ -2667,6 +2630,10 @@ function downloadAllResults() {
             downloadAllRNAformerResults();
         } else if (currentModel.id === 'rnamigos2') {
             downloadAllRNAmigos2Results();
+        } else if (currentModel.id === 'mol2aptamer') {
+            downloadAllMol2AptamerResults();
+        } else if (currentModel.id === 'rnaflow') {
+            downloadAllRNAFlowResults();
         } else {
             alert('Download not supported for this model');
         }
@@ -2760,7 +2727,6 @@ async function downloadAllRNAformerResults() {
                 throw new Error(errorData.error || 'Download failed');
             }
         } catch (error) {
-            console.error('Download error:', error);
             showNotification(`Download failed: ${error.message}`, 'error');
         }
     } else {
@@ -2857,7 +2823,6 @@ async function downloadAllMXFold2Results() {
                 throw new Error(errorData.error || 'Download failed');
             }
         } catch (error) {
-            console.error('Download error:', error);
             showNotification(`Download failed: ${error.message}`, 'error');
         }
     } else {
@@ -2913,6 +2878,142 @@ function downloadAllBPFoldResults() {
     }
 }
 
+// Download all Mol2Aptamer results
+function downloadAllMol2AptamerResults() {
+    // Get current results from the global variable
+    if (window.currentMol2AptamerResults && window.currentMol2AptamerResults.results) {
+        const results = window.currentMol2AptamerResults;
+        const aptamers = results.results || [];
+        
+        // Create CSV content
+        let csvContent = 'Rank,Aptamer Sequence,Length,ΔG (kcal/mol)\n';
+        
+        aptamers.forEach((aptamer, index) => {
+            const rank = index + 1;
+            const sequence = (aptamer.sequence || 'N/A').replace(/"/g, '""'); // Escape quotes
+            const length = aptamer.sequence ? aptamer.sequence.length : 0;
+            const deltaG = (aptamer.delta_g || 0).toFixed(2);
+            csvContent += `${rank},"${sequence}",${length},${deltaG}\n`;
+        });
+        
+        // Add summary information as comments at the end
+        if (aptamers.length > 0) {
+            const deltaGs = aptamers.map(apt => apt.delta_g || 0);
+            const bestDeltaG = Math.min(...deltaGs);
+            const worstDeltaG = Math.max(...deltaGs);
+            const avgDeltaG = (deltaGs.reduce((sum, dg) => sum + dg, 0) / deltaGs.length).toFixed(2);
+            
+            // Calculate nucleotide composition
+            const allSequences = aptamers.map(apt => apt.sequence).join('');
+            const totalNucleotides = allSequences.length;
+            const nucleotideCounts = {
+                'A': (allSequences.match(/A/g) || []).length,
+                'C': (allSequences.match(/C/g) || []).length,
+                'G': (allSequences.match(/G/g) || []).length,
+                'U': (allSequences.match(/U/g) || []).length
+            };
+            
+            const nucleotidePercentages = {};
+            Object.keys(nucleotideCounts).forEach(nuc => {
+                nucleotidePercentages[nuc] = totalNucleotides > 0 ? (nucleotideCounts[nuc] / totalNucleotides * 100).toFixed(1) : '0.0';
+            });
+            
+            csvContent += `\n# Summary\n`;
+            csvContent += `# Best ΔG,${bestDeltaG.toFixed(2)}\n`;
+            csvContent += `# Worst ΔG,${worstDeltaG.toFixed(2)}\n`;
+            csvContent += `# Average ΔG,${avgDeltaG}\n`;
+            csvContent += `# Total Aptamers,${aptamers.length}\n`;
+            csvContent += `# Nucleotide Distribution A,${nucleotidePercentages.A}%\n`;
+            csvContent += `# Nucleotide Distribution C,${nucleotidePercentages.C}%\n`;
+            csvContent += `# Nucleotide Distribution G,${nucleotidePercentages.G}%\n`;
+            csvContent += `# Nucleotide Distribution U,${nucleotidePercentages.U}%\n`;
+        }
+        
+        // Create and download the file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'mol2aptamer_results.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showNotification('Mol2Aptamer results downloaded successfully!', 'success');
+    } else {
+        showNotification('No Mol2Aptamer results available for download', 'warning');
+    }
+}
+
+// Download all RNAFlow results
+function downloadAllRNAFlowResults() {
+    // Get current results from the global variable
+    if (window.currentRNAFlowResults && window.currentRNAFlowResults.results) {
+        const results = window.currentRNAFlowResults;
+        const rnaDesigns = results.results || [];
+        
+        // Create CSV content
+        let csvContent = 'Rank,RNA Sequence,Length,Confidence (%)\n';
+        
+        rnaDesigns.forEach((design, index) => {
+            const rank = index + 1;
+            const sequence = (design.sequence || 'N/A').replace(/"/g, '""'); // Escape quotes
+            const length = design.sequence ? design.sequence.length : 0;
+            const confidence = ((design.confidence || 0.8) * 100).toFixed(1);
+            csvContent += `${rank},"${sequence}",${length},${confidence}\n`;
+        });
+        
+        // Add summary information as comments at the end
+        if (rnaDesigns.length > 0) {
+            const confidences = rnaDesigns.map(design => design.confidence || 0.8);
+            const maxConfidence = Math.max(...confidences);
+            const minConfidence = Math.min(...confidences);
+            const avgConfidence = (confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length).toFixed(3);
+            
+            // Calculate nucleotide composition
+            const allSequences = rnaDesigns.map(design => design.sequence).join('');
+            const totalNucleotides = allSequences.length;
+            const nucleotideCounts = {
+                'A': (allSequences.match(/A/g) || []).length,
+                'C': (allSequences.match(/C/g) || []).length,
+                'G': (allSequences.match(/G/g) || []).length,
+                'U': (allSequences.match(/U/g) || []).length
+            };
+            
+            const nucleotidePercentages = {};
+            Object.keys(nucleotideCounts).forEach(nuc => {
+                nucleotidePercentages[nuc] = totalNucleotides > 0 ? (nucleotideCounts[nuc] / totalNucleotides * 100).toFixed(1) : '0.0';
+            });
+            
+            csvContent += `\n# Summary\n`;
+            csvContent += `# Highest Confidence,${(maxConfidence * 100).toFixed(1)}%\n`;
+            csvContent += `# Lowest Confidence,${(minConfidence * 100).toFixed(1)}%\n`;
+            csvContent += `# Average Confidence,${(avgConfidence * 100).toFixed(1)}%\n`;
+            csvContent += `# Total Designs,${rnaDesigns.length}\n`;
+            csvContent += `# Nucleotide Distribution A,${nucleotidePercentages.A}%\n`;
+            csvContent += `# Nucleotide Distribution C,${nucleotidePercentages.C}%\n`;
+            csvContent += `# Nucleotide Distribution G,${nucleotidePercentages.G}%\n`;
+            csvContent += `# Nucleotide Distribution U,${nucleotidePercentages.U}%\n`;
+        }
+        
+        // Create and download the file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'rnaflow_results.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showNotification('RNAFlow results downloaded successfully!', 'success');
+    } else {
+        showNotification('No RNAFlow results available for download', 'warning');
+    }
+}
+
 // BPFold model setup
 async function setupBPFold() {
     try {
@@ -2947,68 +3048,8 @@ async function checkBPFoldStatus() {
         }
         return false;
     } catch (error) {
-
         return false;
     }
-}
-
-function setupFileUpload(fileInput, uploadArea, fileInfo) {
-    // Click to upload
-    uploadArea.addEventListener('click', () => {
-        fileInput.click();
-    });
-    
-    // File selection
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            displayFileInfo(file, fileInfo);
-        }
-    });
-    
-    // Drag and drop
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const file = files[0];
-            // Check file type
-            const allowedTypes = ['.fasta', '.fa', '.txt'];
-            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-            
-            if (allowedTypes.includes(fileExtension)) {
-                fileInput.files = files;
-                displayFileInfo(file, fileInfo);
-            } else {
-                showNotification('Please upload a FASTA or TXT file', 'warning');
-            }
-        }
-    });
-}
-
-
-// Remove file
-function removeFile(button) {
-    const fileInfo = button.closest('.file-info');
-    const fileInput = fileInfo.previousElementSibling.querySelector('input[type="file"]');
-    
-    if (fileInput) {
-        fileInput.value = '';
-    }
-    
-    fileInfo.style.display = 'none';
-    fileInfo.innerHTML = '';
 }
 
 // RNAmigos2 Analysis Functions
@@ -3025,13 +3066,38 @@ async function runRNAmigos2Analysis() {
     }
     
     const cifFile = cifFileInput.files[0];
-    const residuesText = residuesElement.value.trim();
+    let cifContent = '';
+    let residuesText = residuesElement.value.trim();
+    
+    // If no residues in textarea, check if file was uploaded
+    if (!residuesText) {
+        const unifiedInput = document.getElementById('rnamigos2ResiduesUnifiedInput');
+        if (unifiedInput && unifiedInput.hasAttribute('data-file-content')) {
+            residuesText = unifiedInput.getAttribute('data-file-content').trim();
+        }
+    }
     const smilesFile = smilesFileInput.files[0];
-    const smilesText = smilesTextElement.value.trim();
+    let smilesText = smilesTextElement.value.trim();
+    
+    // If no CIF content in textarea, check if file was uploaded
+    if (!cifContent) {
+        const fileUpload = document.getElementById('rnamigos2FileUpload');
+        if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
+            cifContent = fileUpload.getAttribute('data-file-content').trim();
+        }
+    }
+    
+    // If no SMILES in textarea, check if file was uploaded
+    if (!smilesText) {
+        const fileUpload = document.getElementById('rnamigos2SmilesFileUpload');
+        if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
+            smilesText = fileUpload.getAttribute('data-file-content').trim();
+        }
+    }
     
     // Validate inputs
-    if (!cifFile) {
-        throw new Error('Please provide a CIF or mmCIF file');
+    if (!cifFile && !cifContent) {
+        throw new Error('Please provide a CIF or mmCIF file or paste the content');
     }
     
     if (!smilesFile && !smilesText) {
@@ -3043,7 +3109,10 @@ async function runRNAmigos2Analysis() {
     }
     
     // Prepare data
-    const cifContent = await readFileAsText(cifFile);
+    let finalCifContent = cifContent;
+    if (cifFile && !cifContent) {
+        finalCifContent = await readFileAsText(cifFile);
+    }
     let smilesList = [];
     
     if (smilesFile) {
@@ -3057,7 +3126,7 @@ async function runRNAmigos2Analysis() {
     
     // Prepare request data
     const requestData = {
-        cif_content: cifContent,
+        cif_content: finalCifContent,
         residue_list: residueList,
         smiles_list: smilesList
     };
@@ -3153,7 +3222,6 @@ function parseResidues(residuesText) {
             }
         }
     }
-    
     return residues;
 }
 
@@ -3165,103 +3233,6 @@ function readFileAsText(file) {
         reader.onerror = (e) => reject(e);
         reader.readAsText(file);
     });
-}
-
-// Initialize RNAmigos2 file uploads
-function initializeRNAmigos2FileUploads() {
-    // CIF file upload
-    const cifFileUpload = document.getElementById('rnamigos2FileUpload');
-    const cifFileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (cifFileUpload && cifFileInput) {
-        cifFileUpload.addEventListener('click', () => cifFileInput.click());
-        cifFileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                displayRNAmigos2FileInfo(e.target.files[0], 'cif');
-            }
-        });
-        
-        // Drag and drop for CIF files
-        cifFileUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            cifFileUpload.classList.add('dragover');
-        });
-        
-        cifFileUpload.addEventListener('dragleave', () => {
-            cifFileUpload.classList.remove('dragover');
-        });
-        
-        cifFileUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            cifFileUpload.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const file = files[0];
-                // Check if it's a CIF file
-                const fileName = file.name.toLowerCase();
-                if (fileName.endsWith('.cif') || fileName.endsWith('.mmcif')) {
-                    cifFileInput.files = files;
-                    displayRNAmigos2FileInfo(file, 'cif');
-                } else {
-                    showNotification('Please upload a CIF or mmCIF file', 'warning');
-                }
-            }
-        });
-    }
-    
-    // SMILES file upload
-    const smilesFileUpload = document.getElementById('rnamigos2SmilesFileUpload');
-    const smilesFileInput = document.getElementById('rnamigos2SmilesFileInput');
-    
-    if (smilesFileUpload && smilesFileInput) {
-        smilesFileUpload.addEventListener('click', () => smilesFileInput.click());
-        smilesFileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                displayRNAmigos2FileInfo(e.target.files[0], 'smiles');
-            }
-        });
-        
-        // Drag and drop for SMILES files
-        smilesFileUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            smilesFileUpload.classList.add('dragover');
-        });
-        
-        smilesFileUpload.addEventListener('dragleave', () => {
-            smilesFileUpload.classList.remove('dragover');
-        });
-        
-        smilesFileUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            smilesFileUpload.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const file = files[0];
-                // Check if it's a text file
-                const fileName = file.name.toLowerCase();
-                if (fileName.endsWith('.txt')) {
-                    smilesFileInput.files = files;
-                    displayRNAmigos2FileInfo(file, 'smiles');
-                } else {
-                    showNotification('Please upload a TXT file', 'warning');
-                }
-            }
-        });
-    }
-    
-    // Auto-resize textareas
-    const residuesTextarea = document.getElementById('rnamigos2Residues');
-    const smilesTextarea = document.getElementById('rnamigos2SmilesText');
-    
-    if (residuesTextarea) {
-        autoResizeTextarea(residuesTextarea);
-    }
-    
-    if (smilesTextarea) {
-        autoResizeTextarea(smilesTextarea);
-    }
 }
 
 // Display RNAmigos2 file information
@@ -3305,6 +3276,8 @@ function displayRNAmigos2FileInfo(file, type) {
         `;
         fileInfo.style.display = 'block';
     }
+    
+    // Heights are managed by standard input area
 }
 
 // Remove RNAmigos2 file
@@ -3336,3 +3309,774 @@ function removeRNAmigos2File(type) {
         }
     }
 }
+
+
+// Run Mol2Aptamer analysis
+async function runMol2AptamerAnalysis() {
+    // Get input data
+    const smilesElement = document.getElementById('mol2aptamerSmiles');
+    const numSequencesElement = document.getElementById('mol2aptamerNumSequences');
+    const maxLengthElement = document.getElementById('mol2aptamerMaxLength');
+    const temperatureElement = document.getElementById('mol2aptamerTemperature');
+    const topKElement = document.getElementById('mol2aptamerTopK');
+    const topPElement = document.getElementById('mol2aptamerTopP');
+    const strategyElement = document.getElementById('mol2aptamerStrategy');
+    
+    // Validate inputs
+    if (!smilesElement || !numSequencesElement || !maxLengthElement || 
+        !temperatureElement || !topKElement || !topPElement || !strategyElement) {
+        throw new Error('Mol2Aptamer input elements not found. Please refresh the page and try again.');
+    }
+    
+    let smiles = smilesElement.value.trim();
+    
+    // If no SMILES in textarea, check if file was uploaded
+    if (!smiles) {
+        const fileUpload = document.getElementById('mol2aptamerSmilesFileUpload');
+        if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
+            smiles = fileUpload.getAttribute('data-file-content').trim();
+        }
+    }
+    
+    const numSequences = parseInt(numSequencesElement.value);
+    const maxLength = parseInt(maxLengthElement.value);
+    const temperature = parseFloat(temperatureElement.value);
+    const topK = parseInt(topKElement.value);
+    const topP = parseFloat(topPElement.value);
+    const strategy = strategyElement.value;
+    
+    
+    // Validate that SMILES is provided
+    if (!smiles) {
+        throw new Error('Please provide a SMILES string (either by typing or uploading a file)');
+    }
+    
+    // Validate parameters
+    if (numSequences < 1 || numSequences > 100) {
+        throw new Error('Number of sequences must be between 1 and 100');
+    }
+    
+    if (maxLength < 10 || maxLength > 200) {
+        throw new Error('Max length must be between 10 and 200');
+    }
+    
+    if (temperature < 0.1 || temperature > 2.0) {
+        throw new Error('Temperature must be between 0.1 and 2.0');
+    }
+    
+    if (topK < 1 || topK > 100) {
+        throw new Error('Top-K must be between 1 and 100');
+    }
+    
+    if (topP < 0.1 || topP > 1.0) {
+        throw new Error('Top-P must be between 0.1 and 1.0');
+    }
+    
+    // Prepare request data
+    const requestData = {
+        smiles: smiles,
+        num_sequences: numSequences,
+        max_length: maxLength,
+        temperature: temperature,
+        top_k: topK,
+        top_p: topP,
+        strategy: strategy
+    };
+    
+    // Make API call
+    const response = await fetch('/api/mol2aptamer/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Mol2Aptamer analysis failed');
+    }
+    
+    return response;
+}
+
+
+
+// Display Mol2Aptamer results
+function displayMol2AptamerResults(results) {
+    if (!results || !results.results || results.results.length === 0) {
+        return '<div class="alert alert-warning">No aptamer sequences generated</div>';
+    }
+    
+    // Store results globally for download functionality
+    window.currentMol2AptamerResults = results;
+    
+    const aptamers = results.results;
+    
+    // Calculate ΔG statistics
+    const deltaGs = aptamers.map(apt => apt.delta_g || 0);
+    const bestDeltaG = Math.min(...deltaGs); // Most negative (best)
+    const worstDeltaG = Math.max(...deltaGs); // Least negative (worst)
+    const avgDeltaG = (deltaGs.reduce((sum, dg) => sum + dg, 0) / deltaGs.length).toFixed(2);
+    
+    // Calculate nucleotide composition (in one line)
+    const allSequences = aptamers.map(apt => apt.sequence).join('');
+    const totalNucleotides = allSequences.length;
+    const nucleotideCounts = {
+        'A': (allSequences.match(/A/g) || []).length,
+        'C': (allSequences.match(/C/g) || []).length,
+        'G': (allSequences.match(/G/g) || []).length,
+        'U': (allSequences.match(/U/g) || []).length
+    };
+    
+    const nucleotidePercentages = {};
+    Object.keys(nucleotideCounts).forEach(nuc => {
+        nucleotidePercentages[nuc] = totalNucleotides > 0 ? (nucleotideCounts[nuc] / totalNucleotides * 100).toFixed(1) : '0.0';
+    });
+    
+    const nucleotideDistribution = `A: ${nucleotidePercentages.A}% C: ${nucleotidePercentages.C}% G: ${nucleotidePercentages.G}% U: ${nucleotidePercentages.U}%`;
+    
+    let html = '<div class="mol2aptamer-results">';
+    
+    // Summary information in BPFold style (圆角彩色块方式)
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-dna"></i>Design Results</h6>
+            <div class="sequence-info">
+                <div class="sequence-info-stats">
+                    <div class="sequence-length">Best ΔG: ${bestDeltaG.toFixed(2)} kcal/mol</div>
+                    <div class="sequence-length">Worst ΔG: ${worstDeltaG.toFixed(2)} kcal/mol</div>
+                    <div class="sequence-length">Average ΔG: ${avgDeltaG} kcal/mol</div>
+                    <div class="sequence-length">Nucleotide Distribution: ${nucleotideDistribution}</div>
+                </div>
+            </div>
+            </div>
+        `;
+    
+    // Design results table in RNAmigos2 style
+    const tableRows = aptamers.map((aptamer, index) => {
+        const deltaG = aptamer.delta_g || 0;
+        let scoreClass = 'score-low';
+        if (deltaG < -2.0) scoreClass = 'score-high';
+        else if (deltaG < -1.0) scoreClass = 'score-medium';
+        
+        return `
+            <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="sequence-cell text-center">${aptamer.sequence}</td>
+                <td class="length-cell text-center">${aptamer.sequence.length}</td>
+                <td class="score-cell ${scoreClass} text-center">${deltaG.toFixed(2)} kcal/mol</td>
+            </tr>
+        `;
+    }).join('');
+    
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-table"></i>Generated Aptamer Sequences</h6>
+            <div class="structure-result">
+                <div class="interactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Aptamer Sequence</th>
+                                <th>Length</th>
+                                <th>ΔG</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    html += '</div>';
+    
+    // Show download button
+    const downloadActions = document.getElementById('downloadActions');
+    if (downloadActions) {
+        downloadActions.style.display = 'flex';
+    }
+    
+    return html;
+}
+
+
+// Copy text to clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Copied to clipboard!', 'success');
+    }).catch(err => {
+        showNotification('Failed to copy to clipboard', 'error');
+    });
+}
+
+// RNAFlow Analysis Functions
+async function runRNAFlowAnalysis() {
+    // Get input data
+    const proteinSequenceElement = document.getElementById('rnaflowProteinSequence');
+    const rnaLengthElement = document.getElementById('rnaflowRnaLength');
+    const numSamplesElement = document.getElementById('rnaflowNumSamples');
+    
+    // Validate inputs
+    if (!proteinSequenceElement || !rnaLengthElement || !numSamplesElement) {
+        throw new Error('RNAFlow input elements not found. Please refresh the page and try again.');
+    }
+    
+    let proteinSequence = proteinSequenceElement.value.trim();
+    
+    // If no protein sequence in textarea, check if file was uploaded
+    if (!proteinSequence) {
+        const fileUpload = document.getElementById('rnaflowProteinFileUpload');
+        if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
+            proteinSequence = fileUpload.getAttribute('data-file-content').trim();
+        }
+    }
+    
+    const rnaLength = parseInt(rnaLengthElement.value);
+    const numSamples = parseInt(numSamplesElement.value);
+    
+    // Validate that protein sequence is provided
+    if (!proteinSequence) {
+        throw new Error('Please provide a protein sequence');
+    }
+    
+    // Validate parameters
+    if (rnaLength < 5 || rnaLength > 200) {
+        throw new Error('RNA length must be between 5 and 200');
+    }
+    
+    if (numSamples < 1 || numSamples > 10) {
+        throw new Error('Number of samples must be between 1 and 10');
+    }
+    
+    // Prepare request data
+    const requestData = {
+        protein_sequence: proteinSequence,
+        rna_length: rnaLength,
+        num_samples: numSamples,
+        protein_coordinates: [] // For now, empty coordinates
+    };
+    
+    // Make API call
+    const response = await fetch('/api/rnaflow/design', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'RNAFlow analysis failed');
+    }
+    
+    return response;
+}
+
+// Display RNAFlow results
+function displayRNAFlowResults(results) {
+    if (!results || !results.results || results.results.length === 0) {
+        return '<div class="alert alert-warning">No RNA designs generated</div>';
+    }
+    
+    // Store results globally for download functionality
+    window.currentRNAFlowResults = results;
+    
+    const rnaDesigns = results.results;
+    
+    // Calculate confidence statistics
+    const confidences = rnaDesigns.map(design => design.confidence || 0.8);
+    const maxConfidence = Math.max(...confidences);
+    const minConfidence = Math.min(...confidences);
+    const avgConfidence = (confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length).toFixed(3);
+    
+    // Calculate nucleotide composition (in one line)
+    const allSequences = rnaDesigns.map(design => design.sequence).join('');
+    const totalNucleotides = allSequences.length;
+    const nucleotideCounts = {
+        'A': (allSequences.match(/A/g) || []).length,
+        'C': (allSequences.match(/C/g) || []).length,
+        'G': (allSequences.match(/G/g) || []).length,
+        'U': (allSequences.match(/U/g) || []).length
+    };
+    
+    const nucleotidePercentages = {};
+    Object.keys(nucleotideCounts).forEach(nuc => {
+        nucleotidePercentages[nuc] = totalNucleotides > 0 ? (nucleotideCounts[nuc] / totalNucleotides * 100).toFixed(1) : '0.0';
+    });
+    
+    const nucleotideDistribution = `A: ${nucleotidePercentages.A}% C: ${nucleotidePercentages.C}% G: ${nucleotidePercentages.G}% U: ${nucleotidePercentages.U}%`;
+    
+    let html = '<div class="rnaflow-results">';
+    
+    // Summary information in BPFold style (圆角彩色块方式)
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-dna"></i>Design Results</h6>
+            <div class="sequence-info">
+                <div class="sequence-info-stats">
+                    <div class="sequence-length">Highest Confidence: ${(maxConfidence * 100).toFixed(1)}%</div>
+                    <div class="sequence-length">Lowest Confidence: ${(minConfidence * 100).toFixed(1)}%</div>
+                    <div class="sequence-length">Average Confidence: ${(avgConfidence * 100).toFixed(1)}%</div>
+                    <div class="sequence-length">Nucleotide Distribution: ${nucleotideDistribution}</div>
+            </div>
+            </div>
+        </div>
+    `;
+    
+    // Design results table in RNAmigos2 style
+    const tableRows = rnaDesigns.map((design, index) => {
+        const confidence = design.confidence || 0.8;
+        let scoreClass = 'score-low';
+        if (confidence > 0.7) scoreClass = 'score-high';
+        else if (confidence > 0.4) scoreClass = 'score-medium';
+        
+        return `
+            <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="sequence-cell text-center">${design.sequence}</td>
+                <td class="length-cell text-center">${design.sequence.length}</td>
+                <td class="score-cell ${scoreClass} text-center">${(confidence * 100).toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+        
+        html += `
+            <div class="result-item">
+            <h6><i class="fas fa-table"></i>Generated RNA Sequences</h6>
+            <div class="structure-result">
+                <div class="interactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>RNA Sequence</th>
+                                <th>Length</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+    html += '</div>';
+    
+    // Show download button
+    const downloadActions = document.getElementById('downloadActions');
+    if (downloadActions) {
+        downloadActions.style.display = 'flex';
+    }
+    
+    return html;
+}
+
+// Standard Input Area - 通用输入区域管理
+
+// Initialize single block unified input area
+function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, placeholderId) {
+    const unifiedInput = document.getElementById(unifiedInputId);
+    const textarea = document.getElementById(textareaId);
+    const fileInput = document.getElementById(fileInputId);
+    const placeholder = document.getElementById(placeholderId);
+    
+    if (!unifiedInput || !textarea || !fileInput || !placeholder) {
+        return;
+    }
+    
+    // Click handler for unified input area
+    unifiedInput.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Check if file info is displayed (file is uploaded)
+        const fileInfo = unifiedInput.querySelector('.file-info-content');
+        if (fileInfo && fileInfo.style.display !== 'none') {
+            // File is uploaded, don't allow new input
+            return;
+        }
+        
+        // Show textarea and focus
+        placeholder.style.display = 'none';
+        textarea.style.display = 'block';
+        textarea.focus();
+    });
+    
+    // Textarea blur handler - hide if empty
+    textarea.addEventListener('blur', () => {
+        if (textarea.value.trim() === '') {
+            textarea.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+    });
+    
+    // Textarea input handler - auto resize
+    textarea.addEventListener('input', () => {
+        autoResizeTextarea(textarea);
+    });
+    
+    // Drag and drop handlers
+    unifiedInput.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        unifiedInput.classList.add('dragover');
+    });
+    
+    unifiedInput.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        unifiedInput.classList.remove('dragover');
+    });
+    
+    unifiedInput.addEventListener('drop', (e) => {
+        e.preventDefault();
+        unifiedInput.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleSingleBlockFileUpload(files[0], unifiedInputId, textareaId, fileInputId, placeholderId);
+        }
+    });
+    
+    // File input change handler
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleSingleBlockFileUpload(e.target.files[0], unifiedInputId, textareaId, fileInputId, placeholderId);
+        }
+    });
+}
+
+// Handle file upload for single block input
+function handleSingleBlockFileUpload(file, unifiedInputId, textareaId, fileInputId, placeholderId) {
+    const unifiedInput = document.getElementById(unifiedInputId);
+    const textarea = document.getElementById(textareaId);
+    const fileInput = document.getElementById(fileInputId);
+    const placeholder = document.getElementById(placeholderId);
+    
+    if (!unifiedInput || !textarea || !fileInput || !placeholder) {
+        return;
+    }
+    
+    // Read file content
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fileContent = e.target.result;
+        
+        // Store file content
+        unifiedInput.setAttribute('data-file-content', fileContent);
+        
+        // Hide placeholder and textarea
+        placeholder.style.display = 'none';
+        textarea.style.display = 'none';
+        
+        // Display file info
+        displaySingleBlockFileInfo(file, unifiedInputId);
+    };
+    
+    reader.onerror = function() {
+        showNotification('Error reading file', 'error');
+    };
+    
+    reader.readAsText(file);
+}
+
+// Display file info for single block input
+function displaySingleBlockFileInfo(file, unifiedInputId) {
+    const unifiedInput = document.getElementById(unifiedInputId);
+    if (!unifiedInput) {
+        return;
+    }
+    
+    // Remove existing file info if any
+    const existingFileInfo = unifiedInput.querySelector('.file-info-content');
+    if (existingFileInfo) {
+        existingFileInfo.remove();
+    }
+    
+    // Create file info element
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info-content';
+    fileInfo.style.display = 'flex';
+    
+    // Use appropriate icon
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const iconClass = fileExtension === 'txt' ? 'fa-file-alt' : 'fa-file-code';
+    
+    fileInfo.innerHTML = `
+        <div class="file-details">
+            <i class="fas ${iconClass}"></i>
+            <div>
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+            </div>
+        </div>
+        <button class="btn-remove-file" onclick="event.stopPropagation(); removeSingleBlockFile('${unifiedInputId}')">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    unifiedInput.appendChild(fileInfo);
+}
+
+// Remove file from single block input
+function removeSingleBlockFile(unifiedInputId) {
+    const unifiedInput = document.getElementById(unifiedInputId);
+    if (!unifiedInput) {
+        return;
+    }
+    
+    // Get related elements
+    const textarea = unifiedInput.querySelector('textarea');
+    const fileInput = unifiedInput.querySelector('input[type="file"]');
+    const placeholder = unifiedInput.querySelector('.input-placeholder');
+    const fileInfo = unifiedInput.querySelector('.file-info-content');
+    
+    // Clear file input
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
+    // Clear stored file content
+    unifiedInput.removeAttribute('data-file-content');
+    
+    // Remove file info
+    if (fileInfo) {
+        fileInfo.remove();
+    }
+    
+    // Show placeholder
+    if (placeholder) {
+        placeholder.style.display = 'block';
+    }
+    
+    // Hide textarea
+    if (textarea) {
+        textarea.style.display = 'none';
+        textarea.value = '';
+    }
+}
+
+// Standard Input Area - 通用输入区域管理
+
+// Initialize RNAmigos2 CIF file upload (old HTML structure)
+function initializeRNAmigos2CifFileUpload() {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) {
+        return;
+    }
+    
+    // Remove existing event listeners to prevent duplicates
+    const newFileUpload = fileUpload.cloneNode(true);
+    const newFileInput = fileInput.cloneNode(true);
+    
+    // Preserve the original IDs
+    newFileUpload.id = 'rnamigos2FileUpload';
+    newFileInput.id = 'rnamigos2FileInput';
+    
+    // Replace the old elements with new ones to remove all event listeners
+    fileUpload.parentNode.replaceChild(newFileUpload, fileUpload);
+    fileInput.parentNode.replaceChild(newFileInput, fileInput);
+    
+    // Get references to the new elements
+    const cleanFileUpload = newFileUpload;
+    const cleanFileInput = newFileInput;
+    
+    // Click handler - only allow file selection when no file is uploaded
+    cleanFileUpload.addEventListener('click', (e) => {
+        // Check if file info is displayed (file is uploaded)
+        const fileInfo = cleanFileUpload.querySelector('.file-info-content');
+        if (fileInfo && fileInfo.style.display !== 'none') {
+            // File is uploaded, don't allow new file selection
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        try {
+            cleanFileInput.click();
+        } catch (error) {
+            // Silent error handling
+        }
+    });
+    
+    // Drag and drop handlers
+    cleanFileUpload.addEventListener('dragover', handleDragOver);
+    cleanFileUpload.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        cleanFileUpload.classList.remove('dragover');
+    });
+    cleanFileUpload.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanFileUpload.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleRNAmigos2CifFileUpload(files[0]);
+        }
+    });
+    
+    // File input change handler
+    cleanFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleRNAmigos2CifFileUpload(e.target.files[0]);
+        }
+    });
+}
+
+// Handle RNAmigos2 CIF file upload
+function handleRNAmigos2CifFileUpload(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Read file content and store it for later use
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fileContent = e.target.result;
+        // Store file content in a data attribute for later retrieval
+        fileUpload.setAttribute('data-file-content', fileContent);
+        
+        // Display file info
+        displayRNAmigos2CifFileInfo(file);
+    };
+    
+    reader.onerror = function() {
+        showNotification('Error reading file', 'error');
+    };
+    
+    reader.readAsText(file);
+}
+
+// Display RNAmigos2 CIF file info
+function displayRNAmigos2CifFileInfo(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    if (!fileUpload) return;
+    
+    const uploadContent = fileUpload.querySelector('.upload-content');
+    let fileInfo = fileUpload.querySelector('.file-info-content');
+    
+    // Hide upload content
+    if (uploadContent) uploadContent.style.display = 'none';
+    
+    // Remove existing file info if any
+    if (fileInfo) {
+        fileInfo.remove();
+    }
+    
+    // Create and add new file info
+    const newFileInfo = createRNAmigos2CifFileInfoElement(file);
+    fileUpload.appendChild(newFileInfo);
+}
+
+// Create RNAmigos2 CIF file info element
+function createRNAmigos2CifFileInfoElement(file) {
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info-content';
+    fileInfo.style.display = 'flex';
+    
+    // Use the same icon logic as other file uploads
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const iconClass = fileExtension === 'cif' || fileExtension === 'mmcif' ? 'fa-file-code' : 'fa-file-alt';
+    
+    fileInfo.innerHTML = `
+        <i class="fas ${iconClass}"></i>
+        <div class="file-details">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+        </div>
+        <button class="btn-remove-file" onclick="event.stopPropagation(); removeRNAmigos2CifFile()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    return fileInfo;
+}
+
+// Remove RNAmigos2 CIF file
+function removeRNAmigos2CifFile() {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Clear file input
+    fileInput.value = '';
+    
+    // Hide file info and show upload content
+    const fileInfo = fileUpload.querySelector('.file-info-content');
+    if (fileInfo) {
+        fileInfo.style.display = 'none';
+    }
+    
+    const uploadContent = fileUpload.querySelector('.upload-content');
+    if (uploadContent) {
+        uploadContent.style.display = 'flex';
+    }
+    
+    // Clear stored file content
+    fileUpload.removeAttribute('data-file-content');
+}
+
+// Auto-resize textarea function
+function autoResizeTextarea(textarea) {
+    if (!textarea) return;
+    
+    // Reset height to auto to get the natural content height
+    textarea.style.height = 'auto';
+    
+    // Get the scroll height (content height)
+    const scrollHeight = textarea.scrollHeight;
+    
+    // Set the height to the scroll height, but ensure minimum height
+    const minHeight = 180; // Match CSS min-height
+    const newHeight = Math.max(scrollHeight, minHeight);
+    
+    textarea.style.height = newHeight + 'px';
+}
+
+// Check and toggle file upload area based on textarea content
+function checkAndToggleFileUpload() {
+    const standardInputAreas = document.querySelectorAll('.standard-input-area');
+    
+    standardInputAreas.forEach(area => {
+        const textarea = area.querySelector('textarea');
+        const fileUpload = area.querySelector('.file-upload-area');
+        
+        if (textarea && fileUpload) {
+            const hasContent = textarea.value.trim().length > 0;
+            
+            if (hasContent) {
+                // Disable file upload area when textarea has content
+                fileUpload.style.pointerEvents = 'none';
+                fileUpload.style.opacity = '0.6';
+                fileUpload.style.cursor = 'not-allowed';
+                fileUpload.setAttribute('data-disabled', 'true');
+            } else {
+                // Enable file upload area when textarea is empty
+                fileUpload.style.pointerEvents = '';
+                fileUpload.style.opacity = '';
+                fileUpload.style.cursor = '';
+                fileUpload.removeAttribute('data-disabled');
+            }
+        }
+    });
+}
+
+
+
+
+
+

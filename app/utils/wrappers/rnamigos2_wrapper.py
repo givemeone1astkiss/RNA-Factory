@@ -11,6 +11,7 @@ import logging
 from typing import Dict, Any, List, Optional
 import shutil
 import json
+from ..path_manager import get_model_path, get_venv_path
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,8 @@ class RNAmigos2Wrapper:
             model_path: Path to RNAmigos2 model directory
             environment_path: Path to uv virtual environment for RNAmigos2
         """
-        self.model_path = model_path or "/home/huaizhi/Software/models/rnamigos2"
-        self.environment_path = environment_path or "/home/huaizhi/Software/.venv_rnamigos2"
+        self.model_path = model_path or get_model_path("rnamigos2")
+        self.environment_path = environment_path or get_venv_path(".venv_rnamigos2")
         self.temp_dir = None
         
     def setup_environment(self) -> bool:

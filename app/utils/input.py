@@ -30,6 +30,9 @@ RNA_SEQUENCE_PATTERN = re.compile(r'^[AUCG]+$')
 # Protein sequence pattern (only standard amino acids, no whitespace)
 PROTEIN_SEQUENCE_PATTERN = re.compile(r'^[ARNDCQEGHILKMFPSTWYV]+$')
 
+# SMILES pattern (basic validation - contains only valid SMILES characters)
+SMILES_PATTERN = re.compile(r'^[A-Za-z0-9@+\-\[\]()=#\\/]+$')
+
 
 class InputValidationError(Exception):
     """Exception raised for input validation errors."""
@@ -783,5 +786,36 @@ def validate_rnamigos2_input(data: Dict) -> Dict[str, Union[bool, str]]:
     except Exception as e:
         logger.error(f"RNAmigos2 input validation error: {e}")
         return {"valid": False, "error": f"Validation error: {str(e)}"}
+
+
+def validate_smiles(smiles: str) -> bool:
+    """
+    Validate if a string is a valid SMILES notation.
+    
+    Args:
+        smiles: SMILES string to validate
+        
+    Returns:
+        bool: True if SMILES is valid, False otherwise
+    """
+    if not smiles or not isinstance(smiles, str):
+        return False
+    
+    # Basic validation - check if it contains only valid SMILES characters
+    if not SMILES_PATTERN.match(smiles.strip()):
+        return False
+    
+    # Additional checks for common SMILES patterns
+    smiles = smiles.strip()
+    
+    # Must not be empty
+    if not smiles:
+        return False
+    
+    # Must contain at least one letter (element symbol)
+    if not re.search(r'[A-Za-z]', smiles):
+        return False
+    
+    return True
 
 

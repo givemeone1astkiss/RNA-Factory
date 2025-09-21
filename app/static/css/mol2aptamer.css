@@ -1,0 +1,323 @@
+/* Mol2Aptamer Specific Styles */
+.mol2aptamer-input{
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    grid-column: 1 / -1; /* 跨越整个网格宽度 */
+    width: 100%;
+}
+
+
+.mol2aptamer-input .input-row {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.mol2aptamer-input .file-upload-area {
+    flex: 1;
+    min-height: 120px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--input-bg);
+}
+
+.mol2aptamer-input .file-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.mol2aptamer-input .upload-content {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.mol2aptamer-input .upload-content i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.mol2aptamer-input .upload-content p {
+    margin: 0 0 5px 0;
+    font-weight: 500;
+}
+
+.mol2aptamer-input .upload-content small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.mol2aptamer-input .text-input-area {
+    flex: 1;
+}
+
+.mol2aptamer-input .text-input-area textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none; /* 取消手动缩放功能 */
+    overflow: hidden; /* 隐藏滚动条，让内容完全自适应 */
+    transition: all 0.3s ease;
+}
+
+.mol2aptamer-input .text-input-area textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.mol2aptamer-input .text-input-area textarea::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Parameters Grid */
+.parameters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.parameter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.parameter-group label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.parameter-group input,
+.parameter-group select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.parameter-group input:focus,
+.parameter-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.parameter-group input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.parameter-group input[type="number"]::-webkit-outer-spin-button,
+.parameter-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Results Display Styles - BPFold style for summary, RNAmigos2 style for table */
+.mol2aptamer-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* BPFold style for summary information (圆角彩色块方式) */
+.mol2aptamer-results .sequence-info {
+    margin-bottom: 1rem;
+}
+
+.mol2aptamer-results .sequence-info-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mol2aptamer-results .sequence-length {
+    display: inline-block;
+    background: var(--accent-primary);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    min-width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 为每条信息分配不同的颜色 */
+.mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(1) {
+    background: #28a745; /* 绿色 - Best ΔG */
+}
+
+.mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(2) {
+    background: #ffc107; /* 黄色 - Worst ΔG */
+}
+
+.mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(3) {
+    background: #17a2b8; /* 青色 - Average ΔG */
+}
+
+.mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(4) {
+    background: #6f42c1; /* 紫色 - Nucleotide Distribution */
+}
+
+/* RNAmigos2 style for interactions table */
+.mol2aptamer-results .interactions-table {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.mol2aptamer-results .interactions-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mol2aptamer-results .interactions-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.mol2aptamer-results .interactions-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.mol2aptamer-results .interactions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.mol2aptamer-results .interactions-table .sequence-cell {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8rem;
+    max-width: 300px;
+    word-break: break-all;
+}
+
+.mol2aptamer-results .interactions-table .length-cell {
+    text-align: center;
+    font-weight: 600;
+}
+
+.mol2aptamer-results .interactions-table .score-cell {
+    font-weight: 600;
+    text-align: center;
+}
+
+.mol2aptamer-results .interactions-table .score-high {
+    color: #28a745;
+}
+
+.mol2aptamer-results .interactions-table .score-medium {
+    color: #ffc107;
+}
+
+.mol2aptamer-results .interactions-table .score-low {
+    color: #dc3545;
+}
+
+/* Dark mode adjustments for results */
+[data-theme="dark"] .mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(1) {
+    background: #20c997; /* 暗色模式下的绿色 */
+}
+
+[data-theme="dark"] .mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(2) {
+    background: #fd7e14; /* 暗色模式下的橙色 */
+}
+
+[data-theme="dark"] .mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(3) {
+    background: #0dcaf0; /* 暗色模式下的青色 */
+}
+
+[data-theme="dark"] .mol2aptamer-results .sequence-info-stats .sequence-length:nth-child(4) {
+    background: #8b5cf6; /* 暗色模式下的紫色 */
+}
+
+[data-theme="dark"] .mol2aptamer-results .interactions-table {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mol2aptamer-input .input-row {
+        flex-direction: column;
+    }
+    
+    .parameters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mol2aptamer-results .results-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .mol2aptamer-results .interactions-table {
+        overflow-x: auto;
+    }
+    
+    .mol2aptamer-results .interactions-table .sequence-cell {
+        max-width: 200px;
+    }
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .mol2aptamer-section {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .mol2aptamer-input .file-upload-area {
+    background: var(--input-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .mol2aptamer-input .text-input-area textarea {
+    background: var(--input-bg-dark);
+    border-color: var(--border-color-dark);
+    color: var(--text-primary-dark);
+}
+
+[data-theme="dark"] .parameter-group input,
+[data-theme="dark"] .parameter-group select {
+    background: var(--input-bg-dark);
+    border-color: var(--border-color-dark);
+    color: var(--text-primary-dark);
+}
+
+[data-theme="dark"] .aptamer-sequence {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .aptamer-sequence .sequence-text {
+    background: var(--code-bg-dark);
+    border-color: var(--border-color-dark);
+    color: var(--text-primary-dark);
+}

@@ -11,6 +11,7 @@ import logging
 from typing import Dict, Any, List, Optional
 import shutil
 import json
+from ..path_manager import get_model_path, get_venv_path
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,8 @@ class RNAformerWrapper:
             model_path: Path to RNAformer model directory
             environment_path: Path to uv virtual environment for RNAformer
         """
-        self.model_path = model_path or "/home/huaizhi/Software/models/RNAformer"
-        self.environment_path = environment_path or "/home/huaizhi/Software/.venv_rnaformer"
+        self.model_path = model_path or get_model_path("RNAformer")
+        self.environment_path = environment_path or get_venv_path(".venv_rnaformer")
         self.model_state_dict = os.path.join(self.model_path, "models", "RNAformer_32M_state_dict_biophysical.pth")
         self.model_config = os.path.join(self.model_path, "models", "RNAformer_32M_config_biophysical.yml")
         

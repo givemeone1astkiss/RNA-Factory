@@ -1,0 +1,245 @@
+/* RNAFlow Specific Styles */
+.rnaflow-input {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    grid-column: 1 / -1; /* 跨越整个网格宽度 */
+    width: 100%;
+    .input-row {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        height: auto !important; /* 允许行高度自适应 */
+        min-height: auto !important; /* 移除最小高度限制 */
+        .file-upload-area {
+            width: 50%;
+            height: auto !important; /* 允许文件上传区域高度自适应 */
+        }
+    }
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .rnaflow-section {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+.rnaflow-input .text-input-area {
+    flex: 1;
+    display: block !important; /* 覆盖flex布局，允许文本区域自由调整高度 */
+    height: auto !important; /* 允许容器高度自适应 */
+    min-height: auto !important; /* 移除最小高度限制 */
+}
+
+.rnaflow-input .text-input-area textarea {
+    width: 100% !important;
+    min-height: 120px !important;
+    height: auto !important; /* 允许JavaScript动态设置高度 */
+    max-height: none !important; /* 不限制最大高度 */
+    padding: 12px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    resize: none !important; /* 取消手动缩放功能 */
+    overflow: hidden !important; /* 隐藏滚动条，让内容完全自适应 */
+    box-sizing: border-box !important;
+    transition: all 0.3s ease !important;
+}
+
+.rnaflow-input .text-input-area textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Parameter controls */
+.rnaflow-parameters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.rnaflow-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.rnaflow-parameter label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.rnaflow-parameter input,
+.rnaflow-parameter select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.rnaflow-parameter input:focus,
+.rnaflow-parameter select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+/* Results Display Styles - BPFold style for summary, RNAmigos2 style for table */
+.rnaflow-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* BPFold style for summary information (圆角彩色块方式) */
+.rnaflow-results .sequence-info {
+    margin-bottom: 1rem;
+}
+
+.rnaflow-results .sequence-info-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.rnaflow-results .sequence-length {
+    display: inline-block;
+    background: var(--accent-primary);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    min-width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 为每条信息分配不同的颜色 */
+.rnaflow-results .sequence-info-stats .sequence-length:nth-child(1) {
+    background: #28a745; /* 绿色 - Highest Confidence */
+}
+
+.rnaflow-results .sequence-info-stats .sequence-length:nth-child(2) {
+    background: #ffc107; /* 黄色 - Lowest Confidence */
+}
+
+.rnaflow-results .sequence-info-stats .sequence-length:nth-child(3) {
+    background: #17a2b8; /* 青色 - Average Confidence */
+}
+
+.rnaflow-results .sequence-info-stats .sequence-length:nth-child(4) {
+    background: #6f42c1; /* 紫色 - Nucleotide Distribution */
+}
+
+/* RNAmigos2 style for interactions table */
+.rnaflow-results .interactions-table {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.rnaflow-results .interactions-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rnaflow-results .interactions-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.rnaflow-results .interactions-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.rnaflow-results .interactions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.rnaflow-results .interactions-table .sequence-cell {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8rem;
+    max-width: 300px;
+    word-break: break-all;
+}
+
+.rnaflow-results .interactions-table .length-cell {
+    text-align: center;
+    font-weight: 600;
+}
+
+.rnaflow-results .interactions-table .score-cell {
+    font-weight: 600;
+    text-align: center;
+}
+
+.rnaflow-results .interactions-table .score-high {
+    color: #28a745;
+}
+
+.rnaflow-results .interactions-table .score-medium {
+    color: #ffc107;
+}
+
+.rnaflow-results .interactions-table .score-low {
+    color: #dc3545;
+}
+
+/* Dark mode adjustments for results */
+[data-theme="dark"] .rnaflow-results .sequence-info-stats .sequence-length:nth-child(1) {
+    background: #20c997; /* 暗色模式下的绿色 */
+}
+
+[data-theme="dark"] .rnaflow-results .sequence-info-stats .sequence-length:nth-child(2) {
+    background: #fd7e14; /* 暗色模式下的橙色 */
+}
+
+[data-theme="dark"] .rnaflow-results .sequence-info-stats .sequence-length:nth-child(3) {
+    background: #0dcaf0; /* 暗色模式下的青色 */
+}
+
+[data-theme="dark"] .rnaflow-results .sequence-info-stats .sequence-length:nth-child(4) {
+    background: #8b5cf6; /* 暗色模式下的紫色 */
+}
+
+[data-theme="dark"] .rnaflow-results .interactions-table {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .rnaflow-results .results-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .rnaflow-results .interactions-table {
+        overflow-x: auto;
+    }
+    
+    .rnaflow-results .interactions-table .sequence-cell {
+        max-width: 200px;
+    }
+}
+
+
+

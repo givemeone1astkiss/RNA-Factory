@@ -9,6 +9,7 @@ import tempfile
 import logging
 from typing import Dict, Any, List
 import shutil
+from ..path_manager import get_model_path, get_venv_path
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class UFoldWrapper:
             model_path: Path to UFold model directory
             environment_path: Path to uv virtual environment for UFold
         """
-        self.model_path = model_path or "/home/huaizhi/Software/models/UFold"
-        self.environment_path = environment_path or "/home/huaizhi/Software/.venv_ufold"
+        self.model_path = model_path or get_model_path("UFold")
+        self.environment_path = environment_path or get_venv_path(".venv_ufold")
         self.temp_dir = None
         
         # Validate model path
@@ -310,6 +311,12 @@ class UFoldWrapper:
         modified_content = modified_content.replace(
             "'num_workers': 6,",
             "'num_workers': 0,"
+        )
+        
+        # Disable VARNA visualization to avoid Java dependency
+        modified_content = modified_content.replace(
+            "if not args.nc:\n            subprocess.Popen([\"java\", \"-cp\", \"VARNAv3-93.jar\", \"fr.orsay.lri.varna.applications.VARNAcmd\", '-i', 'results/save_ct_file/' + seq_name[0].replace('/','_') + '.ct', '-o', 'results/save_varna_fig/' + seq_name[0].replace('/','_') + '_radiate.png', '-algorithm', 'radiate', '-resolution', '8.0', '-bpStyle', 'lw'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]\n        else:\n            subprocess.Popen([\"java\", \"-cp\", \"VARNAv3-93.jar\", \"fr.orsay.lri.varna.applications.VARNAcmd\", '-i', 'results/save_ct_file/' + seq_name[0].replace('/','_') + '.ct', '-o', 'results/save_varna_fig/' + seq_name[0].replace('/','_') + '_radiatenew.png', '-algorithm', 'radiate', '-resolution', '8.0', '-bpStyle', 'lw','-auxBPs', tertiary_bp], stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]",
+            "# VARNA visualization disabled - Java not available\n        # if not args.nc:\n        #     subprocess.Popen([\"java\", \"-cp\", \"VARNAv3-93.jar\", \"fr.orsay.lri.varna.applications.VARNAcmd\", '-i', 'results/save_ct_file/' + seq_name[0].replace('/','_') + '.ct', '-o', 'results/save_varna_fig/' + seq_name[0].replace('/','_') + '_radiate.png', '-algorithm', 'radiate', '-resolution', '8.0', '-bpStyle', 'lw'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]\n        # else:\n        #     subprocess.Popen([\"java\", \"-cp\", \"VARNAv3-93.jar\", \"fr.orsay.lri.varna.applications.VARNAcmd\", '-i', 'results/save_ct_file/' + seq_name[0].replace('/','_') + '.ct', '-o', 'results/save_varna_fig/' + seq_name[0].replace('/','_') + '_radiatenew.png', '-algorithm', 'radiate', '-resolution', '8.0', '-bpStyle', 'lw','-auxBPs', tertiary_bp], stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]\n        print('VARNA visualization skipped - Java not available')"
         )
         
         # Fix creatmat function to handle invalid one-hot encoding
