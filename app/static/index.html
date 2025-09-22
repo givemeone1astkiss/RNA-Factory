@@ -16,6 +16,7 @@
     <link href="/static/css/rnamigos2.css" rel="stylesheet">
     <link href="/static/css/mol2aptamer.css" rel="stylesheet">
     <link href="/static/css/rnaflow.css" rel="stylesheet">
+    <link href="/static/css/rnaframeflow.css" rel="stylesheet">
     <link href="/static/css/standard-input.css" rel="stylesheet">
 </head>
 <body>
@@ -341,6 +342,61 @@
                                 </div>
                             </div>
 
+                            <!-- RNA-FrameFlow Specific Input Area -->
+                            <div class="rnaframeflow-input" id="rnaframeflowInput" style="display: none;">
+                                <!-- Structure Generation Parameters Section -->
+                                <div class="rnaframeflow-section input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cog"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="parameters-grid">
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowSequenceLength">Structure Length</label>
+                                            <input type="number" id="rnaframeflowSequenceLength" min="10" max="200" value="50" placeholder="50">
+                                            <small>Length of RNA structure to generate (10-200 residues)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowNumSequences">Number of Structures</label>
+                                            <input type="number" id="rnaframeflowNumSequences" min="1" max="20" value="5" placeholder="5">
+                                            <small>Number of 3D structures to generate (1-20 structures)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowTemperature">Temperature</label>
+                                            <input type="number" id="rnaframeflowTemperature" min="0.1" max="2.0" step="0.1" value="1.0" placeholder="1.0">
+                                            <small>Sampling temperature for structure generation (0.1-2.0)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowSeed">Random Seed</label>
+                                            <input type="number" id="rnaframeflowSeed" min="0" max="999999" value="" placeholder="Random">
+                                            <small>Random seed for reproducible results (leave empty for random)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowNumTimesteps">Sampling Timesteps</label>
+                                            <input type="number" id="rnaframeflowNumTimesteps" min="10" max="200" value="50" placeholder="50">
+                                            <small>Number of timesteps for sampling (10-200)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowMinT">Minimum Time</label>
+                                            <input type="number" id="rnaframeflowMinT" min="0.001" max="0.1" step="0.001" value="0.01" placeholder="0.01">
+                                            <small>Minimum time step for interpolation (0.001-0.1)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowExpRate">Exponential Rate</label>
+                                            <input type="number" id="rnaframeflowExpRate" min="1" max="50" value="10" placeholder="10">
+                                            <small>Exponential rate for sampling schedule (1-50)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="rnaframeflowSelfCondition">Self-Conditioning</label>
+                                            <select id="rnaframeflowSelfCondition">
+                                                <option value="true">Enabled</option>
+                                                <option value="false">Disabled</option>
+                                            </select>
+                                            <small>Enable self-conditioning during sampling</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                         </div>
 
@@ -421,6 +477,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <!-- JSZip library for ZIP file creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- Custom JS -->
     <script src="/static/js/app.js"></script>
     <script>

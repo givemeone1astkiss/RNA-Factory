@@ -27,6 +27,7 @@ def create_app(config_name="default"):
     from app.api.rnaformer_routes import rnaformer_bp
     from app.api.mol2aptamer_routes import mol2aptamer_bp
     from app.api.rnaflow_routes import rnaflow_bp
+    from app.api.rnaframeflow_routes import rnaframeflow_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -37,6 +38,7 @@ def create_app(config_name="default"):
     app.register_blueprint(rnaformer_bp, url_prefix="/api/rnaformer")
     app.register_blueprint(mol2aptamer_bp, url_prefix="/api/mol2aptamer")
     app.register_blueprint(rnaflow_bp, url_prefix="/api/rnaflow")
+    app.register_blueprint(rnaframeflow_bp, url_prefix="/api/rnaframeflow")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -246,6 +248,33 @@ def preload_models(app):
                 "environment_required": True,
                 "environment_type": "uv",
                 "environment_path": "/home/huaizhi/Software/.venv_rnaflow"
+            },
+            {
+                "id": "rnaframeflow",
+                "name": "RNA-FrameFlow",
+                "type": "rna_design",
+                "category": "de_novo_design",
+                "category_name": "De Novo Design",
+                "description": "RNA-FrameFlow is a generative model for 3D RNA backbone structure design based on SE(3) flow matching. It generates all-atom RNA backbone structures using flow matching techniques for 3D RNA structure design.",
+                "input_types": ["structure_length", "num_structures"],
+                "output_types": ["rna_structures", "3d_coordinates", "pdb_files"],
+                "model_path": "utils/wrappers/rnaframeflow_wrapper.py",
+                "weights_path": "models/rna-backbone-design",
+                "input_description": "Requires desired structure length and number of structures to generate",
+                "output_description": "Outputs generated 3D RNA backbone structures in PDB format (no sequence information)",
+                "github_url": "https://github.com/rish-16/rna-backbone-design",
+                "paper_url": "https://arxiv.org/abs/2406.13839",
+                "features": [
+                    "SE(3) flow matching",
+                    "3D RNA backbone design",
+                    "All-atom structure generation",
+                    "PDB file output",
+                    "Flow matching techniques",
+                    "High-quality RNA structures"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_rnaframeflow"
             }
         ]
 

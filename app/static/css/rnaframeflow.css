@@ -1,0 +1,462 @@
+/* RNA-FrameFlow Specific Styles - Simplified to use common styles */
+
+/* Parameters Grid for RNA-FrameFlow - optimized for 10 parameters */
+.rnaframeflow-input .parameters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Ensure parameter groups fill available space */
+.rnaframeflow-input .parameter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Allow shrinking below content size */
+}
+
+/* Responsive adjustments for better space utilization */
+@media (min-width: 1400px) {
+    .rnaframeflow-input .parameters-grid {
+        grid-template-columns: repeat(5, 1fr); /* 5 columns on extra large screens */
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .rnaframeflow-input .parameters-grid {
+        grid-template-columns: repeat(4, 1fr); /* 4 columns on large screens */
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+    .rnaframeflow-input .parameters-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
+    }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+    .rnaframeflow-input .parameters-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+    }
+}
+
+@media (max-width: 599px) {
+    .rnaframeflow-input .parameters-grid {
+        grid-template-columns: 1fr; /* 1 column on mobile */
+    }
+}
+
+/* Dark mode support for parameters grid */
+[data-theme="dark"] .rnaframeflow-input .parameters-grid {
+    /* Inherits from parent, no additional styling needed */
+}
+
+/* Note section */
+.rnaframeflow-note {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: 8px;
+}
+
+.rnaframeflow-note .note-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.rnaframeflow-note .note-content i {
+    color: var(--info-color);
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.rnaframeflow-note .note-content p {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.rnaframeflow-note .note-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .rnaframeflow-note {
+    background: var(--info-bg);
+    border-color: var(--info-border);
+}
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.rnaframeflow-parameter input {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    flex: 1;
+    width: 100%;
+}
+
+.rnaframeflow-parameter input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: white;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--input-bg);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    pointer-events: none;
+}
+
+.rnaframeflow-parameter small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
+/* Advanced Parameters */
+.rnaframeflow-advanced {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.rnaframeflow-advanced .btn-link {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.rnaframeflow-advanced .btn-link:hover {
+    color: var(--accent-secondary);
+    text-decoration: none;
+}
+
+.rnaframeflow-advanced .btn-link i {
+    transition: transform 0.3s ease;
+}
+
+.rnaframeflow-advanced .btn-link.expanded i {
+    transform: rotate(180deg);
+}
+
+.advanced-params {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark mode styles */
+[data-theme="dark"] .rnaframeflow-input {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .rnaframeflow-parameters {
+    background: var(--input-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .rnaframeflow-parameter {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .rnaframeflow-parameter:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .rnaframeflow-parameter input {
+    background: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .rnaframeflow-parameter input:focus {
+    border-color: var(--accent-primary);
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .input-suffix {
+    background: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .advanced-params {
+    background: var(--input-bg);
+    border-color: var(--border-color);
+}
+
+/* Note section */
+.rnaframeflow-note {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: 8px;
+}
+
+.rnaframeflow-note .note-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.rnaframeflow-note .note-content i {
+    color: var(--info-color);
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.rnaframeflow-note .note-content p {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.rnaframeflow-note .note-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Results display styles */
+.rnaframeflow-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rnaframeflow-results .result-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rnaframeflow-results .result-item h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rnaframeflow-results .result-item h6 i {
+    color: var(--primary-color);
+}
+
+.rnaframeflow-results .sequence-info-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.rnaframeflow-results .extend-info {
+    display: inline-block;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    min-width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 为每条信息分配不同的颜色 */
+.rnaframeflow-results .sequence-info-stats .extend-info:nth-child(1) {
+    background: #28a745; /* 绿色 - Highest Confidence */
+}
+
+.rnaframeflow-results .sequence-info-stats .extend-info:nth-child(2) {
+    background: #ffc107; /* 黄色 - Lowest Confidence */
+}
+
+.rnaframeflow-results .sequence-info-stats .extend-info:nth-child(3) {
+    background: #17a2b8; /* 青色 - Average Confidence */
+}
+
+.rnaframeflow-results .interactions-table {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.rnaframeflow-results .interactions-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rnaframeflow-results .interactions-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.rnaframeflow-results .interactions-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.rnaframeflow-results .interactions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.rnaframeflow-results .interactions-table .sequence-cell {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8rem;
+    max-width: 300px;
+    word-break: break-all;
+}
+
+.rnaframeflow-results .interactions-table .length-cell {
+    text-align: center;
+    font-weight: 600;
+}
+
+.rnaframeflow-results .interactions-table .score-cell {
+    font-weight: 600;
+    text-align: center;
+}
+
+.rnaframeflow-results .interactions-table .score-high {
+    color: #28a745;
+}
+
+.rnaframeflow-results .interactions-table .score-medium {
+    color: #ffc107;
+}
+
+.rnaframeflow-results .interactions-table .score-low {
+    color: #dc3545;
+}
+
+/* Dark mode support for new styles */
+[data-theme="dark"] .rnaframeflow-note {
+    background: var(--info-bg);
+    border-color: var(--info-border);
+}[data-theme="dark"] .rnaframeflow-results .result-item {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .rnaframeflow-results .extend-info {
+    background: var(--primary-bg);
+    color: white;
+    border: none;
+}
+
+/* Dark mode color adjustments */
+[data-theme="dark"] .rnaframeflow-results .sequence-info-stats .extend-info:nth-child(1) {
+    background: #20c997; /* 暗色模式下的绿色 */
+}
+
+[data-theme="dark"] .rnaframeflow-results .sequence-info-stats .extend-info:nth-child(2) {
+    background: #fd7e14; /* 暗色模式下的橙色 */
+}
+
+[data-theme="dark"] .rnaframeflow-results .sequence-info-stats .extend-info:nth-child(3) {
+    background: #0dcaf0; /* 暗色模式下的青色 */
+}
+
+[data-theme="dark"] .rnaframeflow-results .interactions-table {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .rnaframeflow-results .interactions-table th {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] .rnaframeflow-results .interactions-table td {
+    color: var(--text-primary);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .rnaframeflow-parameters {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .rnaframeflow-input {
+        gap: 1rem;
+    }
+    
+    .rnaframeflow-parameter {
+        padding: 1rem;
+    }
+    
+    .rnaframeflow-results .sequence-info-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .rnaframeflow-results .interactions-table {
+        overflow-x: auto;
+    }
+    
+    .rnaframeflow-results .interactions-table .sequence-cell {
+        max-width: 200px;
+    }
+}
+

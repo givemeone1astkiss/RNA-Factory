@@ -568,6 +568,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    width: 100%;
 }
 
 .method-header {
@@ -1573,6 +1574,12 @@ body {
     align-items: center;
     z-index: 10000;
     transition: opacity 0.8s ease, visibility 0.8s ease;
+    overflow: hidden;
+}
+
+/* 当loading page显示时，禁止body滚动 */
+body.loading {
+    overflow: hidden;
 }
 
 .loading-page.fade-out {

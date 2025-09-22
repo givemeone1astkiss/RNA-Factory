@@ -69,6 +69,13 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Supports customizable RNA length and sample generation
 - [GitHub](https://github.com/divnori/rnaflow) | [Paper](https://arxiv.org/abs/2405.18768)
 
+**RNA-FrameFlow**
+- Flow matching model for de novo 3D RNA backbone design using SE(3) flow matching
+- Generates high-quality 3D RNA backbone structures without sequence information
+- Supports customizable structure length, sampling parameters, and generation settings
+- Provides confidence scoring and trajectory files for analysis
+- [GitHub](https://github.com/rish-16/rna-backbone-design) | [Paper](https://arxiv.org/abs/2406.13839)
+
 ### 🔧 Platform Capabilities
 
 - **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences
@@ -96,6 +103,7 @@ RNA-Factory/
 │   │   ├── rnamigos2_routes.py  # RNAmigos2 API endpoints
 │   │   ├── mol2aptamer_routes.py # Mol2Aptamer API endpoints
 │   │   ├── rnaflow_routes.py    # RNAFlow API endpoints
+│   │   ├── rnaframeflow_routes.py # RNA-FrameFlow API endpoints
 │   │   ├── copilot_routes.py    # AI assistant API endpoints
 │   │   └── model_config_routes.py # Model configuration endpoints
 │   ├── copilot/                 # AI assistant and RAG system
@@ -162,7 +170,7 @@ RESTful API endpoints for:
 ```bash
    git clone https://github.com/your-username/RNA-Factory.git
    cd RNA-Factory
-```
+   ```
 
 2. **Install dependencies**
    ```bash
@@ -173,12 +181,12 @@ RESTful API endpoints for:
 ```bash
    # Each model requires its own virtual environment
    # The platform will automatically set up environments on first use
-```
+   ```
 
 4. **Run the application**
 ```bash
    python run.py
-```
+   ```
 
 5. **Access the platform**
    Open your browser and navigate to `http://localhost:5000`
@@ -215,6 +223,13 @@ RESTful API endpoints for:
 3. Specify desired RNA length and number of samples
 4. Run analysis to generate RNA sequences and structures
 5. View results with confidence scores and download PDB structures
+
+#### RNA-FrameFlow
+1. Select RNA-FrameFlow for de novo 3D RNA backbone design
+2. Configure structure parameters (length, number of structures, temperature, random seed)
+3. Set advanced sampling parameters (timesteps, minimum time, exponential rate, self-conditioning)
+4. Run analysis to generate 3D RNA backbone structures
+5. View results with confidence scores and download PDB files with trajectory data
 
 ### AI Assistant
 

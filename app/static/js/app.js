@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function showLoadingPage() {
     const loadingPage = document.getElementById('loadingPage');
     
+    // Disable body scrolling when loading page is shown
+    document.body.classList.add('loading');
+    
     // Simple loading animation with random duration
     const minDuration = 2000; // Minimum 2 seconds
     const maxDuration = 4000; // Maximum 4 seconds
@@ -45,6 +48,8 @@ function showLoadingPage() {
         loadingPage.classList.add('fade-out');
         setTimeout(() => {
             loadingPage.style.display = 'none';
+            // Re-enable body scrolling when loading page is hidden
+            document.body.classList.remove('loading');
         }, 800);
     }, duration);
 }
@@ -325,6 +330,27 @@ function clearInputAreas() {
     resetAllStandardInputAreas();
 }
 
+// Clear temp folder for RNA-FrameFlow when switching models
+function clearTempFolder() {
+    // Send request to clear temp folder
+    fetch('/api/rnaframeflow/clear-temp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Temp folder cleared successfully');
+        } else {
+            console.warn('Failed to clear temp folder:', response.status);
+        }
+    })
+    .catch(error => {
+        console.warn('Error clearing temp folder:', error);
+    });
+}
+
 // Reset all standard-input-area components to initial state
 function resetAllStandardInputAreas() {
     // Reset RNAmigos2 CIF file upload (old HTML structure)
@@ -493,6 +519,9 @@ function switchToModel(modelId) {
     // Clear input areas when switching models
     clearInputAreas();
     
+    // Clear temp folder for RNA-FrameFlow when switching models
+    clearTempFolder();
+    
     // Animate content transition
     animateContentTransition(() => {
         updateModelSelection();
@@ -660,6 +689,15 @@ function adjustInputInterface() {
         setTimeout(() => {
             initializeSingleBlockInput('rnaflowProteinUnifiedInput', 'rnaflowProteinSequence', 'rnaflowProteinFileInput', 'rnaflowProteinPlaceholder');
         }, 100);
+    } else if (currentModel.id === 'rnaframeflow') {
+        // RNA-FrameFlow model has specific input interface
+        const rnaframeflowInput = document.getElementById('rnaframeflowInput');
+        if (rnaframeflowInput) {
+            rnaframeflowInput.style.display = 'flex';
+        }
+        // Hide general input areas for RNA-FrameFlow
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports parameter input';
     } else {
         // Other models (BPFold, UFold, MXFold2, RNAformer)
         fileAcceptInfo.textContent = 'Supports FASTA, TXT formats';
@@ -891,8 +929,8 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, Mol2Aptamer, and RNAFlow, skip general input validation as they have their own validation
-    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow') {
+    // For RNAmigos2, Mol2Aptamer, RNAFlow, and RNA-FrameFlow, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
@@ -1003,6 +1041,17 @@ async function runAnalysis() {
             } else {
                 throw new Error(result.error);
             }
+        } else if (currentModel.id === 'rnaframeflow') {
+            const response = await runRNAFrameFlowAnalysis();
+            const result = await response.json();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'RNA-FrameFlow Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
         } else {
             // For models other than BPFold, show a message that they are not yet implemented
             const result = {
@@ -1080,6 +1129,8 @@ function displayResults(result) {
         html = displayMol2AptamerResults(result);
     } else if (currentModel.id === 'rnaflow') {
         html = displayRNAFlowResults(result);
+    } else if (currentModel.id === 'rnaframeflow') {
+        html = displayRNAFrameFlowResults(result);
     } else {
         html = displayDefaultResults(result.result);
     }
@@ -2634,6 +2685,8 @@ function downloadAllResults() {
             downloadAllMol2AptamerResults();
         } else if (currentModel.id === 'rnaflow') {
             downloadAllRNAFlowResults();
+        } else if (currentModel.id === 'rnaframeflow') {
+            downloadAllRNAFrameFlowResults();
         } else {
             alert('Download not supported for this model');
         }
@@ -3011,6 +3064,143 @@ function downloadAllRNAFlowResults() {
         showNotification('RNAFlow results downloaded successfully!', 'success');
     } else {
         showNotification('No RNAFlow results available for download', 'warning');
+    }
+}
+
+// Download all RNA-FrameFlow results
+function downloadAllRNAFrameFlowResults() {
+    if (window.currentRNAFrameFlowResults && window.currentRNAFrameFlowResults.result) {
+        const results = window.currentRNAFrameFlowResults.result;
+        const structures = results.structures || [];
+        
+        if (structures.length === 0) {
+            showNotification('No RNA-FrameFlow results available for download', 'warning');
+            return;
+        }
+        
+        // Create a ZIP file containing PDB files
+        const zip = new JSZip();
+        
+        // Create CSV content for structure information
+        let csvContent = 'Rank,Structure_ID,Length,Confidence\n';
+        structures.forEach((structure, index) => {
+            csvContent += `${index + 1},Structure_${index + 1},${structure.length},${(structure.confidence * 100).toFixed(1)}%\n`;
+        });
+        
+        // Add CSV to ZIP
+        zip.file('rnaframeflow_structures.csv', csvContent);
+        
+        // Download PDB files and trajectory files from server and add to ZIP
+        const downloadPromises = structures.map((structure, index) => {
+            if (structure.pdb_file_path) {
+                const filename = structure.pdb_filename || `na_sample_${index}.pdb`;
+                
+                // 构建正确的下载URL
+                // pdb_file_path格式: /path/to/temp/samples/length_25/na_sample_0.pdb
+                // 需要提取: length_25/na_sample_0.pdb
+                const pathParts = structure.pdb_file_path.split('/');
+                const samplesIndex = pathParts.indexOf('samples');
+                if (samplesIndex !== -1 && samplesIndex + 2 < pathParts.length) {
+                    const relativePath = pathParts.slice(samplesIndex + 1).join('/');
+                    const downloadUrl = `/api/rnaframeflow/download/${relativePath}`;
+                    
+                    console.log(`Downloading PDB file: ${downloadUrl}`);
+                    
+                    // 下载主要PDB文件
+                    const mainPdbPromise = fetch(downloadUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Failed to download ${filename}: ${response.status}`);
+                            }
+                            return response.text();
+                        })
+                        .then(content => {
+                            console.log(`Successfully downloaded ${filename}, size: ${content.length} bytes`);
+                            // 使用实际的PDB文件名而不是索引
+                            const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
+                            zip.file(actualFilename, content);
+                        })
+                        .catch(error => {
+                            console.error(`Error downloading ${filename}:`, error);
+                            // 如果下载失败，尝试使用pdb_content
+                            if (structure.pdb_content) {
+                                console.log(`Falling back to pdb_content for ${filename}`);
+                                const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
+                                zip.file(actualFilename, structure.pdb_content);
+                            }
+                        });
+                    
+                    // 下载轨迹文件
+                    const trajFilename = filename.replace('.pdb', '_traj.pdb');
+                    const trajDownloadUrl = downloadUrl.replace('.pdb', '_traj.pdb');
+                    
+                    console.log(`Downloading trajectory file: ${trajDownloadUrl}`);
+                    
+                    const trajPdbPromise = fetch(trajDownloadUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                console.warn(`Trajectory file not found: ${trajFilename}`);
+                                return null; // 轨迹文件可能不存在，这是正常的
+                            }
+                            return response.text();
+                        })
+                        .then(content => {
+                            if (content) {
+                                console.log(`Successfully downloaded ${trajFilename}, size: ${content.length} bytes`);
+                                zip.file(trajFilename, content);
+                            }
+                        })
+                        .catch(error => {
+                            console.warn(`Error downloading trajectory file ${trajFilename}:`, error);
+                            // 轨迹文件下载失败不影响主要功能
+                        });
+                    
+                    // 等待两个文件都下载完成
+                    return Promise.all([mainPdbPromise, trajPdbPromise]);
+                } else {
+                    console.error(`Invalid pdb_file_path format: ${structure.pdb_file_path}`);
+                    // 回退到使用pdb_content
+                    if (structure.pdb_content) {
+                        const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
+                        zip.file(actualFilename, structure.pdb_content);
+                    }
+                    return Promise.resolve();
+                }
+            } else if (structure.pdb_content) {
+                // 回退到使用pdb_content
+                console.log(`Using pdb_content for structure ${index + 1}`);
+                const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
+                zip.file(actualFilename, structure.pdb_content);
+                return Promise.resolve();
+            }
+            return Promise.resolve();
+        });
+        
+        // Wait for all downloads to complete
+        Promise.all(downloadPromises).then(() => {
+            // Generate and download ZIP file
+            zip.generateAsync({type: 'blob'}).then(function(content) {
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'rnaframeflow_structures.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('RNA-FrameFlow structures downloaded successfully!', 'success');
+            }).catch(function(error) {
+                console.error('Error creating ZIP file:', error);
+                showNotification('Error creating download file', 'error');
+            });
+        }).catch(error => {
+            console.error('Error downloading PDB files:', error);
+            showNotification('Error downloading structure files', 'error');
+        });
+        
+    } else {
+        showNotification('No RNA-FrameFlow results available for download', 'warning');
     }
 }
 
@@ -3400,9 +3590,95 @@ async function runMol2AptamerAnalysis() {
     return response;
 }
 
+// Display RNA-FrameFlow results
+function displayRNAFrameFlowResults(results) {
+    if (!results || !results.result || !results.result.structures || results.result.structures.length === 0) {
+        return '<div class="alert alert-warning">No 3D structures generated</div>';
+    }
+    
+    // Store results globally for download functionality
+    window.currentRNAFrameFlowResults = results;
+    
+    // Get structures data
+    let structures = results.result.structures || [];
+    const statistics = results.result.statistics || {};
+    
+    // Sort structures by confidence (highest to lowest)
+    structures = structures.sort((a, b) => (b.confidence || 0.8) - (a.confidence || 0.8));
+    
+    // Calculate confidence statistics
+    const confidences = structures.map(struct => struct.confidence || 0.8);
+    const maxConfidence = Math.max(...confidences);
+    const minConfidence = Math.min(...confidences);
+    const avgConfidence = (confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length).toFixed(3);
+    
+    let html = '<div class="rnaframeflow-results">';
+    
+    // Summary information in BPFold style (圆角彩色块方式)
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-dna"></i>Design Results</h6>
+            <div class="sequence-info">
+                <div class="sequence-info-stats">
+                    <div class="extend-info">Highest Confidence: ${(maxConfidence * 100).toFixed(1)}%</div>
+                    <div class="extend-info">Lowest Confidence: ${(minConfidence * 100).toFixed(1)}%</div>
+                    <div class="extend-info">Average Confidence: ${(avgConfidence * 100).toFixed(1)}%</div>
+            </div>
+            </div>
+        </div>
+    `;
+    
+    // Structure results table
+    const tableRows = structures.map((structure, index) => {
+        const confidence = structure.confidence || 0.8;
+        let scoreClass = 'score-low';
+        if (confidence > 0.7) scoreClass = 'score-high';
+        else if (confidence > 0.4) scoreClass = 'score-medium';
+        
+        // 使用实际的PDB文件名，如果没有则使用默认格式
+        const structureId = structure.pdb_filename || `na_sample_${index}.pdb`;
+        
+        return `
+            <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="sequence-cell text-center">${structureId}</td>
+                <td class="score-cell ${scoreClass} text-center">${(confidence * 100).toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+        
+        html += `
+            <div class="result-item">
+            <h6><i class="fas fa-table"></i>Generated 3D Structures</h6>
+            <div class="structure-result">
+                <div class="interactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Structure ID</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+    html += '</div>';
 
-
-// Display Mol2Aptamer results
+    // Show download button
+    const downloadActions = document.getElementById('downloadActions');
+    if (downloadActions) {
+        downloadActions.style.display = 'flex';
+    }
+    
+    return html;
+}// Display Mol2Aptamer results
 function displayMol2AptamerResults(results) {
     if (!results || !results.results || results.results.length === 0) {
         return '<div class="alert alert-warning">No aptamer sequences generated</div>';
@@ -3695,7 +3971,7 @@ function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, pla
     
     // Click handler for unified input area
     unifiedInput.addEventListener('click', (e) => {
-        e.preventDefault();
+            e.preventDefault();
         e.stopPropagation();
         
         // Check if file info is displayed (file is uploaded)
@@ -3739,8 +4015,8 @@ function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, pla
         e.preventDefault();
         unifiedInput.classList.remove('dragover');
         
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
             handleSingleBlockFileUpload(files[0], unifiedInputId, textareaId, fileInputId, placeholderId);
         }
     });
@@ -3809,17 +4085,17 @@ function displaySingleBlockFileInfo(file, unifiedInputId) {
     const fileExtension = file.name.split('.').pop().toLowerCase();
     const iconClass = fileExtension === 'txt' ? 'fa-file-alt' : 'fa-file-code';
     
-    fileInfo.innerHTML = `
-        <div class="file-details">
+        fileInfo.innerHTML = `
+            <div class="file-details">
             <i class="fas ${iconClass}"></i>
             <div>
-                <div class="file-name">${file.name}</div>
+                    <div class="file-name">${file.name}</div>
                 <div class="file-size">${formatFileSize(file.size)}</div>
-            </div>
+                </div>
         </div>
         <button class="btn-remove-file" onclick="event.stopPropagation(); removeSingleBlockFile('${unifiedInputId}')">
-            <i class="fas fa-times"></i>
-        </button>
+                    <i class="fas fa-times"></i>
+                </button>
     `;
     
     unifiedInput.appendChild(fileInfo);
@@ -4075,8 +4351,228 @@ function checkAndToggleFileUpload() {
     });
 }
 
+// RNA-FrameFlow Analysis Function
+async function runRNAFrameFlowAnalysis() {
+    // Get input parameters
+    const sequenceLength = document.getElementById('rnaframeflowSequenceLength').value;
+    const numSequences = document.getElementById('rnaframeflowNumSequences').value;
+    
+    // Validate inputs
+    if (!sequenceLength || !numSequences) {
+        throw new Error('Please provide all required parameters');
+    }
+    
+    const sequenceLengthNum = parseInt(sequenceLength);
+    const numSequencesNum = parseInt(numSequences);
+    
+    if (isNaN(sequenceLengthNum) || sequenceLengthNum < 10 || sequenceLengthNum > 200) {
+        throw new Error('Sequence length must be between 10 and 200');
+    }
+    
+    if (isNaN(numSequencesNum) || numSequencesNum < 1 || numSequencesNum > 20) {
+        throw new Error('Number of sequences must be between 1 and 20');
+    }
+    
+    // Get additional parameters
+    const temperature = document.getElementById('rnaframeflowTemperature').value;
+    const randomSeed = document.getElementById('rnaframeflowSeed').value;
+    const numTimesteps = document.getElementById('rnaframeflowNumTimesteps').value;
+    const minT = document.getElementById('rnaframeflowMinT').value;
+    const expRate = document.getElementById('rnaframeflowExpRate').value;
+    const selfCondition = document.getElementById('rnaframeflowSelfCondition').value;
+    
+    const temperatureNum = parseFloat(temperature);
+    const randomSeedNum = randomSeed ? parseInt(randomSeed) : null;
+    const numTimestepsNum = parseInt(numTimesteps);
+    const minTNum = parseFloat(minT);
+    const expRateNum = parseInt(expRate);
+    const selfConditionBool = selfCondition === 'true';
+    const overwriteBool = true; // Always overwrite
+    
+    // Validate additional parameters
+    if (isNaN(temperatureNum) || temperatureNum < 0.1 || temperatureNum > 2.0) {
+        throw new Error('Temperature must be between 0.1 and 2.0');
+    }
+    
+    if (isNaN(numTimestepsNum) || numTimestepsNum < 10 || numTimestepsNum > 200) {
+        throw new Error('Sampling timesteps must be between 10 and 200');
+    }
+    
+    if (isNaN(minTNum) || minTNum < 0.001 || minTNum > 0.1) {
+        throw new Error('Minimum time must be between 0.001 and 0.1');
+    }
+    
+    if (isNaN(expRateNum) || expRateNum < 1 || expRateNum > 50) {
+        throw new Error('Exponential rate must be between 1 and 50');
+    }
+    
+    // Prepare request data
+    const requestData = {
+        sequence_length: sequenceLengthNum,
+        num_sequences: numSequencesNum,
+        temperature: temperatureNum,
+        random_seed: randomSeedNum,
+        num_timesteps: numTimestepsNum,
+        min_t: minTNum,
+        exp_rate: expRateNum,
+        self_condition: selfConditionBool,
+        overwrite: overwriteBool
+    };
+    
+    // Make API call
+    const response = await fetch('/api/rnaframeflow/design', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    
+    return response;
+}
 
+// Handle RNAmigos2 CIF file upload
+function handleRNAmigos2CifFileUpload(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Read file content and store it for later use
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fileContent = e.target.result;
+        // Store file content in a data attribute for later retrieval
+        fileUpload.setAttribute('data-file-content', fileContent);
+        
+        // Display file info
+        displayRNAmigos2CifFileInfo(file);
+    };
+    
+    reader.onerror = function() {
+        showNotification('Error reading file', 'error');
+    };
+    
+    reader.readAsText(file);
+}
 
+// Display RNAmigos2 CIF file info
+function displayRNAmigos2CifFileInfo(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    if (!fileUpload) return;
+    
+    const uploadContent = fileUpload.querySelector('.upload-content');
+    let fileInfo = fileUpload.querySelector('.file-info-content');
+    
+    // Hide upload content
+    if (uploadContent) uploadContent.style.display = 'none';
+    
+    // Remove existing file info if any
+    if (fileInfo) {
+        fileInfo.remove();
+    }
+    
+    // Create and add new file info
+    const newFileInfo = createRNAmigos2CifFileInfoElement(file);
+    fileUpload.appendChild(newFileInfo);
+}
 
+// Create RNAmigos2 CIF file info element
+function createRNAmigos2CifFileInfoElement(file) {
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info-content';
+    fileInfo.style.display = 'flex';
+    
+    // Use the same icon logic as other file uploads
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const iconClass = fileExtension === 'cif' || fileExtension === 'mmcif' ? 'fa-file-code' : 'fa-file-alt';
+    
+    fileInfo.innerHTML = `
+        <i class="fas ${iconClass}"></i>
+        <div class="file-details">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+        <button class="btn-remove-file" onclick="event.stopPropagation(); removeRNAmigos2CifFile()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    return fileInfo;
+}
 
+// Remove RNAmigos2 CIF file
+function removeRNAmigos2CifFile() {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Clear file input
+    fileInput.value = '';
+    
+    // Hide file info and show upload content
+    const fileInfo = fileUpload.querySelector('.file-info-content');
+    if (fileInfo) {
+        fileInfo.style.display = 'none';
+    }
+    
+    const uploadContent = fileUpload.querySelector('.upload-content');
+    if (uploadContent) {
+        uploadContent.style.display = 'flex';
+    }
+    
+    // Clear stored file content
+    fileUpload.removeAttribute('data-file-content');
+}
+
+// Auto-resize textarea function
+function autoResizeTextarea(textarea) {
+    if (!textarea) return;
+    
+    // Reset height to auto to get the natural content height
+    textarea.style.height = 'auto';
+    
+    // Get the scroll height (content height)
+    const scrollHeight = textarea.scrollHeight;
+    
+    // Set the height to the scroll height, but ensure minimum height
+    const minHeight = 180; // Match CSS min-height
+    const newHeight = Math.max(scrollHeight, minHeight);
+    
+    textarea.style.height = newHeight + 'px';
+}
+
+// Check and toggle file upload area based on textarea content
+function checkAndToggleFileUpload() {
+    const standardInputAreas = document.querySelectorAll('.standard-input-area');
+    
+    standardInputAreas.forEach(area => {
+        const textarea = area.querySelector('textarea');
+        const fileUpload = area.querySelector('.file-upload-area');
+        
+        if (textarea && fileUpload) {
+            const hasContent = textarea.value.trim().length > 0;
+            
+            if (hasContent) {
+                // Disable file upload area when textarea has content
+                fileUpload.style.pointerEvents = 'none';
+                fileUpload.style.opacity = '0.6';
+                fileUpload.style.cursor = 'not-allowed';
+                fileUpload.setAttribute('data-disabled', 'true');
+            } else {
+                // Enable file upload area when textarea is empty
+                fileUpload.style.pointerEvents = '';
+                fileUpload.style.opacity = '';
+                fileUpload.style.cursor = '';
+                fileUpload.removeAttribute('data-disabled');
+            }
+        }
+    });
+}
 
