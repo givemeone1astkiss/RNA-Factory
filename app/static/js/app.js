@@ -723,11 +723,11 @@ function adjustInputInterface() {
         setTimeout(() => {
             initializeSingleBlockInput('reformerSequenceUnifiedInput', 'reformerSequence', 'reformerSequenceFileInput', 'reformerSequencePlaceholder');
             
-            // 添加RBP选择变化的事件监听器
+            // Add event listener for RBP selection change
             const rbpSelect = document.getElementById('reformerRbpName');
             if (rbpSelect) {
                 rbpSelect.addEventListener('change', updateReformerCellLineOptions);
-                // 初始化细胞系选项
+                // Initialize cell line options
                 updateReformerCellLineOptions();
             }
         }, 100);
@@ -1231,7 +1231,7 @@ function displayRNAmigos2Results(results) {
     
     let html = '<div class="rnamigos2-results">';
     
-    // Summary information in BPFold style (圆角彩色块方式)
+    // Summary information in BPFold style (rounded color blocks)
     html += `
         <div class="result-item">
             <h6><i class="fas fa-flask"></i>Design Results</h6>
@@ -3146,9 +3146,9 @@ function downloadAllRNAFrameFlowResults() {
             if (structure.pdb_file_path) {
                 const filename = structure.pdb_filename || `na_sample_${index}.pdb`;
                 
-                // 构建正确的下载URL
-                // pdb_file_path格式: /path/to/temp/samples/length_25/na_sample_0.pdb
-                // 需要提取: length_25/na_sample_0.pdb
+                // Build correct download URL
+                // pdb_file_path format: /path/to/temp/samples/length_25/na_sample_0.pdb
+                // Need to extract: length_25/na_sample_0.pdb
                 const pathParts = structure.pdb_file_path.split('/');
                 const samplesIndex = pathParts.indexOf('samples');
                 if (samplesIndex !== -1 && samplesIndex + 2 < pathParts.length) {
@@ -3157,7 +3157,7 @@ function downloadAllRNAFrameFlowResults() {
                     
                     console.log(`Downloading PDB file: ${downloadUrl}`);
                     
-                    // 下载主要PDB文件
+                    // Download main PDB file
                     const mainPdbPromise = fetch(downloadUrl)
                         .then(response => {
                             if (!response.ok) {
@@ -3167,13 +3167,13 @@ function downloadAllRNAFrameFlowResults() {
                         })
                         .then(content => {
                             console.log(`Successfully downloaded ${filename}, size: ${content.length} bytes`);
-                            // 使用实际的PDB文件名而不是索引
+                            // Use actual PDB filename instead of index
                             const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
                             zip.file(actualFilename, content);
                         })
                         .catch(error => {
                             console.error(`Error downloading ${filename}:`, error);
-                            // 如果下载失败，尝试使用pdb_content
+                            // If download fails, try using pdb_content
                             if (structure.pdb_content) {
                                 console.log(`Falling back to pdb_content for ${filename}`);
                                 const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
@@ -3181,7 +3181,7 @@ function downloadAllRNAFrameFlowResults() {
                             }
                         });
                     
-                    // 下载轨迹文件
+                    // Download trajectory file
                     const trajFilename = filename.replace('.pdb', '_traj.pdb');
                     const trajDownloadUrl = downloadUrl.replace('.pdb', '_traj.pdb');
                     
@@ -3191,7 +3191,7 @@ function downloadAllRNAFrameFlowResults() {
                         .then(response => {
                             if (!response.ok) {
                                 console.warn(`Trajectory file not found: ${trajFilename}`);
-                                return null; // 轨迹文件可能不存在，这是正常的
+                                return null; // Trajectory file may not exist, this is normal
                             }
                             return response.text();
                         })
@@ -3203,14 +3203,14 @@ function downloadAllRNAFrameFlowResults() {
                         })
                         .catch(error => {
                             console.warn(`Error downloading trajectory file ${trajFilename}:`, error);
-                            // 轨迹文件下载失败不影响主要功能
+                            // Trajectory file download failure does not affect main functionality
                         });
                     
-                    // 等待两个文件都下载完成
+                    // Wait for both files to download
                     return Promise.all([mainPdbPromise, trajPdbPromise]);
                 } else {
                     console.error(`Invalid pdb_file_path format: ${structure.pdb_file_path}`);
-                    // 回退到使用pdb_content
+                    // Fallback to using pdb_content
                     if (structure.pdb_content) {
                         const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
                         zip.file(actualFilename, structure.pdb_content);
@@ -3218,7 +3218,7 @@ function downloadAllRNAFrameFlowResults() {
                     return Promise.resolve();
                 }
             } else if (structure.pdb_content) {
-                // 回退到使用pdb_content
+                // Fallback to using pdb_content
                 console.log(`Using pdb_content for structure ${index + 1}`);
                 const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
                 zip.file(actualFilename, structure.pdb_content);
@@ -3665,7 +3665,7 @@ function displayRNAFrameFlowResults(results) {
     
     let html = '<div class="rnaframeflow-results">';
     
-    // Summary information in BPFold style (圆角彩色块方式)
+    // Summary information in BPFold style (rounded color blocks)
     html += `
         <div class="result-item">
             <h6><i class="fas fa-dna"></i>Design Results</h6>
@@ -3686,7 +3686,7 @@ function displayRNAFrameFlowResults(results) {
         if (confidence > 0.7) scoreClass = 'score-high';
         else if (confidence > 0.4) scoreClass = 'score-medium';
         
-        // 使用实际的PDB文件名，如果没有则使用默认格式
+        // Use actual PDB filename, fallback to default format if not available
         const structureId = structure.pdb_filename || `na_sample_${index}.pdb`;
         
         return `
@@ -3765,7 +3765,7 @@ function displayMol2AptamerResults(results) {
     
     let html = '<div class="mol2aptamer-results">';
     
-    // Summary information in BPFold style (圆角彩色块方式)
+    // Summary information in BPFold style (rounded color blocks)
     html += `
         <div class="result-item">
             <h6><i class="fas fa-dna"></i>Design Results</h6>
@@ -3941,7 +3941,7 @@ function displayRNAFlowResults(results) {
     
     let html = '<div class="rnaflow-results">';
     
-    // Summary information in BPFold style (圆角彩色块方式)
+    // Summary information in BPFold style (rounded color blocks)
     html += `
         <div class="result-item">
             <h6><i class="fas fa-dna"></i>Design Results</h6>
@@ -4007,7 +4007,7 @@ function displayRNAFlowResults(results) {
     return html;
 }
 
-// Standard Input Area - 通用输入区域管理
+// Standard Input Area - Universal input area management
 
 // Initialize single block unified input area
 function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, placeholderId) {
@@ -4190,7 +4190,7 @@ function removeSingleBlockFile(unifiedInputId) {
     }
 }
 
-// Standard Input Area - 通用输入区域管理
+// Standard Input Area - Universal input area management
 
 // Initialize RNAmigos2 CIF file upload (old HTML structure)
 function initializeRNAmigos2CifFileUpload() {
@@ -4596,7 +4596,7 @@ function checkAndToggleFileUpload() {
 }
 
 
-// Reformer RBP-细胞系组合数据
+// Reformer RBP-Cell Line combination data
 const rbpCellLineCombinations = {
     "AARS": ["K562"],
     "AATF": ["K562"],
@@ -4750,7 +4750,7 @@ const rbpCellLineCombinations = {
     "ZRANB2": ["K562"]
 };
 
-// 更新Reformer细胞系选项
+// Update Reformer cell line options
 function updateReformerCellLineOptions() {
     const rbpSelect = document.getElementById('reformerRbpName');
     const cellLineSelect = document.getElementById('reformerCellLine');
@@ -4760,10 +4760,10 @@ function updateReformerCellLineOptions() {
     const selectedRbp = rbpSelect.value;
     const supportedCellLines = rbpCellLineCombinations[selectedRbp] || [];
     
-    // 清空现有选项
+    // Clear existing options
     cellLineSelect.innerHTML = '';
     
-    // 添加支持的细胞系选项
+    // Add supported cell line options
     supportedCellLines.forEach(cellLine => {
         const option = document.createElement('option');
         option.value = cellLine;
@@ -4771,7 +4771,7 @@ function updateReformerCellLineOptions() {
         cellLineSelect.appendChild(option);
     });
     
-    // 如果没有支持的细胞系，添加提示
+    // If no supported cell lines, add notice
     if (supportedCellLines.length === 0) {
         const option = document.createElement('option');
         option.value = '';
@@ -4816,7 +4816,7 @@ async function runReformerAnalysis() {
     const rbpName = document.getElementById('reformerRbpName').value;
     const cellLine = document.getElementById('reformerCellLine').value;
     
-    // 验证RBP-细胞系组合是否有效
+    // Validate RBP-cell line combination
     const supportedCellLines = rbpCellLineCombinations[rbpName] || [];
     if (!supportedCellLines.includes(cellLine)) {
         throw new Error(`Invalid combination: ${rbpName} does not support ${cellLine} cell line. Supported cell lines: ${supportedCellLines.join(', ')}`);
@@ -4877,7 +4877,7 @@ function displayReformerResults(result) {
     
     let html = '<div class="rnamigos2-results">';
     
-    // Summary information in RNAmigos2 style (圆角彩色块方式)
+    // Summary information in RNAmigos2 style (rounded color blocks)
     html += `
         <div class="result-item">
             <h6><i class="fas fa-dna"></i>Binding Affinity Prediction Results</h6>

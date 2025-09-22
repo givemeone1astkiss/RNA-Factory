@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Reformer模型包装器
-用于预测蛋白质-RNA结合亲和力
+Reformer model wrapper
+For predicting protein-RNA binding affinity
 """
 
 import os
@@ -12,7 +12,7 @@ import tempfile
 from typing import Dict, Any, Optional
 
 class ReformerWrapper:
-    """Reformer模型包装器类"""
+    """Reformer model wrapper class"""
     
     def __init__(self):
         self.model_name = "Reformer"
@@ -21,16 +21,16 @@ class ReformerWrapper:
         self.model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "models", "Reformer")
         self.inference_script = os.path.join(self.model_path, "reformer_inference.py")
         
-        # 检查环境是否存在
+        # Check if environment exists
         if not os.path.exists(self.environment_path):
-            raise RuntimeError(f"Reformer虚拟环境不存在: {self.environment_path}")
+            raise RuntimeError(f"Reformer virtual environment not found: {self.environment_path}")
         
-        # 检查推理脚本是否存在
+        # Check if inference script exists
         if not os.path.exists(self.inference_script):
-            raise RuntimeError(f"Reformer推理脚本不存在: {self.inference_script}")
+            raise RuntimeError(f"Reformer inference script not found: {self.inference_script}")
     
     def get_model_info(self) -> Dict[str, Any]:
-        """获取模型信息"""
+        """Get model information"""
         return {
             "name": self.model_name,
             "type": self.model_type,
@@ -49,60 +49,60 @@ class ReformerWrapper:
                                 cell_line: str = "HepG2",
                                 model_path: Optional[str] = None) -> Dict[str, Any]:
         """
-        预测蛋白质-RNA结合亲和力
+        Predict protein-RNA binding affinity
         
         Args:
-            sequence: RNA序列
-            rbp_name: RNA结合蛋白名称
-            cell_line: 细胞系名称
-            model_path: 模型文件路径
+            sequence: cDNA sequence
+            rbp_name: RNA-binding protein name
+            cell_line: Cell line name
+            model_path: Model file path
         
         Returns:
-            dict: 预测结果
+            dict: Prediction results
         """
         try:
-            # 验证输入
+            # Validate input
             if not sequence or len(sequence.strip()) == 0:
                 return {
                     "success": False,
-                    "error": "cDNA序列不能为空"
+                    "error": "cDNA sequence cannot be empty"
                 }
             
-            # 清理序列
+            # Clean sequence
             sequence = sequence.upper().strip()
             
             valid_bases = set('ATCGN')
             if not all(base in valid_bases for base in sequence):
                 return {
                     "success": False,
-                    "error": "序列只能包含ATCGN字符（请提供cDNA序列）"
+                    "error": "Sequence can only contain ATCGN characters (please provide cDNA sequence)"
                 }
             
-            # 检查序列长度
+            # Check sequence length
             if len(sequence) < 10:
                 return {
                     "success": False,
-                    "error": "cDNA序列长度至少需要10个碱基"
+                    "error": "cDNA sequence must be at least 10 bases long"
                 }
             
-            # 如果序列太长，截断到512bp
+            # If sequence is too long, truncate to 512bp
             if len(sequence) > 512:
                 sequence = sequence[:512]
             
-            # 创建temp目录（如果不存在）
+            # Create temp directory if it doesn't exist
             temp_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "temp")
             os.makedirs(temp_dir, exist_ok=True)
             
-            # 创建临时输入文件
+            # Create temporary input file
             input_file = os.path.join(temp_dir, f"reformer_input_{os.getpid()}_{hash(sequence) % 10000}.txt")
             with open(input_file, 'w') as f:
                 f.write(sequence)
             
-            # 创建临时输出文件
+            # Create temporary output file
             output_file = os.path.join(temp_dir, f"reformer_output_{os.getpid()}_{hash(sequence) % 10000}.json")
             
             try:
-                # 构建命令
+                # Build command
                 python_executable = os.path.join(self.environment_path, "bin", "python")
                 
                 cmd = [
@@ -117,14 +117,14 @@ class ReformerWrapper:
                 if model_path:
                     cmd.extend(["--model_path", model_path])
                 
-                # 设置环境变量
+                # Set environment variables
                 env = os.environ.copy()
                 env['PATH'] = f"{self.environment_path}/bin:{env['PATH']}"
                 env['VIRTUAL_ENV'] = self.environment_path
                 env['PYTHONPATH'] = f"{self.model_path}:{env.get('PYTHONPATH', '')}"
                 
-                # 执行推理
-                print(f"🔮 执行Reformer推理: {' '.join(cmd)}")
+                # Execute inference
+                print(f"🔮 Executing Reformer inference: {' '.join(cmd)}")
                 result = subprocess.run(
                     cmd,
                     env=env,
@@ -134,28 +134,28 @@ class ReformerWrapper:
                     cwd=self.model_path
                 )
                 
-                # 输出推理脚本的日志
+                # Output inference script logs
                 if result.stdout:
-                    print("📊 Reformer推理输出:")
+                    print("📊 Reformer inference output:")
                     print(result.stdout)
                 if result.stderr:
-                    print("⚠️ Reformer推理错误:")
+                    print("⚠️ Reformer inference errors:")
                     print(result.stderr)
                 
-                # 检查执行结果
+                # Check execution result
                 if result.returncode != 0:
                     return {
                         "success": False,
-                        "error": f"推理执行失败: {result.stderr}",
+                        "error": f"Inference execution failed: {result.stderr}",
                         "stdout": result.stdout
                     }
                 
-                # 读取输出结果
+                # Read output results
                 if os.path.exists(output_file):
                     with open(output_file, 'r') as f:
                         prediction_result = json.load(f)
                     
-                    # 添加额外信息
+                    # Add additional information
                     prediction_result.update({
                         "sequence_length": len(sequence),
                         "rbp_name": rbp_name,
@@ -167,15 +167,15 @@ class ReformerWrapper:
                 else:
                     return {
                         "success": False,
-                        "error": "输出文件未生成"
+                        "error": "Output file not generated"
                     }
             
             finally:
-                # 清理输入文件，保留输出文件用于调试
+                # Clean up input file, keep output file for debugging
                 try:
                     if os.path.exists(input_file):
                         os.unlink(input_file)
-                    # 保留输出文件在temp目录中，不删除
+                    # Keep output file in temp directory, do not delete
                     # if os.path.exists(output_file):
                     #     os.unlink(output_file)
                 except:
@@ -184,31 +184,31 @@ class ReformerWrapper:
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "error": "推理超时（5分钟）"
+                "error": "Inference timeout (5 minutes)"
             }
         except Exception as e:
             return {
                 "success": False,
-                "error": f"推理过程中出现错误: {str(e)}"
+                "error": f"Error occurred during inference: {str(e)}"
             }
     
     def is_available(self) -> bool:
-        """检查模型是否可用"""
+        """Check if model is available"""
         try:
-            # 检查环境
+            # Check environment
             if not os.path.exists(self.environment_path):
                 return False
             
-            # 检查推理脚本
+            # Check inference script
             if not os.path.exists(self.inference_script):
                 return False
             
-            # 尝试运行简单测试
+            # Try running simple test
             test_result = self.predict_binding_affinity("ATCGATCGATCG", "U2AF2", "HepG2")
             return test_result.get("success", False)
         
         except:
             return False
 
-# 创建全局实例
+# Create global instance
 reformer_wrapper = ReformerWrapper()
