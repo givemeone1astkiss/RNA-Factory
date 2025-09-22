@@ -35,21 +35,6 @@ env.bak/
 venv.bak/
 .uv/
 
-# Models and Data
-models/
-data/
-*.pkl
-*.pickle
-*.h5
-*.hdf5
-*.pth
-*.pt
-*.ckpt
-*.safetensors
-*.bin
-*.model
-*.weights
-
 # Jupyter Notebook
 .ipynb_checkpoints
 

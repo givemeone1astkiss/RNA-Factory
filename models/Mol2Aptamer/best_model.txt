@@ -1,0 +1,5 @@
+Train Loss: 22.7291 / val Loss: 70.9493
+Token Accuracy: 0.2422
+Sequence Accuracy: 0.0101
+Perplexity: 36.3793
+Average Sequence Length: 24.13

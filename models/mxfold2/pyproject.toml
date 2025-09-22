@@ -1,0 +1,89 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mxfold2"
+version = "0.1.2"
+description = "RNA secondary structure prediction using deep learning with thermodynamic integration"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "MXFold2 Team", email = "mxfold@bio.keio.ac.jp"}
+]
+keywords = ["RNA", "secondary structure", "prediction", "deep learning", "thermodynamics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=1.13.0",
+    "numpy>=1.21.0",
+    "tqdm>=4.60.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mxfold/mxfold2"
+Repository = "https://github.com/mxfold/mxfold2"
+Documentation = "https://github.com/mxfold/mxfold2"
+"Bug Tracker" = "https://github.com/mxfold/mxfold2/issues"
+
+[project.scripts]
+mxfold2 = "mxfold2.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mxfold2*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.whl"]
+
+# Installation instructions for RNA-Factory
+[project.optional-dependencies]
+install = [
+    "mxfold2-0.1.2-cp310-cp310-manylinux_2_17_x86_64.whl"
+]
+
+# Installation process for RNA-Factory
+# 1. Create virtual environment with Python 3.10
+#    uv venv .venv_mxfold2 --python 3.10
+# 2. Install MXFold2 from wheel file
+#    uv pip install --python .venv_mxfold2/bin/python mxfold2-0.1.2-cp310-cp310-manylinux_2_17_x86_64.whl
+# 3. Verify installation
+#    source .venv_mxfold2/bin/activate && mxfold2 --help
+
+[project.gui-scripts]
+mxfold2-gui = "mxfold2.gui:main"
+
+# Model configuration
+[tool.mxfold2]
+models = ["Turner", "Zuker", "ZukerS", "ZukerL", "ZukerC", "Mix", "MixC"]
+default_model = "MixC"
+supported_formats = ["ct", "dotbracket", "bpseq"]
+default_format = "ct"
+gpu_support = true
+max_sequence_length = 1000
+
+# Performance settings
+[tool.mxfold2.performance]
+default_gpu = -1  # -1 for CPU, 0+ for GPU
+timeout = 300  # seconds
+memory_limit = "2GB"
+batch_size = 1
+
+# Output settings
+[tool.mxfold2.output]
+include_energy = true
+include_confidence = false
+include_bpp = false  # base-pairing probabilities
+verbose = false
