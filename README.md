@@ -54,6 +54,13 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Fast inference (~10 seconds) with high enrichment factors
 - [GitHub](https://github.com/cgoliver/rnamigos2) | [Paper](https://www.nature.com/articles/s41467-025-57852-0)
 
+**Reformer**
+- Deep learning model for predicting protein-RNA binding affinity at single-base resolution
+- Uses transformer architecture with cDNA sequences for high-accuracy prediction
+- Supports 150+ RBP types and multiple cell lines for comprehensive analysis
+- Provides binding site identification and confidence scoring
+- [GitHub](https://github.com/xilinshen/Reformer) | [Paper](https://www.sciencedirect.com/science/article/pii/S2666389924003222)
+
 #### De Novo Design Models
 
 **Mol2Aptamer**
@@ -78,7 +85,7 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 
 ### 🔧 Platform Capabilities
 
-- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences
+- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences, cDNA sequences
 - **Unified Interface**: Consistent user experience across all models with standardized input areas
 - **Real-time Processing**: Fast analysis with progress tracking
 - **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, PDB, and more
@@ -101,6 +108,7 @@ RNA-Factory/
 │   │   ├── mxfold2_routes.py    # MXFold2 API endpoints
 │   │   ├── rnaformer_routes.py  # RNAformer API endpoints
 │   │   ├── rnamigos2_routes.py  # RNAmigos2 API endpoints
+│   │   ├── reformer_routes.py   # Reformer API endpoints
 │   │   ├── mol2aptamer_routes.py # Mol2Aptamer API endpoints
 │   │   ├── rnaflow_routes.py    # RNAFlow API endpoints
 │   │   ├── rnaframeflow_routes.py # RNA-FrameFlow API endpoints
@@ -202,11 +210,19 @@ RESTful API endpoints for:
 
 ### Interaction Prediction
 
-1. Select RNAmigos2 for interaction prediction
+#### RNAmigos2
+1. Select RNAmigos2 for RNA-ligand interaction prediction
 2. Upload mmCIF structure file
 3. Specify binding site residues
 4. Input SMILES strings of ligands
 5. Run analysis to get interaction scores
+
+#### Reformer
+1. Select Reformer for protein-RNA binding affinity prediction
+2. Input cDNA sequence (ATCGN characters only)
+3. Select RBP (RNA-binding protein) type from 150+ options
+4. Choose cell line (HepG2, K562, or MCF-7)
+5. Run analysis to get single-base resolution binding scores
 
 ### De Novo Design
 

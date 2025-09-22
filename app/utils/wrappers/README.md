@@ -10,6 +10,7 @@ This document provides detailed information about the model wrappers in the RNA-
 - [MXFold2 Wrapper](#mxfold2-wrapper)
 - [RNAformer Wrapper](#rnaformer-wrapper)
 - [RNAmigos2 Wrapper](#rnamigos2-wrapper)
+- [Reformer Wrapper](#reformer-wrapper)
 - [Mol2Aptamer Wrapper](#mol2aptamer-wrapper)
 - [RNAFlow Wrapper](#rnaflow-wrapper)
 - [General Testing Methods](#general-testing-methods)
@@ -566,6 +567,161 @@ def test_rnamigos2_binding_sites():
     assert result["results"][0]["binding_sites"] == "A.20,A.19,A.18"
 ```
 
+## Reformer Wrapper
+
+### Packaging Method
+
+Reformer wrapper calls Reformer's Python script through subprocess for protein-RNA binding affinity prediction at single-base resolution.
+
+**File Location**: `app/utils/wrappers/reformer_wrapper.py`
+
+**Main Class**: `ReformerWrapper`
+
+### Calling Method
+
+```python
+from app.utils.wrappers.reformer_wrapper import ReformerWrapper
+
+# Initialize wrapper
+wrapper = ReformerWrapper(
+    model_path="/path/to/Reformer",
+    environment_path="/path/to/.venv_reformer"
+)
+
+# Predict protein-RNA binding affinity
+result = wrapper.predict_binding_affinity(
+    sequence="ATCGATCGATCGATCGATCGATCGATCGATCG",
+    rbp_name="U2AF2",
+    cell_line="HepG2"
+)
+
+# Result format
+{
+    "success": True,
+    "binding_scores": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4],
+    "max_score": 0.9,
+    "mean_score": 0.45,
+    "sequence_length": 32,
+    "rbp_name": "U2AF2",
+    "cell_line": "HepG2"
+}
+```
+
+### Input Requirements
+
+- **sequence**: cDNA sequence string (ATCGN characters only)
+- **rbp_name**: RBP (RNA-binding protein) name from supported list (150+ options)
+- **cell_line**: Cell line type ("HepG2", "K562", or "MCF-7")
+
+### Output Format
+
+- **success**: Boolean value indicating whether prediction was successful
+- **binding_scores**: List of binding affinity scores at single-base resolution
+- **max_score**: Maximum binding score in the sequence
+- **mean_score**: Mean binding score across the sequence
+- **sequence_length**: Length of the input sequence
+- **rbp_name**: Name of the RBP used for prediction
+- **cell_line**: Cell line used for prediction
+- **error**: Error message (if any)
+
+### Supported RBPs and Cell Lines
+
+The wrapper supports 150+ RBP types and 3 cell lines. Valid combinations are determined by the `prefix_codes.csv` file.
+
+**Supported Cell Lines**:
+- HepG2
+- K562  
+- MCF-7
+
+**Example RBP Types**:
+- U2AF2, ELAVL1, PTBP1, RBMX, SRSF1, SRSF2, SRSF3, SRSF4, SRSF5, SRSF6, SRSF7, SRSF9, SRSF10, TRA2A, TRA2B, and many more.
+
+### Testing Method
+
+```python
+# Basic test
+def test_reformer_basic():
+    wrapper = ReformerWrapper()
+    result = wrapper.predict_binding_affinity(
+        "ATCGATCGATCGATCGATCGATCGATCGATCG",
+        "U2AF2",
+        "HepG2"
+    )
+    assert result["success"] == True
+    assert "binding_scores" in result
+    assert len(result["binding_scores"]) == 32
+
+# Different RBP test
+def test_reformer_different_rbp():
+    wrapper = ReformerWrapper()
+    result = wrapper.predict_binding_affinity(
+        "ATCGATCGATCGATCGATCGATCGATCGATCG",
+        "ELAVL1",
+        "K562"
+    )
+    assert result["success"] == True
+    assert result["rbp_name"] == "ELAVL1"
+    assert result["cell_line"] == "K562"
+
+# Invalid sequence test
+def test_reformer_invalid_sequence():
+    wrapper = ReformerWrapper()
+    result = wrapper.predict_binding_affinity(
+        "INVALID_SEQUENCE_WITH_U_CHARS",
+        "U2AF2",
+        "HepG2"
+    )
+    assert result["success"] == False
+    assert result["error"] is not None
+
+# Long sequence test
+def test_reformer_long_sequence():
+    wrapper = ReformerWrapper()
+    long_seq = "ATCG" * 100  # 400 bases
+    result = wrapper.predict_binding_affinity(
+        long_seq,
+        "U2AF2",
+        "HepG2"
+    )
+    assert result["success"] == True
+    assert len(result["binding_scores"]) == 400
+```
+
+### Installation Process
+
+Reformer requires specific Python version and dependencies:
+
+1. **Create virtual environment**:
+   ```bash
+   uv venv .venv_reformer --python 3.11
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   uv pip install --python .venv_reformer/bin/python torch==2.0.1 transformers==4.21.0 h5py==3.7.0 numpy==1.26.4
+   ```
+
+3. **Download model weights**:
+   - Download model weights from Hugging Face: `https://huggingface.co/xilinshen/Reformer`
+   - Place `model.bin` in `models/Reformer/model/` directory
+   - Ensure `prefix_codes.csv` is in `models/Reformer/data/` directory
+
+4. **Verify installation**:
+   ```bash
+   source .venv_reformer/bin/activate
+   python models/Reformer/reformer_inference.py --help
+   ```
+
+### Features
+
+- **Single-base resolution prediction**: Provides binding affinity scores for each nucleotide position
+- **Transformer architecture**: Uses advanced transformer model for high-accuracy prediction
+- **Multiple RBP support**: Supports 150+ different RNA-binding proteins
+- **Cell line specific prediction**: Different predictions for HepG2, K562, and MCF-7 cell lines
+- **cDNA sequence input**: Optimized for cDNA sequences (ATCGN characters)
+- **High prediction accuracy**: State-of-the-art performance in protein-RNA binding prediction
+- **Comprehensive analysis**: Provides max, mean, and position-specific binding scores
+
 ## Mol2Aptamer Wrapper
 
 ### Packaging Method
@@ -772,7 +928,7 @@ def test_rnaflow_error():
 ```python
 import unittest
 from app.utils.wrappers import (BPFoldWrapper, UFoldWrapper, MXFold2Wrapper, 
-                               RNAformerWrapper, RNAmigos2Wrapper, 
+                               RNAformerWrapper, RNAmigos2Wrapper, ReformerWrapper,
                                Mol2AptamerWrapper, RNAFlowWrapper)
 
 class TestWrappers(unittest.TestCase):
@@ -797,14 +953,25 @@ class TestWrappers(unittest.TestCase):
                 self.assertGreater(len(result["results"]), 0)
     
     def test_interaction_prediction_wrappers(self):
-        wrapper = RNAmigos2Wrapper()
-        result = wrapper.predict(
+        # Test RNAmigos2
+        rnamigos2 = RNAmigos2Wrapper()
+        result = rnamigos2.predict(
             [self.test_sequence],
             [self.test_smiles],
             ["A.20", "A.19", "A.18"]
         )
         self.assertTrue(result["success"])
         self.assertIsInstance(result["results"], list)
+        
+        # Test Reformer
+        reformer = ReformerWrapper()
+        result = reformer.predict_binding_affinity(
+            "ATCGATCGATCGATCGATCGATCGATCGATCG",
+            "U2AF2",
+            "HepG2"
+        )
+        self.assertTrue(result["success"])
+        self.assertIsInstance(result["binding_scores"], list)
     
     def test_de_novo_design_wrappers(self):
         # Test Mol2Aptamer
@@ -837,11 +1004,21 @@ def test_wrapper_integration():
         data = response.get_json()
         assert data['success'] == True
         
-        # Test interaction prediction
+        # Test interaction prediction - RNAmigos2
         response = client.post('/api/rnamigos2/predict', json={
             'rna_sequences': ['GUGGGGGCUUCGCCUCUGGCCCAGCCCUCAC'],
             'smiles_list': ['CC1=CC2=C(CC1)C(=CC3=C2C(=CO3)C)C'],
             'binding_sites': ['A.20', 'A.19', 'A.18']
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] == True
+        
+        # Test interaction prediction - Reformer
+        response = client.post('/api/reformer/predict', json={
+            'sequence': 'ATCGATCGATCGATCGATCGATCGATCGATCG',
+            'rbp_name': 'U2AF2',
+            'cell_line': 'HepG2'
         })
         assert response.status_code == 200
         data = response.get_json()
