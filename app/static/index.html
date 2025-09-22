@@ -17,6 +17,7 @@
     <link href="/static/css/mol2aptamer.css" rel="stylesheet">
     <link href="/static/css/rnaflow.css" rel="stylesheet">
     <link href="/static/css/rnaframeflow.css" rel="stylesheet">
+    <link href="/static/css/reformer.css" rel="stylesheet">
     <link href="/static/css/standard-input.css" rel="stylesheet">
 </head>
 <body>
@@ -107,20 +108,6 @@
                     <h1 id="currentModelTitle">Welcome to RNA-Factory</h1>
                     <p id="currentModelDesc" class="text-muted">Please select a model from the left sidebar to begin analysis</p>
                     
-                    <!-- Model Links Section -->
-                    <div class="model-links" id="modelLinks" style="display: none;">
-                        <div class="links-container">
-                            <a href="#" id="githubLink" class="model-link github-link" target="_blank" style="display: none;">
-                                <i class="fab fa-github"></i>
-                                <span>GitHub Repository</span>
-                            </a>
-                            <a href="#" id="paperLink" class="model-link paper-link" target="_blank" style="display: none;">
-                                <i class="fas fa-file-alt"></i>
-                                <span>Research Paper</span>
-                            </a>
-                        </div>
-                    </div>
-
                     <!-- Model Architecture Section -->
                     <div class="model-architecture" id="modelArchitecture" style="display: none;">
                         <div class="architecture-header">
@@ -135,6 +122,20 @@
                                     <p>No architecture image available</p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Model Links Section -->
+                    <div class="model-links" id="modelLinks" style="display: none;">
+                        <div class="links-container">
+                            <a href="#" id="githubLink" class="model-link github-link" target="_blank" style="display: none;">
+                                <i class="fab fa-github"></i>
+                                <span>GitHub Repository</span>
+                            </a>
+                            <a href="#" id="paperLink" class="model-link paper-link" target="_blank" style="display: none;">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Research Paper</span>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -242,6 +243,201 @@
                                 </div>
                             </div>
 
+                            <!-- Reformer Specific Input Area -->
+                            <div class="input-method reformer-input" id="reformerInput" style="display: none;">
+                                <!-- RNA Sequence Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-dna"></i>
+                                        <h6>cDNA Sequence</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="reformerSequenceInputArea">
+                                        <div class="unified-input-area" id="reformerSequenceUnifiedInput">
+                                            <div class="input-placeholder" id="reformerSequencePlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter cDNA sequence or drag files here</p>
+                                                <small>FASTA, TXT supported</small>
+                                            </div>
+                                            <textarea id="reformerSequence" rows="6" placeholder="Enter cDNA sequence (ATCGN characters only)&#10;Example:&#10;ATGCGATCGATCGATCGA&#10;TTCGAATTCGAATTCGAA" style="display: none;"></textarea>
+                                            <input type="file" id="reformerSequenceFileInput" accept=".fasta,.fa,.txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Prediction Parameters Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cogs"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="reformer-parameters">
+                                        <div class="reformer-parameter">
+                                            <label for="reformerRbpName">RBP Name</label>
+                                            <select id="reformerRbpName" class="form-select">
+                                                <option value="AARS">AARS</option>
+                                                <option value="AATF">AATF</option>
+                                                <option value="ABCF1">ABCF1</option>
+                                                <option value="AGGF1">AGGF1</option>
+                                                <option value="AKAP1">AKAP1</option>
+                                                <option value="AKAP8L">AKAP8L</option>
+                                                <option value="APOBEC3C">APOBEC3C</option>
+                                                <option value="AQR">AQR</option>
+                                                <option value="BCCIP">BCCIP</option>
+                                                <option value="BCLAF1">BCLAF1</option>
+                                                <option value="BUD13">BUD13</option>
+                                                <option value="CDC40">CDC40</option>
+                                                <option value="CPEB4">CPEB4</option>
+                                                <option value="CPSF6">CPSF6</option>
+                                                <option value="CSTF2">CSTF2</option>
+                                                <option value="CSTF2T">CSTF2T</option>
+                                                <option value="DDX21">DDX21</option>
+                                                <option value="DDX24">DDX24</option>
+                                                <option value="DDX3X">DDX3X</option>
+                                                <option value="DDX42">DDX42</option>
+                                                <option value="DDX51">DDX51</option>
+                                                <option value="DDX52">DDX52</option>
+                                                <option value="DDX55">DDX55</option>
+                                                <option value="DDX59">DDX59</option>
+                                                <option value="DDX6">DDX6</option>
+                                                <option value="DGCR8">DGCR8</option>
+                                                <option value="DHX30">DHX30</option>
+                                                <option value="DKC1">DKC1</option>
+                                                <option value="DROSHA">DROSHA</option>
+                                                <option value="EFTUD2">EFTUD2</option>
+                                                <option value="EIF3D">EIF3D</option>
+                                                <option value="EIF3G">EIF3G</option>
+                                                <option value="EIF3H">EIF3H</option>
+                                                <option value="EIF4G2">EIF4G2</option>
+                                                <option value="EWSR1">EWSR1</option>
+                                                <option value="EXOSC5">EXOSC5</option>
+                                                <option value="FAM120A">FAM120A</option>
+                                                <option value="FASTKD2">FASTKD2</option>
+                                                <option value="FKBP4">FKBP4</option>
+                                                <option value="FMR1">FMR1</option>
+                                                <option value="FTO">FTO</option>
+                                                <option value="FUBP3">FUBP3</option>
+                                                <option value="FUS">FUS</option>
+                                                <option value="FXR1">FXR1</option>
+                                                <option value="FXR2">FXR2</option>
+                                                <option value="G3BP1">G3BP1</option>
+                                                <option value="GEMIN5">GEMIN5</option>
+                                                <option value="GNL3">GNL3</option>
+                                                <option value="GPKOW">GPKOW</option>
+                                                <option value="GRSF1">GRSF1</option>
+                                                <option value="GRWD1">GRWD1</option>
+                                                <option value="GTF2F1">GTF2F1</option>
+                                                <option value="HLTF">HLTF</option>
+                                                <option value="HNRNPA1">HNRNPA1</option>
+                                                <option value="HNRNPC">HNRNPC</option>
+                                                <option value="HNRNPK">HNRNPK</option>
+                                                <option value="HNRNPL">HNRNPL</option>
+                                                <option value="HNRNPM">HNRNPM</option>
+                                                <option value="HNRNPU">HNRNPU</option>
+                                                <option value="HNRNPUL1">HNRNPUL1</option>
+                                                <option value="IGF2BP1">IGF2BP1</option>
+                                                <option value="IGF2BP2">IGF2BP2</option>
+                                                <option value="IGF2BP3">IGF2BP3</option>
+                                                <option value="ILF3">ILF3</option>
+                                                <option value="KHDRBS1">KHDRBS1</option>
+                                                <option value="KHSRP">KHSRP</option>
+                                                <option value="LARP4">LARP4</option>
+                                                <option value="LARP7">LARP7</option>
+                                                <option value="LIN28B">LIN28B</option>
+                                                <option value="LSM11">LSM11</option>
+                                                <option value="MATR3">MATR3</option>
+                                                <option value="METAP2">METAP2</option>
+                                                <option value="MTPAP">MTPAP</option>
+                                                <option value="NCBP2">NCBP2</option>
+                                                <option value="NIP7">NIP7</option>
+                                                <option value="NIPBL">NIPBL</option>
+                                                <option value="NKRF">NKRF</option>
+                                                <option value="NOL12">NOL12</option>
+                                                <option value="NOLC1">NOLC1</option>
+                                                <option value="NONO">NONO</option>
+                                                <option value="NPM1">NPM1</option>
+                                                <option value="NSUN2">NSUN2</option>
+                                                <option value="PABPC4">PABPC4</option>
+                                                <option value="PABPN1">PABPN1</option>
+                                                <option value="PCBP1">PCBP1</option>
+                                                <option value="PCBP2">PCBP2</option>
+                                                <option value="PHF6">PHF6</option>
+                                                <option value="POLR2G">POLR2G</option>
+                                                <option value="PPIG">PPIG</option>
+                                                <option value="PPIL4">PPIL4</option>
+                                                <option value="PRPF4">PRPF4</option>
+                                                <option value="PRPF8">PRPF8</option>
+                                                <option value="PTBP1">PTBP1</option>
+                                                <option value="PUM1">PUM1</option>
+                                                <option value="PUM2">PUM2</option>
+                                                <option value="PUS1">PUS1</option>
+                                                <option value="QKI">QKI</option>
+                                                <option value="RBFOX2">RBFOX2</option>
+                                                <option value="RBM15">RBM15</option>
+                                                <option value="RBM22">RBM22</option>
+                                                <option value="RBM5">RBM5</option>
+                                                <option value="RPS11">RPS11</option>
+                                                <option value="RPS3">RPS3</option>
+                                                <option value="SAFB">SAFB</option>
+                                                <option value="SAFB2">SAFB2</option>
+                                                <option value="SBDS">SBDS</option>
+                                                <option value="SDAD1">SDAD1</option>
+                                                <option value="SERBP1">SERBP1</option>
+                                                <option value="SF3A3">SF3A3</option>
+                                                <option value="SF3B1">SF3B1</option>
+                                                <option value="SF3B4">SF3B4</option>
+                                                <option value="SFPQ">SFPQ</option>
+                                                <option value="SLBP">SLBP</option>
+                                                <option value="SLTM">SLTM</option>
+                                                <option value="SMNDC1">SMNDC1</option>
+                                                <option value="SND1">SND1</option>
+                                                <option value="SRSF1">SRSF1</option>
+                                                <option value="SRSF7">SRSF7</option>
+                                                <option value="SRSF9">SRSF9</option>
+                                                <option value="SSB">SSB</option>
+                                                <option value="STAU2">STAU2</option>
+                                                <option value="SUB1">SUB1</option>
+                                                <option value="SUGP2">SUGP2</option>
+                                                <option value="SUPV3L1">SUPV3L1</option>
+                                                <option value="TAF15">TAF15</option>
+                                                <option value="TARDBP">TARDBP</option>
+                                                <option value="TBRG4">TBRG4</option>
+                                                <option value="TIA1">TIA1</option>
+                                                <option value="TIAL1">TIAL1</option>
+                                                <option value="TRA2A">TRA2A</option>
+                                                <option value="TROVE2">TROVE2</option>
+                                                <option value="U2AF1">U2AF1</option>
+                                                <option value="U2AF2">U2AF2</option>
+                                                <option value="UCHL5">UCHL5</option>
+                                                <option value="UPF1">UPF1</option>
+                                                <option value="UTP18">UTP18</option>
+                                                <option value="UTP3">UTP3</option>
+                                                <option value="WDR3">WDR3</option>
+                                                <option value="WDR43">WDR43</option>
+                                                <option value="WRN">WRN</option>
+                                                <option value="XPO5">XPO5</option>
+                                                <option value="XRCC6">XRCC6</option>
+                                                <option value="XRN2">XRN2</option>
+                                                <option value="YBX3">YBX3</option>
+                                                <option value="YWHAG">YWHAG</option>
+                                                <option value="ZC3H11A">ZC3H11A</option>
+                                                <option value="ZC3H8">ZC3H8</option>
+                                                <option value="ZNF622">ZNF622</option>
+                                                <option value="ZNF800">ZNF800</option>
+                                                <option value="ZRANB2">ZRANB2</option>
+                                            </select>
+                                        </div>
+                                        <div class="reformer-parameter">
+                                            <label for="reformerCellLine">Cell Line</label>
+                                            <select id="reformerCellLine" class="form-select">
+                                                <option value="HepG2">HepG2</option>
+                                                <option value="K562">K562</option>
+                                                <option value="adrenal_gland">Adrenal Gland</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- RNAFlow Specific Input Area -->
                             <div class="rnaflow-input" id="rnaflowInput" style="display: none;">
                                 <!-- Protein Sequence Input Section -->
@@ -278,9 +474,9 @@
                                             <label for="rnaflowNumSamples">Number of Samples</label>
                                             <input type="number" id="rnaflowNumSamples" min="1" max="10" value="3" placeholder="3">
                                         </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
                             <!-- Mol2Aptamer Specific Input Area -->
                             <div class="mol2aptamer-input" id="mol2aptamerInput" style="display: none;">

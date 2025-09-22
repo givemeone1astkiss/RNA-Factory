@@ -28,6 +28,7 @@ def create_app(config_name="default"):
     from app.api.mol2aptamer_routes import mol2aptamer_bp
     from app.api.rnaflow_routes import rnaflow_bp
     from app.api.rnaframeflow_routes import rnaframeflow_bp
+    from app.api.reformer_routes import reformer_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -39,6 +40,7 @@ def create_app(config_name="default"):
     app.register_blueprint(mol2aptamer_bp, url_prefix="/api/mol2aptamer")
     app.register_blueprint(rnaflow_bp, url_prefix="/api/rnaflow")
     app.register_blueprint(rnaframeflow_bp, url_prefix="/api/rnaframeflow")
+    app.register_blueprint(reformer_bp, url_prefix="/api/reformer")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -87,7 +89,8 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_bpfold"
+                "environment_path": "/home/huaizhi/Software/.venv_bpfold",
+                "architecture_image": "/static/images/bpfold.png"
             },
             {
                 "id": "ufold",
@@ -114,7 +117,8 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_ufold"
+                "environment_path": "/home/huaizhi/Software/.venv_ufold",
+                "architecture_image": "/static/images/ufold.png"
             },
             {
                 "id": "mxfold2",
@@ -141,7 +145,8 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_mxfold2"
+                "environment_path": "/home/huaizhi/Software/.venv_mxfold2",
+                "architecture_image": "/static/images/mxfold2.png"
             },
             {
                 "id": "rnamigos2",
@@ -168,7 +173,8 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_rnamigos2"
+                "environment_path": "/home/huaizhi/Software/.venv_rnamigos2",
+                "architecture_image": "/static/images/rnamigos2.png"
             },
             {
                 "id": "rnaformer",
@@ -195,7 +201,8 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_rnaformer"
+                "environment_path": "/home/huaizhi/Software/.venv_rnaformer",
+                "architecture_image": "/static/images/rnaformer.png"
             },
             {
                 "id": "mol2aptamer",
@@ -247,7 +254,8 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/huaizhi/Software/.venv_rnaflow"
+                "environment_path": "/home/huaizhi/Software/.venv_rnaflow",
+                "architecture_image": "/static/images/rnaflow.png"
             },
             {
                 "id": "rnaframeflow",
@@ -274,7 +282,36 @@ def preload_models(app):
                 ],
                 "environment_required": True,
                 "environment_type": "uv",
-                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_rnaframeflow"
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_rnaframeflow",
+                "architecture_image": "/static/images/rna-frameflow.png"
+            },
+            {
+                "id": "reformer",
+                "name": "Reformer",
+                "type": "rna_interaction",
+                "category": "interaction_prediction",
+                "category_name": "Interaction Prediction",
+                "description": "Reformer is a deep learning model for predicting protein-RNA binding affinity at single-base resolution using transformer architecture and cDNA sequences.",
+                "input_types": ["rna_sequence", "rbp_name", "cell_line"],
+                "output_types": ["binding_scores", "affinity_prediction"],
+                "model_path": "utils/wrappers/reformer_wrapper.py",
+                "weights_path": "models/Reformer",
+                "input_description": "Requires cDNA sequence, RBP name, and cell line for binding affinity prediction",
+                "output_description": "Outputs binding affinity scores at single-base resolution with statistics",
+                "github_url": "https://github.com/xilinshen/Reformer",
+                "paper_url": "https://www.sciencedirect.com/science/article/pii/S2666389924003222",
+                "features": [
+                    "Single-base resolution prediction",
+                    "Transformer architecture",
+                    "Multiple RBP support",
+                    "Cell line specific prediction",
+                    "Binding site identification",
+                    "High prediction accuracy"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_reformer",
+                "architecture_image": "/static/images/reformer.png"
             }
         ]
 

@@ -308,6 +308,14 @@ function clearInputAreas() {
         document.getElementById('rnaflowNumSamples').value = '3';
     }
     
+    // Clear Reformer specific inputs (parameters only, input areas handled by standard-input-area)
+    const reformerInput = document.getElementById('reformerInput');
+    if (reformerInput) {
+        // Reset parameters to default values
+        document.getElementById('reformerRbpName').value = 'U2AF2';
+        document.getElementById('reformerCellLine').value = 'HepG2';
+    }
+    
     // Clear any result sections
     const resultSection = document.getElementById('resultSection');
     if (resultSection) {
@@ -616,6 +624,8 @@ function adjustInputInterface() {
     const rnamigos2Input = document.getElementById('rnamigos2Input');
     const mol2aptamerInput = document.getElementById('mol2aptamerInput');
     const rnaflowInput = document.getElementById('rnaflowInput');
+    const rnaframeflowInput = document.getElementById('rnaframeflowInput');
+    const reformerInput = document.getElementById('reformerInput');
     const fileAcceptInfo = document.getElementById('fileAcceptInfo');
     
     // Get general input areas by ID
@@ -628,6 +638,8 @@ function adjustInputInterface() {
     if (rnamigos2Input) rnamigos2Input.style.display = 'none';
     if (mol2aptamerInput) mol2aptamerInput.style.display = 'none';
     if (rnaflowInput) rnaflowInput.style.display = 'none';
+    if (rnaframeflowInput) rnaframeflowInput.style.display = 'none';
+    if (reformerInput) reformerInput.style.display = 'none';
     
     // Show general input areas by default
     if (rnaSequencesInput) rnaSequencesInput.style.display = 'flex';
@@ -698,6 +710,27 @@ function adjustInputInterface() {
         // Hide general input areas for RNA-FrameFlow
         if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
         fileAcceptInfo.textContent = 'Supports parameter input';
+    } else if (currentModel.id === 'reformer') {
+        // Reformer model has specific input interface
+        if (reformerInput) {
+            reformerInput.style.display = 'flex';
+        }
+        // Hide general input areas for Reformer
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports RNA sequence input and RBP prediction parameters';
+        
+        // Initialize Reformer single block input area when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('reformerSequenceUnifiedInput', 'reformerSequence', 'reformerSequenceFileInput', 'reformerSequencePlaceholder');
+            
+            // 添加RBP选择变化的事件监听器
+            const rbpSelect = document.getElementById('reformerRbpName');
+            if (rbpSelect) {
+                rbpSelect.addEventListener('change', updateReformerCellLineOptions);
+                // 初始化细胞系选项
+                updateReformerCellLineOptions();
+            }
+        }, 100);
     } else {
         // Other models (BPFold, UFold, MXFold2, RNAformer)
         fileAcceptInfo.textContent = 'Supports FASTA, TXT formats';
@@ -929,8 +962,8 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, Mol2Aptamer, RNAFlow, and RNA-FrameFlow, skip general input validation as they have their own validation
-    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow') {
+    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, and Reformer, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
@@ -1052,6 +1085,16 @@ async function runAnalysis() {
             } else {
                 throw new Error(result.error);
             }
+        } else if (currentModel.id === 'reformer') {
+            const result = await runReformerAnalysis();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'Reformer Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
         } else {
             // For models other than BPFold, show a message that they are not yet implemented
             const result = {
@@ -1106,7 +1149,8 @@ function displayResults(result) {
     const resultContent = document.getElementById('resultContent');
     
     // Check for result data (different models use different field names)
-    if (!result.result && !result.results) {
+    // Skip this check for Reformer model as it has a different data structure
+    if (currentModel.id !== 'reformer' && !result.result && !result.results) {
         resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
         showResultSection(); // Always show result section
         return;
@@ -1131,6 +1175,13 @@ function displayResults(result) {
         html = displayRNAFlowResults(result);
     } else if (currentModel.id === 'rnaframeflow') {
         html = displayRNAFrameFlowResults(result);
+    } else if (currentModel.id === 'reformer') {
+        html = displayReformerResults(result);
+        // Show download button for Reformer
+        const downloadActions = document.getElementById('downloadActions');
+        if (downloadActions) {
+            downloadActions.style.display = 'flex';
+        }
     } else {
         html = displayDefaultResults(result.result);
     }
@@ -1962,34 +2013,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Auto-resize textarea function (simplified for general use)
 function autoResizeTextarea(textarea) {
-    function adjustHeight() {
-        // Check if this is a standard input area textarea
-        const isStandardInputArea = textarea.closest('.standard-input-area');
-        
-        if (isStandardInputArea) {
-            // Standard input areas handle their own height management
-            // Don't interfere with the standard input area logic
-            return;
-        } else {
-            // For general input areas (BPFold, UFold, MXFold2, RNAformer), sync heights
-            const isGeneralTextarea = textarea.closest('#rnaSequencesInput');
-            if (isGeneralTextarea) {
-                // Height management now handled by standard-input-area
-                return; // Don't call adjustHeight() again to avoid conflicts
-            } else {
-                // For other textareas, use the original logic
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-            }
-        }
+    if (!textarea) return;
+    
+    // Check if this is a standard input area textarea
+    const isStandardInputArea = textarea.closest('.standard-input-area');
+    
+    if (isStandardInputArea) {
+        // Standard input areas handle their own height management
+        // Don't interfere with the standard input area logic
+        return;
     }
     
-    // Initial adjustment (only for non-general textareas)
-    if (!textarea.closest('#rnaSequencesInput')) {
-        adjustHeight();
-    } else {
+    // Check if this is a general textarea
+    const isGeneralTextarea = textarea.closest('#rnaSequencesInput');
+    if (isGeneralTextarea) {
         // Height management now handled by standard-input-area
+        return;
     }
+    
+    // For other textareas (including AI input), use the original logic
+    function adjustHeight() {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+    
+    // Initial adjustment
+    adjustHeight();
     
     // Adjust on input
     textarea.addEventListener('input', adjustHeight);
@@ -2687,6 +2736,8 @@ function downloadAllResults() {
             downloadAllRNAFlowResults();
         } else if (currentModel.id === 'rnaframeflow') {
             downloadAllRNAFrameFlowResults();
+        } else if (currentModel.id === 'reformer') {
+            downloadAllReformerResults();
         } else {
             alert('Download not supported for this model');
         }
@@ -4306,22 +4357,6 @@ function removeRNAmigos2CifFile() {
     fileUpload.removeAttribute('data-file-content');
 }
 
-// Auto-resize textarea function
-function autoResizeTextarea(textarea) {
-    if (!textarea) return;
-    
-    // Reset height to auto to get the natural content height
-    textarea.style.height = 'auto';
-    
-    // Get the scroll height (content height)
-    const scrollHeight = textarea.scrollHeight;
-    
-    // Set the height to the scroll height, but ensure minimum height
-    const minHeight = 180; // Match CSS min-height
-    const newHeight = Math.max(scrollHeight, minHeight);
-    
-    textarea.style.height = newHeight + 'px';
-}
 
 // Check and toggle file upload area based on textarea content
 function checkAndToggleFileUpload() {
@@ -4531,22 +4566,6 @@ function removeRNAmigos2CifFile() {
     fileUpload.removeAttribute('data-file-content');
 }
 
-// Auto-resize textarea function
-function autoResizeTextarea(textarea) {
-    if (!textarea) return;
-    
-    // Reset height to auto to get the natural content height
-    textarea.style.height = 'auto';
-    
-    // Get the scroll height (content height)
-    const scrollHeight = textarea.scrollHeight;
-    
-    // Set the height to the scroll height, but ensure minimum height
-    const minHeight = 180; // Match CSS min-height
-    const newHeight = Math.max(scrollHeight, minHeight);
-    
-    textarea.style.height = newHeight + 'px';
-}
 
 // Check and toggle file upload area based on textarea content
 function checkAndToggleFileUpload() {
@@ -4576,3 +4595,390 @@ function checkAndToggleFileUpload() {
     });
 }
 
+
+// Reformer RBP-细胞系组合数据
+const rbpCellLineCombinations = {
+    "AARS": ["K562"],
+    "AATF": ["K562"],
+    "ABCF1": ["K562"],
+    "AGGF1": ["HepG2", "K562"],
+    "AKAP1": ["HepG2", "K562"],
+    "AKAP8L": ["K562"],
+    "APOBEC3C": ["K562"],
+    "AQR": ["HepG2", "K562"],
+    "BCCIP": ["HepG2"],
+    "BCLAF1": ["HepG2"],
+    "BUD13": ["HepG2", "K562"],
+    "CDC40": ["HepG2"],
+    "CPEB4": ["K562"],
+    "CPSF6": ["K562"],
+    "CSTF2": ["HepG2"],
+    "CSTF2T": ["HepG2", "K562"],
+    "DDX21": ["K562"],
+    "DDX24": ["K562"],
+    "DDX3X": ["HepG2", "K562"],
+    "DDX42": ["K562"],
+    "DDX51": ["K562"],
+    "DDX52": ["HepG2", "K562"],
+    "DDX55": ["HepG2", "K562"],
+    "DDX59": ["HepG2"],
+    "DDX6": ["HepG2", "K562"],
+    "DGCR8": ["HepG2", "K562", "adrenal_gland"],
+    "DHX30": ["HepG2", "K562"],
+    "DKC1": ["HepG2"],
+    "DROSHA": ["HepG2", "K562"],
+    "EFTUD2": ["HepG2", "K562"],
+    "EIF3D": ["HepG2"],
+    "EIF3G": ["K562"],
+    "EIF3H": ["HepG2"],
+    "EIF4G2": ["K562"],
+    "EWSR1": ["K562"],
+    "EXOSC5": ["HepG2", "K562"],
+    "FAM120A": ["HepG2", "K562"],
+    "FASTKD2": ["HepG2", "K562"],
+    "FKBP4": ["HepG2"],
+    "FMR1": ["K562"],
+    "FTO": ["HepG2", "K562"],
+    "FUBP3": ["HepG2"],
+    "FUS": ["HepG2", "K562"],
+    "FXR1": ["K562"],
+    "FXR2": ["HepG2", "K562"],
+    "G3BP1": ["HepG2"],
+    "GEMIN5": ["K562"],
+    "GNL3": ["K562"],
+    "GPKOW": ["K562"],
+    "GRSF1": ["HepG2"],
+    "GRWD1": ["HepG2", "K562"],
+    "GTF2F1": ["HepG2", "K562"],
+    "HLTF": ["HepG2", "K562"],
+    "HNRNPA1": ["HepG2", "K562"],
+    "HNRNPC": ["HepG2", "K562"],
+    "HNRNPK": ["HepG2", "K562"],
+    "HNRNPL": ["HepG2", "K562"],
+    "HNRNPM": ["HepG2", "K562"],
+    "HNRNPU": ["HepG2", "K562", "adrenal_gland"],
+    "HNRNPUL1": ["HepG2", "K562"],
+    "IGF2BP1": ["HepG2", "K562"],
+    "IGF2BP2": ["K562"],
+    "IGF2BP3": ["HepG2"],
+    "ILF3": ["HepG2", "K562"],
+    "KHDRBS1": ["K562"],
+    "KHSRP": ["HepG2", "K562"],
+    "LARP4": ["HepG2", "K562"],
+    "LARP7": ["HepG2", "K562"],
+    "LIN28B": ["HepG2", "K562"],
+    "LSM11": ["HepG2", "K562"],
+    "MATR3": ["HepG2", "K562"],
+    "METAP2": ["K562"],
+    "MTPAP": ["K562"],
+    "NCBP2": ["HepG2", "K562"],
+    "NIP7": ["HepG2"],
+    "NIPBL": ["K562"],
+    "NKRF": ["HepG2"],
+    "NOL12": ["HepG2"],
+    "NOLC1": ["HepG2", "K562"],
+    "NONO": ["K562"],
+    "NPM1": ["K562"],
+    "NSUN2": ["K562"],
+    "PABPC4": ["K562"],
+    "PABPN1": ["HepG2"],
+    "PCBP1": ["HepG2", "K562"],
+    "PCBP2": ["HepG2"],
+    "PHF6": ["K562"],
+    "POLR2G": ["HepG2"],
+    "PPIG": ["HepG2"],
+    "PPIL4": ["K562"],
+    "PRPF4": ["HepG2"],
+    "PRPF8": ["HepG2", "K562"],
+    "PTBP1": ["HepG2", "K562"],
+    "PUM1": ["K562"],
+    "PUM2": ["K562"],
+    "PUS1": ["K562"],
+    "QKI": ["HepG2", "K562"],
+    "RBFOX2": ["HepG2", "K562"],
+    "RBM15": ["HepG2", "K562"],
+    "RBM22": ["HepG2", "K562"],
+    "RBM5": ["HepG2"],
+    "RPS11": ["K562"],
+    "RPS3": ["HepG2", "K562"],
+    "SAFB": ["HepG2", "K562"],
+    "SAFB2": ["K562"],
+    "SBDS": ["K562"],
+    "SDAD1": ["HepG2", "K562"],
+    "SERBP1": ["K562"],
+    "SF3A3": ["HepG2"],
+    "SF3B1": ["K562"],
+    "SF3B4": ["HepG2", "K562"],
+    "SFPQ": ["HepG2"],
+    "SLBP": ["K562"],
+    "SLTM": ["HepG2", "K562"],
+    "SMNDC1": ["HepG2", "K562"],
+    "SND1": ["HepG2", "K562"],
+    "SRSF1": ["HepG2", "K562"],
+    "SRSF7": ["HepG2", "K562"],
+    "SRSF9": ["HepG2"],
+    "SSB": ["HepG2", "K562"],
+    "STAU2": ["HepG2"],
+    "SUB1": ["HepG2"],
+    "SUGP2": ["HepG2"],
+    "SUPV3L1": ["HepG2", "K562"],
+    "TAF15": ["HepG2", "K562"],
+    "TARDBP": ["K562"],
+    "TBRG4": ["HepG2", "K562"],
+    "TIA1": ["HepG2", "K562"],
+    "TIAL1": ["HepG2"],
+    "TRA2A": ["HepG2", "K562"],
+    "TROVE2": ["HepG2", "K562"],
+    "U2AF1": ["HepG2", "K562"],
+    "U2AF2": ["HepG2", "K562"],
+    "UCHL5": ["HepG2", "K562"],
+    "UPF1": ["HepG2", "K562"],
+    "UTP18": ["HepG2", "K562"],
+    "UTP3": ["K562"],
+    "WDR3": ["K562"],
+    "WDR43": ["HepG2", "K562"],
+    "WRN": ["K562"],
+    "XPO5": ["HepG2"],
+    "XRCC6": ["HepG2", "K562"],
+    "XRN2": ["HepG2", "K562"],
+    "YBX3": ["HepG2", "K562"],
+    "YWHAG": ["K562"],
+    "ZC3H11A": ["HepG2", "K562"],
+    "ZC3H8": ["K562"],
+    "ZNF622": ["K562"],
+    "ZNF800": ["HepG2", "K562"],
+    "ZRANB2": ["K562"]
+};
+
+// 更新Reformer细胞系选项
+function updateReformerCellLineOptions() {
+    const rbpSelect = document.getElementById('reformerRbpName');
+    const cellLineSelect = document.getElementById('reformerCellLine');
+    
+    if (!rbpSelect || !cellLineSelect) return;
+    
+    const selectedRbp = rbpSelect.value;
+    const supportedCellLines = rbpCellLineCombinations[selectedRbp] || [];
+    
+    // 清空现有选项
+    cellLineSelect.innerHTML = '';
+    
+    // 添加支持的细胞系选项
+    supportedCellLines.forEach(cellLine => {
+        const option = document.createElement('option');
+        option.value = cellLine;
+        option.textContent = cellLine === 'adrenal_gland' ? 'Adrenal Gland' : cellLine;
+        cellLineSelect.appendChild(option);
+    });
+    
+    // 如果没有支持的细胞系，添加提示
+    if (supportedCellLines.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No supported cell lines';
+        option.disabled = true;
+        cellLineSelect.appendChild(option);
+    }
+}
+
+// Reformer Analysis Function
+async function runReformerAnalysis() {
+    // Get input sequence from standard-input-area
+    const rnaSequenceInputArea = document.getElementById('reformerSequenceInputArea');
+    const rnaSequenceTextarea = document.getElementById('reformerSequence');
+    const rnaSequenceFileInput = document.getElementById('reformerSequenceFileInput');
+    
+    console.log('Reformer Analysis Debug:');
+    console.log('rnaSequenceInputArea:', rnaSequenceInputArea);
+    console.log('rnaSequenceTextarea:', rnaSequenceTextarea);
+    console.log('rnaSequenceFileInput:', rnaSequenceFileInput);
+    
+    let sequence = rnaSequenceTextarea ? rnaSequenceTextarea.value.trim() : '';
+    
+    // Check if file content is available
+    if (rnaSequenceInputArea && rnaSequenceInputArea.hasAttribute('data-file-content')) {
+        const fileContent = rnaSequenceInputArea.getAttribute('data-file-content').trim();
+        console.log('File content found:', fileContent ? 'Yes' : 'No');
+        if (fileContent) {
+            sequence = fileContent;
+        }
+    }
+    
+    console.log('Final sequence length:', sequence.length);
+    console.log('Sequence preview:', sequence.substring(0, 50) + '...');
+    
+    // Validate input
+    if (!sequence) {
+        throw new Error('Please provide cDNA sequence');
+    }
+    
+    // Get parameters
+    const rbpName = document.getElementById('reformerRbpName').value;
+    const cellLine = document.getElementById('reformerCellLine').value;
+    
+    // 验证RBP-细胞系组合是否有效
+    const supportedCellLines = rbpCellLineCombinations[rbpName] || [];
+    if (!supportedCellLines.includes(cellLine)) {
+        throw new Error(`Invalid combination: ${rbpName} does not support ${cellLine} cell line. Supported cell lines: ${supportedCellLines.join(', ')}`);
+    }
+    
+    // Prepare request data
+    const requestData = {
+        sequence: sequence,
+        rbp_name: rbpName,
+        cell_line: cellLine
+    };
+    
+    // Send request to API
+    const response = await fetch('/api/reformer/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // Parse the response and store for download functionality
+    const result = await response.json();
+    window.currentResult = result;
+    
+    return result;
+}
+
+// Display Reformer Results
+function displayReformerResults(result) {
+    if (!result.success) {
+        return `<div class="error-message">Error: ${result.error}</div>`;
+    }
+    
+    const bindingScores = result.binding_scores || [];
+    const maxScore = result.max_score || 0;
+    const meanScore = result.mean_score || 0;
+    const sequenceLength = result.sequence_length || 0;
+    const rbpName = result.rbp_name || 'Unknown';
+    const cellLine = result.cell_line || 'Unknown';
+    
+    if (bindingScores.length === 0) {
+        return `<div class="alert alert-warning">No binding affinity predictions found</div>`;
+    }
+    
+    // Store results globally for download functionality
+    window.currentResult = result;
+    
+    // Calculate score statistics
+    const scores = bindingScores;
+    const bestScore = Math.max(...scores);
+    const worstScore = Math.min(...scores);
+    const avgScore = (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(4);
+    
+    let html = '<div class="rnamigos2-results">';
+    
+    // Summary information in RNAmigos2 style (圆角彩色块方式)
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-dna"></i>Binding Affinity Prediction Results</h6>
+            <div class="sequence-info">
+                <div class="sequence-info-stats">
+                    <div class="sequence-length">Max Score: ${maxScore.toFixed(4)}</div>
+                    <div class="sequence-length">Mean Score: ${meanScore.toFixed(4)}</div>
+                    <div class="sequence-length">Sequence Length: ${sequenceLength} bp</div>
+                    <div class="sequence-length">RBP: ${rbpName}</div>
+                    <div class="sequence-length">Cell Line: ${cellLine}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add binding scores table with centered text (RNAmigos2 style)
+    const tableRows = bindingScores.map((score, index) => {
+        let scoreClass = 'score-low';
+        if (score > 0.7) scoreClass = 'score-high';
+        else if (score > 0.4) scoreClass = 'score-medium';
+        
+        return `
+            <tr>
+                <td class="text-center">${index + 1}</td>
+                <td class="score-cell ${scoreClass} text-center">${score.toFixed(4)}</td>
+                <td class="${scoreClass} text-center">${score > 0.7 ? 'High' : score > 0.4 ? 'Medium' : 'Low'}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-chart-line"></i>Binding Scores by Position</h6>
+            <div class="interactions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Binding Score</th>
+                            <th>Score Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows.join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    html += '</div>';
+    
+    return html;
+}
+
+// Download all Reformer results
+function downloadAllReformerResults() {
+    // Get the current result data from the global result storage
+    if (!window.currentResult || !window.currentResult.success) {
+        showNotification('No results to download', 'warning');
+        return;
+    }
+    
+    const result = window.currentResult;
+    const bindingScores = result.binding_scores || [];
+    const maxScore = result.max_score || 0;
+    const meanScore = result.mean_score || 0;
+    const sequenceLength = result.sequence_length || 0;
+    const rbpName = result.rbp_name || 'Unknown';
+    const cellLine = result.cell_line || 'Unknown';
+    
+    // Create CSV content
+    let csvContent = 'Reformer Binding Affinity Prediction Results\n';
+    csvContent += `RBP: ${rbpName}\n`;
+    csvContent += `Cell Line: ${cellLine}\n`;
+    csvContent += `Sequence Length: ${sequenceLength} bp\n`;
+    csvContent += `Max Binding Score: ${maxScore.toFixed(4)}\n`;
+    csvContent += `Mean Binding Score: ${meanScore.toFixed(4)}\n`;
+    csvContent += '\n';
+    csvContent += 'Position,Binding_Score,Score_Level\n';
+    
+    // Add binding scores data
+    for (let i = 0; i < bindingScores.length; i++) {
+        const score = bindingScores[i];
+        let scoreLevel = 'Low';
+        if (score > 0.7) scoreLevel = 'High';
+        else if (score > 0.4) scoreLevel = 'Medium';
+        
+        csvContent += `${i + 1},${score.toFixed(4)},${scoreLevel}\n`;
+    }
+    
+    // Create and download CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reformer_${rbpName}_${cellLine}_binding_scores.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showNotification('Reformer results downloaded successfully!', 'success');
+}

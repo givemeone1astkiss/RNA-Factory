@@ -1,0 +1,78 @@
+/* Reformer Model Styles */
+
+.reformer-input {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+
+.reformer-parameters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.reformer-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.reformer-parameter label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.reformer-parameter .form-select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.reformer-parameter .form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 144, 220, 0.1);
+}
+
+.reformer-parameter .form-select option {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Results Area Styles - Now using RNAmigos2 styles */
+
+/* Dark mode styles */
+[data-theme="dark"] .reformer-section {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .reformer-parameter .form-select {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .reformer-parameter .form-select option {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Dark mode styles for .reformer-results removed - now using RNAmigos2 styles */
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .reformer-parameters {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    /* Mobile responsiveness for .reformer-results removed - now using RNAmigos2 styles */
+}
