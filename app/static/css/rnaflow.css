@@ -56,42 +56,79 @@
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-/* Parameter controls */
-.rnaflow-parameters {
+/* Parameters Grid for RNAFlow - Based on RiboDiffusion design */
+.rnaflow-input .parameters-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
     margin-top: 15px;
+    width: 100%;
+    max-width: 100%;
 }
 
-.rnaflow-parameter {
+/* Ensure parameter groups fill available space */
+.rnaflow-input .parameter-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    min-width: 0; /* Allow shrinking below content size */
 }
 
-.rnaflow-parameter label {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
+/* Responsive adjustments for better space utilization */
+@media (min-width: 1400px) {
+    .rnaflow-input .parameters-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on extra large screens */
+    }
 }
 
-.rnaflow-parameter input,
-.rnaflow-parameter select {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .rnaflow-input .parameters-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on large screens */
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+    .rnaflow-input .parameters-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+    }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+    .rnaflow-input .parameters-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+    }
+}
+
+@media (max-width: 599px) {
+    .rnaflow-input .parameters-grid {
+        grid-template-columns: 1fr; /* 1 column on mobile */
+    }
+}
+
+.rnaflow-parameter input {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
     background: var(--input-bg);
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 0.9rem;
+    font-weight: 500;
     transition: all 0.3s ease;
+    flex: 1;
+    width: 100%;
 }
 
-.rnaflow-parameter input:focus,
-.rnaflow-parameter select:focus {
+.rnaflow-parameter input:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: white;
+}
+
+.rnaflow-parameter small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    line-height: 1.4;
 }
 
 /* Results Display Styles - BPFold style for summary, RNAmigos2 style for table */
@@ -156,12 +193,17 @@
 }
 
 .rnaflow-results .interactions-table th {
-    background: var(--primary-color);
+    background: #0f172a;
     color: white;
     padding: 0.75rem 1rem;
     text-align: center;
     font-weight: 600;
     font-size: 0.9rem;
+}
+
+[data-theme="dark"] .rnaflow-results .interactions-table th {
+    background: white;
+    color: #0f172a;
 }
 
 .rnaflow-results .interactions-table td {

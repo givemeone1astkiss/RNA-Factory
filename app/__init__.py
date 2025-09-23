@@ -30,6 +30,7 @@ def create_app(config_name="default"):
     from app.api.rnaframeflow_routes import rnaframeflow_bp
     from app.api.reformer_routes import reformer_bp
     from app.api.copra_routes import copra_bp
+    from app.api.ribodiffusion_routes import ribodiffusion_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -43,6 +44,7 @@ def create_app(config_name="default"):
     app.register_blueprint(rnaframeflow_bp, url_prefix="/api/rnaframeflow")
     app.register_blueprint(reformer_bp, url_prefix="/api/reformer")
     app.register_blueprint(copra_bp, url_prefix="/api/copra")
+    app.register_blueprint(ribodiffusion_bp, url_prefix="/api/ribodiffusion")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -342,6 +344,34 @@ def preload_models(app):
                 "environment_type": "uv",
                 "environment_path": "/home/zhangliqin/RNA-Factory/.venv_copra",
                 "architecture_image": "/static/images/copra.png"
+            },
+            {
+                "id": "ribodiffusion",
+                "name": "RiboDiffusion",
+                "type": "rna_design",
+                "category": "de_novo_design",
+                "category_name": "De Novo Design",
+                "description": "RiboDiffusion is a generative diffusion model for tertiary structure-based RNA inverse folding. It generates RNA sequences that can fold into specific 3D structures using diffusion-based generation.",
+                "input_types": ["pdb"],
+                "output_types": ["rna_sequences", "fasta_files"],
+                "model_path": "utils/wrappers/ribodiffusion_wrapper.py",
+                "weights_path": "models/RiboDiffusion/ckpts",
+                "input_description": "Requires PDB file of target RNA structure",
+                "output_description": "Outputs generated RNA sequences in FASTA format that can fold into the target structure",
+                "github_url": "https://github.com/ml4bio/RiboDiffusion",
+                "paper_url": "https://arxiv.org/abs/2404.11199",
+                "features": [
+                    "Tertiary structure-based inverse folding",
+                    "Generative diffusion models",
+                    "High-quality RNA sequence generation",
+                    "Structure-conditioned generation",
+                    "Multiple sampling strategies",
+                    "Recovery rate evaluation"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_ribodiffusion",
+                "architecture_image": "/static/images/ribodiffusion.png"
             }
         ]
 

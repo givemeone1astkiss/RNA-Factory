@@ -6,6 +6,27 @@
     grid-column: 1 / -1; /* Span across all columns */
 }
 
+/* Ensure input-placeholder uses vertical layout for RNAmigos2 */
+.rnamigos2-input .input-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.rnamigos2-input .input-placeholder i {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.rnamigos2-input .input-placeholder p {
+    margin: 0.5rem 0;
+}
+
+.rnamigos2-input .input-placeholder small {
+    margin-top: 0.25rem;
+}
+
 .rnamigos2-section {
     display: flex;
     flex-direction: column;
@@ -311,12 +332,17 @@
 }
 
 .rnamigos2-results .interactions-table th {
-    background: var(--primary-color);
+    background: #0f172a;
     color: white;
     padding: 0.75rem 1rem;
     text-align: center;
     font-weight: 600;
     font-size: 0.9rem;
+}
+
+[data-theme="dark"] .rnamigos2-results .interactions-table th {
+    background: white;
+    color: #0f172a;
 }
 
 .rnamigos2-results .interactions-table td {

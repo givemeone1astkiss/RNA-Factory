@@ -336,6 +336,7 @@
     color: var(--text-muted);
     pointer-events: none;
     transition: all 0.3s ease;
+    flex-direction: column;
 }
 
 .standard-input-area.single-block .input-placeholder i {
@@ -471,7 +472,6 @@
 }
 
 [data-theme="dark"] .standard-input-area.single-block .file-info-content {
-    background: #2d3748;
     border-color: #28a745;
     color: #28a745;
 }

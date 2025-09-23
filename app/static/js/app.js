@@ -326,6 +326,15 @@ function clearInputAreas() {
         document.getElementById('copraConfidenceThreshold').value = '0.7';
     }
     
+    // Clear RiboDiffusion specific inputs (parameters only, input areas handled by standard-input-area)
+    const ribodiffusionInput = document.getElementById('ribodiffusionInput');
+    if (ribodiffusionInput) {
+        // Reset parameters to default values
+        document.getElementById('ribodiffusionNumSamples').value = '1';
+        document.getElementById('ribodiffusionSamplingSteps').value = '50';
+        document.getElementById('ribodiffusionCondScale').value = '-1.0';
+    }
+    
     // Clear any result sections
     const resultSection = document.getElementById('resultSection');
     if (resultSection) {
@@ -371,8 +380,59 @@ function clearTempFolder() {
 
 // Reset all standard-input-area components to initial state
 function resetAllStandardInputAreas() {
-    // Reset RNAmigos2 CIF file upload (now uses standard-input-area single-block)
-    // This will be handled by the single block areas reset below
+    // Reset RNAmigos2 CIF file upload (now uses standard single block mode)
+    const rnamigos2FileUpload = document.getElementById('rnamigos2FileUpload');
+    const rnamigos2FileInput = document.getElementById('rnamigos2FileInput');
+    const rnamigos2CifContent = document.getElementById('rnamigos2CifContent');
+    const rnamigos2Placeholder = document.getElementById('rnamigos2Placeholder');
+    
+    if (rnamigos2FileUpload && rnamigos2FileInput && rnamigos2CifContent && rnamigos2Placeholder) {
+        // Clear file input
+        rnamigos2FileInput.value = '';
+        
+        // Clear textarea
+        rnamigos2CifContent.value = '';
+        rnamigos2CifContent.style.display = 'none';
+        
+        // Show placeholder
+        rnamigos2Placeholder.style.display = 'flex';
+        
+        // Clear stored file content
+        rnamigos2FileUpload.removeAttribute('data-file-content');
+        
+        // Remove file info
+        const fileInfo = rnamigos2FileUpload.querySelector('.file-info-content');
+        if (fileInfo) {
+            fileInfo.style.display = 'none';
+        }
+    }
+    
+    // Reset RiboDiffusion PDB file upload (now uses standard single block mode)
+    const ribodiffusionPdbInputArea = document.getElementById('ribodiffusionPdbInputArea');
+    const ribodiffusionPdbFileInput = document.getElementById('ribodiffusionPdbFileInput');
+    const ribodiffusionPdbContent = document.getElementById('ribodiffusionPdbContent');
+    const ribodiffusionPdbPlaceholder = document.getElementById('ribodiffusionPdbPlaceholder');
+    
+    if (ribodiffusionPdbInputArea && ribodiffusionPdbFileInput && ribodiffusionPdbContent && ribodiffusionPdbPlaceholder) {
+        // Clear file input
+        ribodiffusionPdbFileInput.value = '';
+        
+        // Clear textarea
+        ribodiffusionPdbContent.value = '';
+        ribodiffusionPdbContent.style.display = 'none';
+        
+        // Show placeholder
+        ribodiffusionPdbPlaceholder.style.display = 'flex';
+        
+        // Clear stored file content
+        ribodiffusionPdbInputArea.removeAttribute('data-file-content');
+        
+        // Remove file info
+        const fileInfo = ribodiffusionPdbInputArea.querySelector('.file-info-content');
+        if (fileInfo) {
+            fileInfo.style.display = 'none';
+        }
+    }
     
     // Reset single block input areas
     const singleBlockAreas = document.querySelectorAll('.standard-input-area.single-block');
@@ -425,15 +485,15 @@ function resetAllStandardInputAreas() {
             // Reset file input
             fileInput.value = '';
             
-            // Hide file info and show upload content
+            // Hide file info and show input placeholder
             const fileInfo = fileUpload.querySelector('.file-info-content');
             if (fileInfo) {
                 fileInfo.style.display = 'none';
             }
             
-            const uploadContent = fileUpload.querySelector('.upload-content');
-            if (uploadContent) {
-                uploadContent.style.display = 'flex';
+            const inputPlaceholder = fileUpload.querySelector('.input-placeholder');
+            if (inputPlaceholder) {
+                inputPlaceholder.style.display = 'flex';
             }
             
             // Clear stored file content
@@ -612,6 +672,7 @@ function adjustInputInterface() {
     const rnaframeflowInput = document.getElementById('rnaframeflowInput');
     const reformerInput = document.getElementById('reformerInput');
     const copraInput = document.getElementById('copraInput');
+    const ribodiffusionInput = document.getElementById('ribodiffusionInput');
     const fileAcceptInfo = document.getElementById('fileAcceptInfo');
     
     // Get general input areas by ID
@@ -627,6 +688,7 @@ function adjustInputInterface() {
     if (rnaframeflowInput) rnaframeflowInput.style.display = 'none';
     if (reformerInput) reformerInput.style.display = 'none';
     if (copraInput) copraInput.style.display = 'none';
+    if (ribodiffusionInput) ribodiffusionInput.style.display = 'none';
     
     // Show general input areas by default
     if (rnaSequencesInput) rnaSequencesInput.style.display = 'flex';
@@ -653,7 +715,7 @@ function adjustInputInterface() {
         // Initialize RNAmigos2 input areas when model is selected
         setTimeout(() => {
             // CIF file input area (now uses single block mode)
-            initializeSingleBlockInput('rnamigos2StructureUnifiedInput', 'rnamigos2StructureText', 'rnamigos2FileInput', 'rnamigos2StructurePlaceholder');
+            initializeSingleBlockInput('rnamigos2UnifiedInput', 'rnamigos2CifContent', 'rnamigos2FileInput', 'rnamigos2Placeholder');
             
             // SMILES input area (uses single block mode)
             initializeSingleBlockInput('rnamigos2SmilesUnifiedInput', 'rnamigos2SmilesText', 'rnamigos2SmilesFileInput', 'rnamigos2SmilesPlaceholder');
@@ -731,6 +793,19 @@ function adjustInputInterface() {
         setTimeout(() => {
             initializeSingleBlockInput('copraProteinUnifiedInput', 'copraProteinSequence', 'copraProteinFileInput', 'copraProteinPlaceholder');
             initializeSingleBlockInput('copraRnaUnifiedInput', 'copraRnaSequence', 'copraRnaFileInput', 'copraRnaPlaceholder');
+        }, 100);
+    } else if (currentModel.id === 'ribodiffusion') {
+        // RiboDiffusion model has specific input interface
+        if (ribodiffusionInput) {
+            ribodiffusionInput.style.display = 'flex';
+        }
+        // Hide general input areas for RiboDiffusion
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports PDB format';
+        
+        // Initialize RiboDiffusion single block input areas when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('ribodiffusionPdbUnifiedInput', 'ribodiffusionPdbContent', 'ribodiffusionPdbFileInput', 'ribodiffusionPdbPlaceholder');
         }, 100);
     } else {
         // Other models (BPFold, UFold, MXFold2, RNAformer)
@@ -963,8 +1038,8 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, and CoPRA, skip general input validation as they have their own validation
-    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra') {
+    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, CoPRA, and RiboDiffusion, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra' && currentModel.id !== 'ribodiffusion') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
@@ -1106,6 +1181,16 @@ async function runAnalysis() {
             } else {
                 throw new Error(result.error);
             }
+        } else if (currentModel.id === 'ribodiffusion') {
+            const result = await runRiboDiffusionAnalysis();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'RiboDiffusion Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
         } else {
             // For models other than BPFold, show a message that they are not yet implemented
             const result = {
@@ -1160,8 +1245,15 @@ function displayResults(result) {
     const resultContent = document.getElementById('resultContent');
     
     // Check for result data (different models use different field names)
-    // Skip this check for Reformer model as it has a different data structure
-    if (currentModel.id !== 'reformer' && !result.result && !result.results) {
+    // Skip this check for Reformer and RiboDiffusion models as they have different data structures
+    if (currentModel.id !== 'reformer' && currentModel.id !== 'ribodiffusion' && !result.result && !result.results) {
+        resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
+        showResultSection(); // Always show result section
+        return;
+    }
+    
+    // Special check for RiboDiffusion
+    if (currentModel.id === 'ribodiffusion' && !result.data) {
         resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
         showResultSection(); // Always show result section
         return;
@@ -1195,6 +1287,13 @@ function displayResults(result) {
         }
     } else if (currentModel.id === 'copra') {
         html = displayCoPRAResults(result);
+    } else if (currentModel.id === 'ribodiffusion') {
+        html = displayRiboDiffusionResults(result);
+        // Show download button for RiboDiffusion
+        const downloadActions = document.getElementById('downloadActions');
+        if (downloadActions) {
+            downloadActions.style.display = 'flex';
+        }
     } else {
         html = displayDefaultResults(result.result);
     }
@@ -2751,6 +2850,8 @@ function downloadAllResults() {
             downloadAllRNAFrameFlowResults();
         } else if (currentModel.id === 'reformer') {
             downloadAllReformerResults();
+        } else if (currentModel.id === 'ribodiffusion') {
+            downloadAllRiboDiffusionResults();
         } else {
             alert('Download not supported for this model');
         }
@@ -3310,18 +3411,18 @@ async function checkBPFoldStatus() {
 async function runRNAmigos2Analysis() {
     // Get input data
     const cifFileInput = document.getElementById('rnamigos2FileInput');
-    const cifTextElement = document.getElementById('rnamigos2StructureText');
+    const cifContentElement = document.getElementById('rnamigos2CifContent');
     const residuesElement = document.getElementById('rnamigos2Residues');
     const smilesFileInput = document.getElementById('rnamigos2SmilesFileInput');
     const smilesTextElement = document.getElementById('rnamigos2SmilesText');
     
     // Validate inputs
-    if (!cifFileInput || !cifTextElement || !residuesElement || !smilesFileInput || !smilesTextElement) {
+    if (!cifFileInput || !cifContentElement || !residuesElement || !smilesFileInput || !smilesTextElement) {
         throw new Error('RNAmigos2 input elements not found. Please refresh the page and try again.');
     }
     
     const cifFile = cifFileInput.files[0];
-    let cifContent = cifTextElement.value.trim();
+    let cifContent = cifContentElement.value.trim();
     let residuesText = residuesElement.value.trim();
     
     // If no residues in textarea, check if file was uploaded
@@ -3336,7 +3437,7 @@ async function runRNAmigos2Analysis() {
     
     // If no CIF content in textarea, check if file was uploaded
     if (!cifContent) {
-        const unifiedInput = document.getElementById('rnamigos2StructureUnifiedInput');
+        const unifiedInput = document.getElementById('rnamigos2UnifiedInput');
         if (unifiedInput && unifiedInput.hasAttribute('data-file-content')) {
             cifContent = unifiedInput.getAttribute('data-file-content').trim();
         }
@@ -3344,9 +3445,9 @@ async function runRNAmigos2Analysis() {
     
     // If no SMILES in textarea, check if file was uploaded
     if (!smilesText) {
-        const fileUpload = document.getElementById('rnamigos2SmilesFileUpload');
-        if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
-            smilesText = fileUpload.getAttribute('data-file-content').trim();
+        const unifiedInput = document.getElementById('rnamigos2SmilesUnifiedInput');
+        if (unifiedInput && unifiedInput.hasAttribute('data-file-content')) {
+            smilesText = unifiedInput.getAttribute('data-file-content').trim();
         }
     }
     
@@ -4026,17 +4127,25 @@ function displayRNAFlowResults(results) {
 // Initialize single block unified input area
 function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, placeholderId) {
     const unifiedInput = document.getElementById(unifiedInputId);
-    const textarea = document.getElementById(textareaId);
+    const textarea = textareaId ? document.getElementById(textareaId) : null;
     const fileInput = document.getElementById(fileInputId);
     const placeholder = document.getElementById(placeholderId);
     
-    if (!unifiedInput || !textarea || !fileInput || !placeholder) {
+    if (!unifiedInput || !fileInput || !placeholder) {
         return;
     }
     
+    // Check if already initialized to prevent duplicate event listeners
+    if (unifiedInput.hasAttribute('data-initialized')) {
+        return;
+    }
+    
+    // Mark as initialized
+    unifiedInput.setAttribute('data-initialized', 'true');
+    
     // Click handler for unified input area
     unifiedInput.addEventListener('click', (e) => {
-            e.preventDefault();
+        e.preventDefault();
         e.stopPropagation();
         
         // Check if file info is displayed (file is uploaded)
@@ -4046,24 +4155,31 @@ function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, pla
             return;
         }
         
-        // Show textarea and focus
-        placeholder.style.display = 'none';
-        textarea.style.display = 'block';
-        textarea.focus();
-    });
-    
-    // Textarea blur handler - hide if empty
-    textarea.addEventListener('blur', () => {
-        if (textarea.value.trim() === '') {
-            textarea.style.display = 'none';
-            placeholder.style.display = 'block';
+        if (textarea) {
+            // Show textarea and focus
+            placeholder.style.display = 'none';
+            textarea.style.display = 'block';
+            textarea.focus();
+        } else {
+            // Only file upload - trigger file input
+            fileInput.click();
         }
     });
     
-    // Textarea input handler - auto resize
-    textarea.addEventListener('input', () => {
-        autoResizeTextarea(textarea);
-    });
+    // Textarea blur handler - hide if empty (only if textarea exists)
+    if (textarea) {
+        textarea.addEventListener('blur', () => {
+            if (textarea.value.trim() === '') {
+                textarea.style.display = 'none';
+                placeholder.style.display = 'block';
+            }
+        });
+        
+        // Textarea input handler - auto resize
+        textarea.addEventListener('input', () => {
+            autoResizeTextarea(textarea);
+        });
+    }
     
     // Drag and drop handlers
     unifiedInput.addEventListener('dragover', (e) => {
@@ -4080,8 +4196,8 @@ function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, pla
         e.preventDefault();
         unifiedInput.classList.remove('dragover');
         
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
             handleSingleBlockFileUpload(files[0], unifiedInputId, textareaId, fileInputId, placeholderId);
         }
     });
@@ -4097,11 +4213,11 @@ function initializeSingleBlockInput(unifiedInputId, textareaId, fileInputId, pla
 // Handle file upload for single block input
 function handleSingleBlockFileUpload(file, unifiedInputId, textareaId, fileInputId, placeholderId) {
     const unifiedInput = document.getElementById(unifiedInputId);
-    const textarea = document.getElementById(textareaId);
+    const textarea = textareaId ? document.getElementById(textareaId) : null;
     const fileInput = document.getElementById(fileInputId);
     const placeholder = document.getElementById(placeholderId);
     
-    if (!unifiedInput || !textarea || !fileInput || !placeholder) {
+    if (!unifiedInput || !fileInput || !placeholder) {
         return;
     }
     
@@ -4113,9 +4229,11 @@ function handleSingleBlockFileUpload(file, unifiedInputId, textareaId, fileInput
         // Store file content
         unifiedInput.setAttribute('data-file-content', fileContent);
         
-        // Hide placeholder and textarea
+        // Hide placeholder and textarea (if exists)
         placeholder.style.display = 'none';
-        textarea.style.display = 'none';
+        if (textarea) {
+            textarea.style.display = 'none';
+        }
         
         // Display file info
         displaySingleBlockFileInfo(file, unifiedInputId);
@@ -4206,6 +4324,75 @@ function removeSingleBlockFile(unifiedInputId) {
 
 // Standard Input Area - Universal input area management
 
+// Display RNAmigos2 CIF file info
+function displayRNAmigos2CifFileInfo(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    if (!fileUpload) return;
+    
+    const inputPlaceholder = fileUpload.querySelector('.input-placeholder');
+    let fileInfo = fileUpload.querySelector('.file-info-content');
+    
+    // Hide input placeholder
+    if (inputPlaceholder) inputPlaceholder.style.display = 'none';
+    
+    // Remove existing file info if any
+    if (fileInfo) {
+        fileInfo.remove();
+    }
+    
+    // Create and add new file info
+    const newFileInfo = createRNAmigos2CifFileInfoElement(file);
+    fileUpload.appendChild(newFileInfo);
+}
+
+// Create RNAmigos2 CIF file info element
+function createRNAmigos2CifFileInfoElement(file) {
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info-content';
+    fileInfo.style.display = 'flex';
+    
+    // Use the same icon logic as other file uploads
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const iconClass = fileExtension === 'cif' || fileExtension === 'mmcif' ? 'fa-file-code' : 'fa-file-alt';
+    
+    fileInfo.innerHTML = `
+        <i class="fas ${iconClass}"></i>
+        <div class="file-details">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+        </div>
+        <button class="btn-remove-file" onclick="event.stopPropagation(); removeRNAmigos2CifFile()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    return fileInfo;
+}
+
+// Remove RNAmigos2 CIF file
+function removeRNAmigos2CifFile() {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Clear file input
+    fileInput.value = '';
+    
+    // Hide file info and show upload content
+    const fileInfo = fileUpload.querySelector('.file-info-content');
+    if (fileInfo) {
+        fileInfo.style.display = 'none';
+    }
+    
+    const inputPlaceholder = fileUpload.querySelector('.input-placeholder');
+    if (uploadContent) {
+        uploadContent.style.display = 'flex';
+    }
+    
+    // Clear stored file content
+    fileUpload.removeAttribute('data-file-content');
+}
 
 
 // Check and toggle file upload area based on textarea content
@@ -4321,6 +4508,100 @@ async function runRNAFrameFlowAnalysis() {
     return response;
 }
 
+// Handle RNAmigos2 CIF file upload
+function handleRNAmigos2CifFileUpload(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Read file content and store it for later use
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fileContent = e.target.result;
+        // Store file content in a data attribute for later retrieval
+        fileUpload.setAttribute('data-file-content', fileContent);
+        
+        // Display file info
+        displayRNAmigos2CifFileInfo(file);
+    };
+    
+    reader.onerror = function() {
+        showNotification('Error reading file', 'error');
+    };
+    
+    reader.readAsText(file);
+}
+
+// Display RNAmigos2 CIF file info
+function displayRNAmigos2CifFileInfo(file) {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    if (!fileUpload) return;
+    
+    const inputPlaceholder = fileUpload.querySelector('.input-placeholder');
+    let fileInfo = fileUpload.querySelector('.file-info-content');
+    
+    // Hide input placeholder
+    if (inputPlaceholder) inputPlaceholder.style.display = 'none';
+    
+    // Remove existing file info if any
+    if (fileInfo) {
+        fileInfo.remove();
+    }
+    
+    // Create and add new file info
+    const newFileInfo = createRNAmigos2CifFileInfoElement(file);
+    fileUpload.appendChild(newFileInfo);
+}
+
+// Create RNAmigos2 CIF file info element
+function createRNAmigos2CifFileInfoElement(file) {
+    const fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info-content';
+    fileInfo.style.display = 'flex';
+    
+    // Use the same icon logic as other file uploads
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const iconClass = fileExtension === 'cif' || fileExtension === 'mmcif' ? 'fa-file-code' : 'fa-file-alt';
+    
+    fileInfo.innerHTML = `
+        <i class="fas ${iconClass}"></i>
+        <div class="file-details">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+        <button class="btn-remove-file" onclick="event.stopPropagation(); removeRNAmigos2CifFile()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    return fileInfo;
+}
+
+// Remove RNAmigos2 CIF file
+function removeRNAmigos2CifFile() {
+    const fileUpload = document.getElementById('rnamigos2FileUpload');
+    const fileInput = document.getElementById('rnamigos2FileInput');
+    
+    if (!fileUpload || !fileInput) return;
+    
+    // Clear file input
+    fileInput.value = '';
+    
+    // Hide file info and show upload content
+    const fileInfo = fileUpload.querySelector('.file-info-content');
+    if (fileInfo) {
+        fileInfo.style.display = 'none';
+    }
+    
+    const inputPlaceholder = fileUpload.querySelector('.input-placeholder');
+    if (uploadContent) {
+        uploadContent.style.display = 'flex';
+    }
+    
+    // Clear stored file content
+    fileUpload.removeAttribute('data-file-content');
+}
 
 
 // Check and toggle file upload area based on textarea content
@@ -4721,6 +5002,192 @@ function displayCoPRAResults(result) {
     html += '</div>';
     
     return html;
+}
+
+// Run RiboDiffusion analysis
+async function runRiboDiffusionAnalysis() {
+    try {
+        // Get PDB content from textarea
+        const pdbContentElement = document.getElementById('ribodiffusionPdbContent');
+        let pdbContent = pdbContentElement?.value.trim();
+        
+        // If no content in textarea, check if file was uploaded
+        if (!pdbContent) {
+            const unifiedInput = document.getElementById('ribodiffusionPdbUnifiedInput');
+            const fileContent = unifiedInput?.getAttribute('data-file-content');
+            if (fileContent) {
+                pdbContent = fileContent.trim();
+            }
+        }
+        
+        // If still no content, check if file was selected directly
+        let pdbFile = document.getElementById('ribodiffusionPdbFileInput')?.files[0];
+        if (!pdbContent && !pdbFile) {
+            return {
+                success: false,
+                error: 'PDB content or file is required for RiboDiffusion analysis'
+            };
+        }
+        
+        // If we have content but no file, create a file from content
+        if (pdbContent && !pdbFile) {
+            const blob = new Blob([pdbContent], { type: 'text/plain' });
+            pdbFile = new File([blob], 'input.pdb', { type: 'text/plain' });
+        }
+        
+        // Get parameters
+        const numSamples = parseInt(document.getElementById('ribodiffusionNumSamples')?.value || '1');
+        const samplingSteps = parseInt(document.getElementById('ribodiffusionSamplingSteps')?.value || '50');
+        const condScale = parseFloat(document.getElementById('ribodiffusionCondScale')?.value || '-1.0');
+        const dynamicThreshold = true; // Always set to true
+        
+        // Validate parameters
+        if (numSamples < 1 || numSamples > 10) {
+            return {
+                success: false,
+                error: 'Number of samples must be between 1 and 10'
+            };
+        }
+        
+        if (samplingSteps < 10 || samplingSteps > 1000) {
+            return {
+                success: false,
+                error: 'Sampling steps must be between 10 and 1000'
+            };
+        }
+        
+        if (condScale < -1.0 || condScale > 2.0) {
+            return {
+                success: false,
+                error: 'Conditional scale must be between -1.0 and 2.0'
+            };
+        }
+        
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('pdb_file', pdbFile);
+        formData.append('num_samples', numSamples);
+        formData.append('sampling_steps', samplingSteps);
+        formData.append('cond_scale', condScale);
+        formData.append('dynamic_threshold', dynamicThreshold);
+        
+        // Call RiboDiffusion API
+        const response = await fetch('/api/ribodiffusion/inverse_fold', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'RiboDiffusion analysis failed');
+        }
+        
+        return result;
+        
+    } catch (error) {
+        console.error('RiboDiffusion analysis error:', error);
+        return {
+            success: false,
+            error: error.message || 'RiboDiffusion analysis failed'
+        };
+    }
+}
+
+// Display RiboDiffusion results
+function displayRiboDiffusionResults(result) {
+    if (!result.success) {
+        return `<div class="error-message">Error: ${result.error}</div>`;
+    }
+    
+    const data = result.data || {};
+    const sequences = data.sequences || [];
+    
+    // Store results globally for download functionality
+    window.currentRiboDiffusionResult = result;
+    
+    let html = '<div class="ribodiffusion-results">';
+    
+    // Display generated sequences in table format
+    if (sequences.length > 0) {
+        html += `
+            <div class="result-item">
+                <h6><i class="fas fa-list"></i>Generated RNA Sequences</h6>
+                <div class="interactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sequence ID</th>
+                                <th>Sequence Content</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        sequences.forEach((sequence, index) => {
+            html += `
+                <tr>
+                    <td class="sequence-id-cell">Sequence ${index + 1}</td>
+                    <td class="sequence-cell">${sequence}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    
+    return html;
+}
+
+// Download all RiboDiffusion results
+function downloadAllRiboDiffusionResults() {
+    // Get the current result data from the global result storage
+    if (!window.currentRiboDiffusionResult || !window.currentRiboDiffusionResult.success) {
+        showNotification('No RiboDiffusion results to download', 'warning');
+        return;
+    }
+    
+    const result = window.currentRiboDiffusionResult;
+    const data = result.data || {};
+    const sequences = data.sequences || [];
+    
+    if (sequences.length === 0) {
+        showNotification('No sequences available for download', 'warning');
+        return;
+    }
+    
+    // Create CSV content
+    let csvContent = 'Sequence ID,Sequence Content\n';
+    
+    sequences.forEach((sequence, index) => {
+        const sequenceId = `Sequence ${index + 1}`;
+        csvContent += `"${sequenceId}","${sequence}"\n`;
+    });
+    
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ribodiffusion_sequences.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('RiboDiffusion sequences downloaded successfully', 'success');
 }
 
 // Download all Reformer results

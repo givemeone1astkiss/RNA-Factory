@@ -18,6 +18,7 @@
     <link href="/static/css/rnaflow.css" rel="stylesheet">
     <link href="/static/css/rnaframeflow.css" rel="stylesheet">
     <link href="/static/css/reformer.css" rel="stylesheet">
+    <link href="/static/css/ribodiffusion.css" rel="stylesheet">
     <link href="/static/css/standard-input.css" rel="stylesheet">
 </head>
 <body>
@@ -232,19 +233,19 @@
                             <!-- RNAmigos2 Specific Input Area -->
                             <div class="input-method rnamigos2-input" id="rnamigos2Input" style="display: none;">
                                 <!-- Structure Input Section -->
-                                <div class="rnamigos2-section">
+                                <div class="rnamigos2-section input-method">
                                     <div class="method-header">
                                         <i class="fas fa-cube"></i>
                                         <h6>RNA Structure</h6>
                                     </div>
-                                    <div class="standard-input-area single-block" id="rnamigos2StructureInputArea">
-                                        <div class="unified-input-area" id="rnamigos2StructureUnifiedInput">
-                                            <div class="input-placeholder" id="rnamigos2StructurePlaceholder">
-                                                <i class="fas fa-cloud-upload-alt"></i>
-                                                <p>Click or drag mmCIF files here</p>
+                                    <div class="standard-input-area single-block" id="rnamigos2FileUpload">
+                                        <div class="unified-input-area" id="rnamigos2UnifiedInput">
+                                            <div class="input-placeholder" id="rnamigos2Placeholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter mmCIF content or drag files here</p>
                                                 <small>CIF, mmCIF supported</small>
                                             </div>
-                                            <textarea id="rnamigos2StructureText" rows="6" placeholder="Enter mmCIF content or drag files here&#10;Example:&#10;data_example&#10;_entry.id example&#10;_struct.title 'RNA Structure'" style="display: none;"></textarea>
+                                            <textarea id="rnamigos2CifContent" rows="10" placeholder="Enter mmCIF content&#10;Example:&#10;data_1ABC&#10;_entry.id   1ABC&#10;loop_&#10;..." style="display: none;"></textarea>
                                             <input type="file" id="rnamigos2FileInput" accept=".cif,.mmcif" style="display: none;">
                                         </div>
                                     </div>
@@ -544,6 +545,53 @@
                                 </div>
                             </div>
 
+                            <!-- RiboDiffusion Specific Input Area -->
+                            <div class="ribodiffusion-input" id="ribodiffusionInput" style="display: none;">
+                                <!-- PDB File Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cube"></i>
+                                        <h6>PDB Structure File</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="ribodiffusionPdbInputArea">
+                                        <div class="unified-input-area" id="ribodiffusionPdbUnifiedInput">
+                                            <div class="input-placeholder" id="ribodiffusionPdbPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter PDB content or drag files here</p>
+                                                <small>PDB format supported</small>
+                                            </div>
+                                            <textarea id="ribodiffusionPdbContent" rows="10" placeholder="Enter PDB content&#10;Example:&#10;HEADER    HYDROLASE/HYDROLASE INHIBITOR           01-JAN-98   1ABC&#10;ATOM      1  N   ALA A   1      20.154  16.967  23.862  1.00 11.18           N&#10;ATOM      2  CA  ALA A   1      19.030  16.206  23.258  1.00 10.35           C&#10;..." style="display: none;"></textarea>
+                                            <input type="file" id="ribodiffusionPdbFileInput" accept=".pdb" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Generation Parameters Section -->
+                                <div class="ribodiffusion-section input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cog"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="parameters-grid">
+                                        <div class="parameter-group">
+                                            <label for="ribodiffusionNumSamples">Number of Sequences</label>
+                                            <input type="number" id="ribodiffusionNumSamples" min="1" max="10" value="1" placeholder="1">
+                                            <small>Number of RNA sequences to generate (1-10)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="ribodiffusionSamplingSteps">Sampling Steps</label>
+                                            <input type="number" id="ribodiffusionSamplingSteps" min="10" max="1000" value="50" placeholder="50">
+                                            <small>Number of sampling steps (10-1000)</small>
+                                        </div>
+                                        <div class="parameter-group">
+                                            <label for="ribodiffusionCondScale">Conditional Scale</label>
+                                            <input type="number" id="ribodiffusionCondScale" min="-1.0" max="2.0" step="0.1" value="-1.0" placeholder="-1.0">
+                                            <small>Conditional scaling weight (-1.0 to 2.0)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- RNAFlow Specific Input Area -->
                             <div class="rnaflow-input" id="rnaflowInput" style="display: none;">
                                 <!-- Protein Sequence Input Section -->
@@ -566,22 +614,24 @@
                                 </div>
 
                                 <!-- RNA Design Parameters Section -->
-                                <div class="rnaflow-section">
+                                <div class="rnaflow-section input-method">
                                     <div class="method-header">
-                                        <i class="fas fa-cogs"></i>
+                                        <i class="fas fa-cog"></i>
                                         <h6>Options & Settings</h6>
                                     </div>
-                                    <div class="rnaflow-parameters">
-                                        <div class="rnaflow-parameter">
+                                    <div class="parameters-grid">
+                                        <div class="parameter-group">
                                             <label for="rnaflowRnaLength">RNA Length</label>
                                             <input type="number" id="rnaflowRnaLength" min="5" max="200" value="20" placeholder="20">
+                                            <small>Length of RNA sequence to generate (5-200 nucleotides)</small>
                                         </div>
-                                        <div class="rnaflow-parameter">
+                                        <div class="parameter-group">
                                             <label for="rnaflowNumSamples">Number of Samples</label>
                                             <input type="number" id="rnaflowNumSamples" min="1" max="10" value="3" placeholder="3">
-                                        </div>
+                                            <small>Number of RNA sequences to generate (1-10)</small>
                                         </div>
                                     </div>
+                                </div>
                                 </div>
 
                             <!-- Mol2Aptamer Specific Input Area -->

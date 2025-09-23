@@ -91,9 +91,17 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Provides confidence scoring and trajectory files for analysis
 - [GitHub](https://github.com/rish-16/rna-backbone-design) | [Paper](https://arxiv.org/abs/2406.13839)
 
+**RiboDiffusion**
+- Diffusion-based model for RNA inverse folding from protein structures
+- Generates RNA sequences that can fold into target protein-bound conformations
+- Uses conditional diffusion with protein structure conditioning
+- Supports customizable sampling parameters and generation settings
+- Provides recovery rate scoring and multiple sequence generation
+- [GitHub](https://github.com/ml4bio/RiboDiffusion) | [Paper](https://arxiv.org/abs/2404.11199)
+
 ### 🔧 Platform Capabilities
 
-- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences, cDNA sequences, RNA sequences
+- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, PDB structures, SMILES strings, protein sequences, cDNA sequences, RNA sequences
 - **Unified Interface**: Consistent user experience across all models with standardized input areas
 - **Real-time Processing**: Fast analysis with progress tracking
 - **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, PDB, and more
@@ -121,6 +129,7 @@ RNA-Factory/
 │   │   ├── mol2aptamer_routes.py # Mol2Aptamer API endpoints
 │   │   ├── rnaflow_routes.py    # RNAFlow API endpoints
 │   │   ├── rnaframeflow_routes.py # RNA-FrameFlow API endpoints
+│   │   ├── ribodiffusion_routes.py # RiboDiffusion API endpoints
 │   │   ├── copilot_routes.py    # AI assistant API endpoints
 │   │   └── model_config_routes.py # Model configuration endpoints
 │   ├── copilot/                 # AI assistant and RAG system
@@ -262,6 +271,13 @@ RESTful API endpoints for:
 3. Set advanced sampling parameters (timesteps, minimum time, exponential rate, self-conditioning)
 4. Run analysis to generate 3D RNA backbone structures
 5. View results with confidence scores and download PDB files with trajectory data
+
+#### RiboDiffusion
+1. Select RiboDiffusion for RNA inverse folding from protein structures
+2. Input PDB structure file (via text input or file upload)
+3. Configure generation parameters (number of sequences, sampling steps, conditional scale)
+4. Run analysis to generate RNA sequences that can fold into target conformations
+5. View results with recovery rate scores and download CSV files with generated sequences
 
 ### AI Assistant
 

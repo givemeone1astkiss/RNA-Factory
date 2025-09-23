@@ -14,6 +14,7 @@ This document provides detailed information about the model wrappers in the RNA-
 - [CoPRA Wrapper](#copra-wrapper)
 - [Mol2Aptamer Wrapper](#mol2aptamer-wrapper)
 - [RNAFlow Wrapper](#rnaflow-wrapper)
+- [RiboDiffusion Wrapper](#ribodiffusion-wrapper)
 - [General Testing Methods](#general-testing-methods)
 - [Troubleshooting](#troubleshooting)
 
@@ -1074,6 +1075,186 @@ def test_rnaflow_error():
     assert result["error"] is not None
 ```
 
+## RiboDiffusion Wrapper
+
+### Packaging Method
+
+RiboDiffusion wrapper calls RiboDiffusion's Python script through subprocess for RNA inverse folding from protein structures using diffusion-based generation.
+
+**File Location**: `app/utils/wrappers/ribodiffusion_wrapper.py`
+
+**Main Class**: `RiboDiffusionWrapper`
+
+**Installation Requirements**: Python 3.10+, PyTorch with CUDA support, specialized virtual environment
+
+### Calling Method
+
+```python
+from app.utils.wrappers.ribodiffusion_wrapper import RiboDiffusionWrapper
+
+# Initialize wrapper
+wrapper = RiboDiffusionWrapper(
+    model_path="/path/to/RiboDiffusion",
+    environment_path="/path/to/.venv_ribodiffusion"
+)
+
+# Perform RNA inverse folding
+result = wrapper.inverse_fold(
+    pdb_file="/path/to/protein_structure.pdb",
+    num_samples=3,
+    sampling_steps=50,
+    cond_scale=-1.0,
+    dynamic_threshold=True
+)
+
+# Result format
+{
+    "success": True,
+    "sequences": [
+        "GGGCCUUCGCCUCUGGCCCAGCCCUCAC",
+        "AUCGAUCGAUCGAUCGAUCGAUCGAUCG",
+        "UUUCCCGGGAAACCCGGGAAACCCGGG"
+    ],
+    "recovery_rate": 0.85,
+    "num_samples": 3,
+    "sampling_steps": 50,
+    "cond_scale": -1.0,
+    "dynamic_threshold": True,
+    "output_dir": "/tmp/ribodiffusion_output",
+    "error": None
+}
+```
+
+### Input Requirements
+
+- **pdb_file**: Path to PDB structure file
+- **num_samples**: Number of RNA sequences to generate (1-10)
+- **sampling_steps**: Number of diffusion sampling steps (10-1000)
+- **cond_scale**: Conditional scaling weight (-1.0 to 2.0)
+- **dynamic_threshold**: Whether to use dynamic thresholding (boolean)
+
+### Output Format
+
+- **success**: Boolean value indicating whether generation was successful
+- **sequences**: List of generated RNA sequences
+- **recovery_rate**: Average recovery rate across all generated sequences
+- **num_samples**: Number of sequences generated
+- **sampling_steps**: Number of sampling steps used
+- **cond_scale**: Conditional scaling weight used
+- **dynamic_threshold**: Whether dynamic thresholding was used
+- **output_dir**: Directory containing model outputs
+- **error**: Error message (if any)
+
+### Model Information
+
+```python
+# Get model information
+info = wrapper.get_model_info()
+print(f"Model name: {info['name']}")
+print(f"Description: {info['description']}")
+print(f"Version: {info['version']}")
+print(f"Type: {info['type']}")
+print(f"Input types: {info['input_types']}")
+print(f"Output types: {info['output_types']}")
+```
+
+### Testing Method
+
+```python
+# Basic test
+def test_ribodiffusion_basic():
+    wrapper = RiboDiffusionWrapper()
+    result = wrapper.inverse_fold(
+        "/path/to/test_structure.pdb",
+        num_samples=2,
+        sampling_steps=50
+    )
+    assert result["success"] == True
+    assert len(result["sequences"]) == 2
+    assert "recovery_rate" in result
+
+# Different parameters test
+def test_ribodiffusion_parameters():
+    wrapper = RiboDiffusionWrapper()
+    result = wrapper.inverse_fold(
+        "/path/to/test_structure.pdb",
+        num_samples=5,
+        sampling_steps=100,
+        cond_scale=0.5,
+        dynamic_threshold=False
+    )
+    assert result["success"] == True
+    assert len(result["sequences"]) == 5
+    assert result["sampling_steps"] == 100
+    assert result["cond_scale"] == 0.5
+    assert result["dynamic_threshold"] == False
+
+# Error handling test
+def test_ribodiffusion_error():
+    wrapper = RiboDiffusionWrapper()
+    result = wrapper.inverse_fold(
+        "/path/to/nonexistent_file.pdb",
+        num_samples=1
+    )
+    assert result["success"] == False
+    assert result["error"] is not None
+
+# Multiple samples test
+def test_ribodiffusion_multiple_samples():
+    wrapper = RiboDiffusionWrapper()
+    result = wrapper.inverse_fold(
+        "/path/to/test_structure.pdb",
+        num_samples=3,
+        sampling_steps=50
+    )
+    assert result["success"] == True
+    assert len(result["sequences"]) == 3
+    # Verify sequences are different (due to random generation)
+    assert len(set(result["sequences"])) > 1
+```
+
+### Installation Process
+
+RiboDiffusion requires specific Python version and dependencies:
+
+1. **Create virtual environment**:
+   ```bash
+   uv venv .venv_ribodiffusion --python 3.10
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   uv pip install --python .venv_ribodiffusion/bin/python torch==2.1.3+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+   uv pip install --python .venv_ribodiffusion/bin/python -r models/RiboDiffusion/requirements_fixed.txt
+   ```
+
+3. **Install additional dependencies**:
+   ```bash
+   uv pip install --python .venv_ribodiffusion/bin/python models/env/torch_cluster-2.1.0+pt113cu116-cp310-cp310-linux_x86_64.whl
+   uv pip install --python .venv_ribodiffusion/bin/python models/env/torch_scatter-2.1.0+pt113cu116-cp310-cp310-linux_x86_64.whl
+   ```
+
+4. **Download model weights**:
+   - Download checkpoint files from the official repository
+   - Place checkpoint files in `models/RiboDiffusion/ckpts/` directory
+
+5. **Verify installation**:
+   ```bash
+   source .venv_ribodiffusion/bin/activate
+   python models/RiboDiffusion/main.py --help
+   ```
+
+### Features
+
+- **Diffusion-based generation**: Uses conditional diffusion for RNA sequence generation
+- **Protein structure conditioning**: Generates RNA sequences that can fold into target protein-bound conformations
+- **Multiple sequence generation**: Supports generating multiple diverse RNA sequences
+- **Customizable sampling**: Adjustable sampling steps and conditional scaling
+- **Recovery rate scoring**: Provides recovery rate metrics for generated sequences
+- **Dynamic thresholding**: Optional dynamic thresholding for improved generation quality
+- **CUDA acceleration**: Supports GPU acceleration for faster generation
+- **Random seed control**: Configurable random seed for reproducible results
+
 ## General Testing Methods
 
 ### 1. Unit Testing
@@ -1082,7 +1263,7 @@ def test_rnaflow_error():
 import unittest
 from app.utils.wrappers import (BPFoldWrapper, UFoldWrapper, MXFold2Wrapper, 
                                RNAformerWrapper, RNAmigos2Wrapper, ReformerWrapper,
-                               CoPRAInference, Mol2AptamerWrapper, RNAFlowWrapper)
+                               CoPRAWrapper, Mol2AptamerWrapper, RNAFlowWrapper, RiboDiffusionWrapper)
 
 class TestWrappers(unittest.TestCase):
     def setUp(self):
@@ -1127,7 +1308,7 @@ class TestWrappers(unittest.TestCase):
         self.assertIsInstance(result["binding_scores"], list)
         
         # Test CoPRA
-        copra = CoPRAInference()
+        copra = CoPRAWrapper()
         result = copra.predict_binding_affinity(
             "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
             "GGGAAACCCUUU"
@@ -1148,6 +1329,16 @@ class TestWrappers(unittest.TestCase):
         result = rnaflow.design_rna(self.test_protein, rna_length=30, num_samples=2)
         self.assertTrue(result["success"])
         self.assertIsInstance(result["results"], list)
+        
+        # Test RiboDiffusion
+        ribodiffusion = RiboDiffusionWrapper()
+        result = ribodiffusion.inverse_fold(
+            "/path/to/test_structure.pdb",
+            num_samples=2,
+            sampling_steps=50
+        )
+        self.assertTrue(result["success"])
+        self.assertIsInstance(result["sequences"], list)
 ```
 
 ### 2. Integration Testing
@@ -1213,6 +1404,16 @@ def test_wrapper_integration():
             'protein_sequence': 'MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG',
             'rna_length': 30,
             'num_samples': 2
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] == True
+        
+        # Test de novo design - RiboDiffusion
+        response = client.post('/api/ribodiffusion/inverse_fold', json={
+            'pdb_file': '/path/to/test_structure.pdb',
+            'num_samples': 2,
+            'sampling_steps': 50
         })
         assert response.status_code == 200
         data = response.get_json()

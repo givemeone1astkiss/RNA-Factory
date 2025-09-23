@@ -340,7 +340,7 @@
 }
 
 .rnaframeflow-results .interactions-table th {
-    background: var(--primary-color);
+    background: #0f172a;
     color: white;
     padding: 0.75rem 1rem;
     text-align: center;
@@ -422,8 +422,8 @@
 }
 
 [data-theme="dark"] .rnaframeflow-results .interactions-table th {
-    background: var(--primary-color);
-    color: white;
+    background: white;
+    color: #0f172a;
 }
 
 [data-theme="dark"] .rnaframeflow-results .interactions-table td {

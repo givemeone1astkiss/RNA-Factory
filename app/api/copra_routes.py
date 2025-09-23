@@ -7,17 +7,20 @@ from flask import Blueprint, request, jsonify
 import logging
 import os
 import sys
-import json
-import tempfile
 from pathlib import Path
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+from app.utils.wrappers.copra_wrapper import CoPRAWrapper
+
 logger = logging.getLogger(__name__)
 
 copra_bp = Blueprint("copra", __name__)
+
+# Initialize CoPRA wrapper
+copra_wrapper = CoPRAWrapper()
 
 @copra_bp.route('/predict', methods=['POST'])
 def predict_binding_affinity():

@@ -819,3 +819,55 @@ def validate_smiles(smiles: str) -> bool:
     return True
 
 
+def validate_pdb_file(file_path: Union[str, Path]) -> bool:
+    """
+    Validate if a file is a proper PDB format file.
+    
+    Args:
+        file_path: Path to the PDB file
+        
+    Returns:
+        bool: True if file is valid PDB format
+        
+    Raises:
+        InputValidationError: If file is invalid
+    """
+    file_path = Path(file_path)
+    
+    if not file_path.exists():
+        raise InputValidationError(f"File does not exist: {file_path}")
+    
+    if not file_path.is_file():
+        raise InputValidationError(f"Path is not a file: {file_path}")
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+    except Exception as e:
+        raise InputValidationError(f"Error reading file: {e}")
+    
+    if not content:
+        raise InputValidationError("File is empty")
+    
+    lines = content.split('\n')
+    has_atom = False
+    has_header = False
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Check for ATOM or HETATM records
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            has_atom = True
+        # Check for HEADER record
+        elif line.startswith('HEADER'):
+            has_header = True
+    
+    if not has_atom:
+        raise InputValidationError("No ATOM or HETATM records found in PDB file")
+    
+    return True
+
+

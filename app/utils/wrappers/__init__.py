@@ -8,6 +8,12 @@ from .ufold_wrapper import UFoldWrapper
 from .mxfold2_wrapper import MXFold2Wrapper
 from .rnamigos2_wrapper import RNAmigos2Wrapper
 from .rnaformer_wrapper import RNAformerWrapper
+from .rnaflow_wrapper import RNAFlowWrapper
+from .reformer_wrapper import ReformerWrapper
+from .copra_wrapper import CoPRAWrapper
+from .ribodiffusion_wrapper import RiboDiffusionWrapper
+from .mol2aptamer_wrapper import Mol2AptamerWrapper
+from .rnaframeflow_wrapper import RNAFrameFlowWrapper
 
 __all__ = [
     "BPFoldWrapper", 
@@ -15,5 +21,10 @@ __all__ = [
     "MXFold2Wrapper",
     "RNAmigos2Wrapper",
     "RNAformerWrapper",
-    "RNAFlowWrapper"
+    "RNAFlowWrapper",
+    "ReformerWrapper",
+    "CoPRAWrapper",
+    "RiboDiffusionWrapper",
+    "Mol2AptamerWrapper",
+    "RNAFrameFlowWrapper"
 ]
