@@ -1664,6 +1664,7 @@ body {
 
 .btn-primary:hover {
     background: var(--primary-color);
+    color: var(--bg-primary);
     transform: translateY(-2px);
     box-shadow: 0 10px 25px var(--shadow-color);
 }
@@ -1705,6 +1706,11 @@ body {
 }
 
 /* Dark mode specific adjustments */
+[data-theme="dark"] .btn-primary:hover {
+    background: var(--primary-color);
+    color: #0f172a; /* Force dark text in dark mode hover */
+}
+
 [data-theme="dark"] .btn-outline-light {
     border-color: var(--text-secondary);
     color: var(--text-secondary);

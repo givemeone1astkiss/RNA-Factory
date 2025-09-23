@@ -1522,8 +1522,12 @@ function viewHistoryResult(historyId) {
 
 // Clear inputs
 function clearInputs() {
-    document.getElementById('inputFile').value = '';
-    document.getElementById('inputText').value = '';
+    // Clear general input areas
+    const inputFile = document.getElementById('inputFile');
+    const inputText = document.getElementById('inputText');
+    if (inputFile) inputFile.value = '';
+    if (inputText) inputText.value = '';
+    
     const proteinInput = document.getElementById('proteinInputText');
     if (proteinInput) {
         proteinInput.value = '';
@@ -1543,7 +1547,90 @@ function clearInputs() {
         }
     }
     
+    // Clear all standard-input-area components
+    resetAllStandardInputAreas();
+    
+    // Clear model-specific parameters
+    clearModelSpecificInputs();
+    
     showNotification('Inputs cleared', 'info');
+}
+
+// Clear model-specific input parameters
+function clearModelSpecificInputs() {
+    // Clear RNAmigos2 parameters
+    const rnamigos2NumSequences = document.getElementById('rnamigos2NumSequences');
+    const rnamigos2MaxLength = document.getElementById('rnamigos2MaxLength');
+    const rnamigos2Temperature = document.getElementById('rnamigos2Temperature');
+    const rnamigos2TopK = document.getElementById('rnamigos2TopK');
+    const rnamigos2TopP = document.getElementById('rnamigos2TopP');
+    const rnamigos2Strategy = document.getElementById('rnamigos2Strategy');
+    
+    if (rnamigos2NumSequences) rnamigos2NumSequences.value = '10';
+    if (rnamigos2MaxLength) rnamigos2MaxLength.value = '50';
+    if (rnamigos2Temperature) rnamigos2Temperature.value = '1.0';
+    if (rnamigos2TopK) rnamigos2TopK.value = '50';
+    if (rnamigos2TopP) rnamigos2TopP.value = '0.9';
+    if (rnamigos2Strategy) rnamigos2Strategy.value = 'greedy';
+    
+    // Clear Reformer parameters
+    const reformerRbpType = document.getElementById('reformerRbpType');
+    const reformerCellLine = document.getElementById('reformerCellLine');
+    if (reformerRbpType) reformerRbpType.value = 'U2AF2';
+    if (reformerCellLine) reformerCellLine.value = 'HepG2';
+    
+    // Clear CoPRA parameters
+    const copraConfidenceThreshold = document.getElementById('copraConfidenceThreshold');
+    if (copraConfidenceThreshold) copraConfidenceThreshold.value = 'Medium';
+    
+    // Clear Mol2Aptamer parameters
+    const mol2aptamerNumSequences = document.getElementById('mol2aptamerNumSequences');
+    const mol2aptamerMaxLength = document.getElementById('mol2aptamerMaxLength');
+    const mol2aptamerTemperature = document.getElementById('mol2aptamerTemperature');
+    const mol2aptamerTopK = document.getElementById('mol2aptamerTopK');
+    const mol2aptamerTopP = document.getElementById('mol2aptamerTopP');
+    const mol2aptamerStrategy = document.getElementById('mol2aptamerStrategy');
+    
+    if (mol2aptamerNumSequences) mol2aptamerNumSequences.value = '10';
+    if (mol2aptamerMaxLength) mol2aptamerMaxLength.value = '50';
+    if (mol2aptamerTemperature) mol2aptamerTemperature.value = '1.0';
+    if (mol2aptamerTopK) mol2aptamerTopK.value = '50';
+    if (mol2aptamerTopP) mol2aptamerTopP.value = '0.9';
+    if (mol2aptamerStrategy) mol2aptamerStrategy.value = 'greedy';
+    
+    // Clear RNAFlow parameters
+    const rnaflowRnaLength = document.getElementById('rnaflowRnaLength');
+    const rnaflowNumSamples = document.getElementById('rnaflowNumSamples');
+    if (rnaflowRnaLength) rnaflowRnaLength.value = '20';
+    if (rnaflowNumSamples) rnaflowNumSamples.value = '3';
+    
+    // Clear RNA-FrameFlow parameters
+    const rnaframeflowStructureLength = document.getElementById('rnaframeflowStructureLength');
+    const rnaframeflowNumStructures = document.getElementById('rnaframeflowNumStructures');
+    const rnaframeflowTemperature = document.getElementById('rnaframeflowTemperature');
+    const rnaframeflowRandomSeed = document.getElementById('rnaframeflowRandomSeed');
+    const rnaframeflowTimesteps = document.getElementById('rnaframeflowTimesteps');
+    const rnaframeflowMinTime = document.getElementById('rnaframeflowMinTime');
+    const rnaframeflowExponentialRate = document.getElementById('rnaframeflowExponentialRate');
+    const rnaframeflowSelfConditioning = document.getElementById('rnaframeflowSelfConditioning');
+    
+    if (rnaframeflowStructureLength) rnaframeflowStructureLength.value = '50';
+    if (rnaframeflowNumStructures) rnaframeflowNumStructures.value = '5';
+    if (rnaframeflowTemperature) rnaframeflowTemperature.value = '1.0';
+    if (rnaframeflowRandomSeed) rnaframeflowRandomSeed.value = '42';
+    if (rnaframeflowTimesteps) rnaframeflowTimesteps.value = '100';
+    if (rnaframeflowMinTime) rnaframeflowMinTime.value = '0.01';
+    if (rnaframeflowExponentialRate) rnaframeflowExponentialRate.value = '1.0';
+    if (rnaframeflowSelfConditioning) rnaframeflowSelfConditioning.checked = true;
+    
+    // Clear RiboDiffusion parameters
+    const ribodiffusionNumSamples = document.getElementById('ribodiffusionNumSamples');
+    const ribodiffusionSamplingSteps = document.getElementById('ribodiffusionSamplingSteps');
+    const ribodiffusionCondScale = document.getElementById('ribodiffusionCondScale');
+    
+    if (ribodiffusionNumSamples) ribodiffusionNumSamples.value = '1';
+    if (ribodiffusionSamplingSteps) ribodiffusionSamplingSteps.value = '50';
+    if (ribodiffusionCondScale) ribodiffusionCondScale.value = '-1.0';
 }
 
 // Clear history
