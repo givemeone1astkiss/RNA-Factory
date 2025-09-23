@@ -237,11 +237,14 @@
                                         <i class="fas fa-cube"></i>
                                         <h6>RNA Structure</h6>
                                     </div>
-                                    <div class="file-upload-area" id="rnamigos2FileUpload">
-                                        <div class="upload-content">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <p>Click or drag mmCIF files here</p>
-                                            <small>CIF, mmCIF supported</small>
+                                    <div class="standard-input-area single-block" id="rnamigos2StructureInputArea">
+                                        <div class="unified-input-area" id="rnamigos2StructureUnifiedInput">
+                                            <div class="input-placeholder" id="rnamigos2StructurePlaceholder">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <p>Click or drag mmCIF files here</p>
+                                                <small>CIF, mmCIF supported</small>
+                                            </div>
+                                            <textarea id="rnamigos2StructureText" rows="6" placeholder="Enter mmCIF content or drag files here&#10;Example:&#10;data_example&#10;_entry.id example&#10;_struct.title 'RNA Structure'" style="display: none;"></textarea>
                                             <input type="file" id="rnamigos2FileInput" accept=".cif,.mmcif" style="display: none;">
                                         </div>
                                     </div>

@@ -371,33 +371,8 @@ function clearTempFolder() {
 
 // Reset all standard-input-area components to initial state
 function resetAllStandardInputAreas() {
-    // Reset RNAmigos2 CIF file upload (old HTML structure)
-    const rnamigos2FileUpload = document.getElementById('rnamigos2FileUpload');
-    const rnamigos2FileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (rnamigos2FileUpload && rnamigos2FileInput) {
-        // Clear file input
-        rnamigos2FileInput.value = '';
-        
-        // Hide file info and show upload content
-        const fileInfo = rnamigos2FileUpload.querySelector('.file-info-content');
-        if (fileInfo) {
-            fileInfo.style.display = 'none';
-        }
-        
-        const uploadContent = rnamigos2FileUpload.querySelector('.upload-content');
-        if (uploadContent) {
-            uploadContent.style.display = 'flex';
-        }
-        
-        // Clear stored file content
-        rnamigos2FileUpload.removeAttribute('data-file-content');
-        
-        // Re-initialize the CIF file upload
-        setTimeout(() => {
-            initializeRNAmigos2CifFileUpload();
-        }, 100);
-    }
+    // Reset RNAmigos2 CIF file upload (now uses standard-input-area single-block)
+    // This will be handled by the single block areas reset below
     
     // Reset single block input areas
     const singleBlockAreas = document.querySelectorAll('.standard-input-area.single-block');
@@ -677,8 +652,8 @@ function adjustInputInterface() {
         
         // Initialize RNAmigos2 input areas when model is selected
         setTimeout(() => {
-            // CIF file input area (uses old HTML structure)
-            initializeRNAmigos2CifFileUpload();
+            // CIF file input area (now uses single block mode)
+            initializeSingleBlockInput('rnamigos2StructureUnifiedInput', 'rnamigos2StructureText', 'rnamigos2FileInput', 'rnamigos2StructurePlaceholder');
             
             // SMILES input area (uses single block mode)
             initializeSingleBlockInput('rnamigos2SmilesUnifiedInput', 'rnamigos2SmilesText', 'rnamigos2SmilesFileInput', 'rnamigos2SmilesPlaceholder');
@@ -3335,17 +3310,18 @@ async function checkBPFoldStatus() {
 async function runRNAmigos2Analysis() {
     // Get input data
     const cifFileInput = document.getElementById('rnamigos2FileInput');
+    const cifTextElement = document.getElementById('rnamigos2StructureText');
     const residuesElement = document.getElementById('rnamigos2Residues');
     const smilesFileInput = document.getElementById('rnamigos2SmilesFileInput');
     const smilesTextElement = document.getElementById('rnamigos2SmilesText');
     
     // Validate inputs
-    if (!cifFileInput || !residuesElement || !smilesFileInput || !smilesTextElement) {
+    if (!cifFileInput || !cifTextElement || !residuesElement || !smilesFileInput || !smilesTextElement) {
         throw new Error('RNAmigos2 input elements not found. Please refresh the page and try again.');
     }
     
     const cifFile = cifFileInput.files[0];
-    let cifContent = '';
+    let cifContent = cifTextElement.value.trim();
     let residuesText = residuesElement.value.trim();
     
     // If no residues in textarea, check if file was uploaded
@@ -3360,9 +3336,9 @@ async function runRNAmigos2Analysis() {
     
     // If no CIF content in textarea, check if file was uploaded
     if (!cifContent) {
-        const fileUpload = document.getElementById('rnamigos2FileUpload');
-        if (fileUpload && fileUpload.hasAttribute('data-file-content')) {
-            cifContent = fileUpload.getAttribute('data-file-content').trim();
+        const unifiedInput = document.getElementById('rnamigos2StructureUnifiedInput');
+        if (unifiedInput && unifiedInput.hasAttribute('data-file-content')) {
+            cifContent = unifiedInput.getAttribute('data-file-content').trim();
         }
     }
     
@@ -4230,170 +4206,6 @@ function removeSingleBlockFile(unifiedInputId) {
 
 // Standard Input Area - Universal input area management
 
-// Initialize RNAmigos2 CIF file upload (old HTML structure)
-function initializeRNAmigos2CifFileUpload() {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    const fileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (!fileUpload || !fileInput) {
-        return;
-    }
-    
-    // Remove existing event listeners to prevent duplicates
-    const newFileUpload = fileUpload.cloneNode(true);
-    const newFileInput = fileInput.cloneNode(true);
-    
-    // Preserve the original IDs
-    newFileUpload.id = 'rnamigos2FileUpload';
-    newFileInput.id = 'rnamigos2FileInput';
-    
-    // Replace the old elements with new ones to remove all event listeners
-    fileUpload.parentNode.replaceChild(newFileUpload, fileUpload);
-    fileInput.parentNode.replaceChild(newFileInput, fileInput);
-    
-    // Get references to the new elements
-    const cleanFileUpload = newFileUpload;
-    const cleanFileInput = newFileInput;
-    
-    // Click handler - only allow file selection when no file is uploaded
-    cleanFileUpload.addEventListener('click', (e) => {
-        // Check if file info is displayed (file is uploaded)
-        const fileInfo = cleanFileUpload.querySelector('.file-info-content');
-        if (fileInfo && fileInfo.style.display !== 'none') {
-            // File is uploaded, don't allow new file selection
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        try {
-            cleanFileInput.click();
-        } catch (error) {
-            // Silent error handling
-        }
-    });
-    
-    // Drag and drop handlers
-    cleanFileUpload.addEventListener('dragover', handleDragOver);
-    cleanFileUpload.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        cleanFileUpload.classList.remove('dragover');
-    });
-    cleanFileUpload.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        cleanFileUpload.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleRNAmigos2CifFileUpload(files[0]);
-        }
-    });
-    
-    // File input change handler
-    cleanFileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleRNAmigos2CifFileUpload(e.target.files[0]);
-        }
-    });
-}
-
-// Handle RNAmigos2 CIF file upload
-function handleRNAmigos2CifFileUpload(file) {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    const fileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (!fileUpload || !fileInput) return;
-    
-    // Read file content and store it for later use
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const fileContent = e.target.result;
-        // Store file content in a data attribute for later retrieval
-        fileUpload.setAttribute('data-file-content', fileContent);
-        
-        // Display file info
-        displayRNAmigos2CifFileInfo(file);
-    };
-    
-    reader.onerror = function() {
-        showNotification('Error reading file', 'error');
-    };
-    
-    reader.readAsText(file);
-}
-
-// Display RNAmigos2 CIF file info
-function displayRNAmigos2CifFileInfo(file) {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    if (!fileUpload) return;
-    
-    const uploadContent = fileUpload.querySelector('.upload-content');
-    let fileInfo = fileUpload.querySelector('.file-info-content');
-    
-    // Hide upload content
-    if (uploadContent) uploadContent.style.display = 'none';
-    
-    // Remove existing file info if any
-    if (fileInfo) {
-        fileInfo.remove();
-    }
-    
-    // Create and add new file info
-    const newFileInfo = createRNAmigos2CifFileInfoElement(file);
-    fileUpload.appendChild(newFileInfo);
-}
-
-// Create RNAmigos2 CIF file info element
-function createRNAmigos2CifFileInfoElement(file) {
-    const fileInfo = document.createElement('div');
-    fileInfo.className = 'file-info-content';
-    fileInfo.style.display = 'flex';
-    
-    // Use the same icon logic as other file uploads
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const iconClass = fileExtension === 'cif' || fileExtension === 'mmcif' ? 'fa-file-code' : 'fa-file-alt';
-    
-    fileInfo.innerHTML = `
-        <i class="fas ${iconClass}"></i>
-        <div class="file-details">
-            <div class="file-name">${file.name}</div>
-            <div class="file-size">${formatFileSize(file.size)}</div>
-        </div>
-        <button class="btn-remove-file" onclick="event.stopPropagation(); removeRNAmigos2CifFile()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    return fileInfo;
-}
-
-// Remove RNAmigos2 CIF file
-function removeRNAmigos2CifFile() {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    const fileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (!fileUpload || !fileInput) return;
-    
-    // Clear file input
-    fileInput.value = '';
-    
-    // Hide file info and show upload content
-    const fileInfo = fileUpload.querySelector('.file-info-content');
-    if (fileInfo) {
-        fileInfo.style.display = 'none';
-    }
-    
-    const uploadContent = fileUpload.querySelector('.upload-content');
-    if (uploadContent) {
-        uploadContent.style.display = 'flex';
-    }
-    
-    // Clear stored file content
-    fileUpload.removeAttribute('data-file-content');
-}
 
 
 // Check and toggle file upload area based on textarea content
@@ -4509,100 +4321,6 @@ async function runRNAFrameFlowAnalysis() {
     return response;
 }
 
-// Handle RNAmigos2 CIF file upload
-function handleRNAmigos2CifFileUpload(file) {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    const fileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (!fileUpload || !fileInput) return;
-    
-    // Read file content and store it for later use
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const fileContent = e.target.result;
-        // Store file content in a data attribute for later retrieval
-        fileUpload.setAttribute('data-file-content', fileContent);
-        
-        // Display file info
-        displayRNAmigos2CifFileInfo(file);
-    };
-    
-    reader.onerror = function() {
-        showNotification('Error reading file', 'error');
-    };
-    
-    reader.readAsText(file);
-}
-
-// Display RNAmigos2 CIF file info
-function displayRNAmigos2CifFileInfo(file) {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    if (!fileUpload) return;
-    
-    const uploadContent = fileUpload.querySelector('.upload-content');
-    let fileInfo = fileUpload.querySelector('.file-info-content');
-    
-    // Hide upload content
-    if (uploadContent) uploadContent.style.display = 'none';
-    
-    // Remove existing file info if any
-    if (fileInfo) {
-        fileInfo.remove();
-    }
-    
-    // Create and add new file info
-    const newFileInfo = createRNAmigos2CifFileInfoElement(file);
-    fileUpload.appendChild(newFileInfo);
-}
-
-// Create RNAmigos2 CIF file info element
-function createRNAmigos2CifFileInfoElement(file) {
-    const fileInfo = document.createElement('div');
-    fileInfo.className = 'file-info-content';
-    fileInfo.style.display = 'flex';
-    
-    // Use the same icon logic as other file uploads
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const iconClass = fileExtension === 'cif' || fileExtension === 'mmcif' ? 'fa-file-code' : 'fa-file-alt';
-    
-    fileInfo.innerHTML = `
-        <i class="fas ${iconClass}"></i>
-        <div class="file-details">
-            <div class="file-name">${file.name}</div>
-            <div class="file-size">${formatFileSize(file.size)}</div>
-                    </div>
-        <button class="btn-remove-file" onclick="event.stopPropagation(); removeRNAmigos2CifFile()">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    
-    return fileInfo;
-}
-
-// Remove RNAmigos2 CIF file
-function removeRNAmigos2CifFile() {
-    const fileUpload = document.getElementById('rnamigos2FileUpload');
-    const fileInput = document.getElementById('rnamigos2FileInput');
-    
-    if (!fileUpload || !fileInput) return;
-    
-    // Clear file input
-    fileInput.value = '';
-    
-    // Hide file info and show upload content
-    const fileInfo = fileUpload.querySelector('.file-info-content');
-    if (fileInfo) {
-        fileInfo.style.display = 'none';
-    }
-    
-    const uploadContent = fileUpload.querySelector('.upload-content');
-    if (uploadContent) {
-        uploadContent.style.display = 'flex';
-    }
-    
-    // Clear stored file content
-    fileUpload.removeAttribute('data-file-content');
-}
 
 
 // Check and toggle file upload area based on textarea content

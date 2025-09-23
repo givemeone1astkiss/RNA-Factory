@@ -81,14 +81,23 @@
 
 /* File upload area - consistent with other models */
 .rnamigos2-input .file-upload-area {
+    position: relative;
+    width: 100%;
+    min-height: 180px;
     border: 2px dashed var(--border-color);
-    border-radius: 15px;
-    padding: 2rem;
-    text-align: center;
+    border-radius: 8px;
+    background: var(--input-bg);
     transition: all 0.3s ease;
     cursor: pointer;
-    position: relative;
-    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+[data-theme="dark"] .rnamigos2-input .file-upload-area{
+    background: var(--input-bg-dark);
+    border-color: var(--border-color-dark);
 }
 
 /* File upload area content */
@@ -139,19 +148,16 @@
 
 .rnamigos2-input .file-upload-area .upload-content i {
     font-size: 2.5rem;
-    color: var(--text-muted);
     margin-bottom: 0.5rem;
 }
 
 .rnamigos2-input .file-upload-area .upload-content p {
     margin: 0.5rem 0;
-    color: var(--text-primary);
     font-weight: 500;
     font-size: 1rem;
 }
 
 .rnamigos2-input .file-upload-area .upload-content small {
-    color: var(--text-muted);
     font-size: 0.85rem;
 }
 

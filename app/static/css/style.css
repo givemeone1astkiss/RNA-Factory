@@ -16,6 +16,8 @@
     --accent-warning: #d97706;
     --accent-danger: #dc2626;
     --accent-info: #0f172a;
+    --accent-light: #f0f9ff;
+    --accent-light-dark: #1e293b;
     --primary-color: #0f172a;
     --secondary-color: #334155;
     --success-color: #059669;
@@ -55,6 +57,8 @@
     --accent-warning: #f59e0b;
     --accent-danger: #ef4444;
     --accent-info: #f8fafc;
+    --accent-light: #f0f9ff;
+    --accent-light-dark: #1e293b;
     --primary-color: #f8fafc;
     --secondary-color: #cbd5e1;
     --success-color: #10b981;
@@ -1042,24 +1046,6 @@ body {
 
 .upload-content {
     pointer-events: none;
-}
-
-.upload-content i {
-    font-size: 2.5rem;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-}
-
-.upload-content p {
-    margin: 0.5rem 0;
-    color: var(--text-primary);
-    font-weight: 500;
-    font-size: 1rem;
-}
-
-.upload-content small {
-    color: var(--text-muted);
-    font-size: 0.85rem;
 }
 
 /* File info display - consistent with RNAmigos2 */
@@ -2213,13 +2199,6 @@ body.loading {
     color: var(--text-primary);
 }
 
-[data-theme="dark"] .upload-content p {
-    color: var(--text-primary);
-}
-
-[data-theme="dark"] .upload-content small {
-    color: var(--text-secondary);
-}
 
 [data-theme="dark"] .result-item h6 {
     color: var(--text-primary);

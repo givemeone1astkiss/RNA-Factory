@@ -16,27 +16,30 @@
     padding: 1rem;
     text-align: center;
     background: var(--bg-secondary);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .standard-input-area .file-upload-area:hover {
     border-color: var(--accent-primary);
     background: var(--hover-bg);
-    transform: translateY(-1px);
-    box-shadow: 0 5px 15px var(--shadow-color);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-style: solid;
 }
 
 .standard-input-area .file-upload-area.dragover {
     border-color: var(--accent-primary);
     background: var(--active-bg);
-    transform: scale(1.02);
-    box-shadow: 0 8px 25px var(--shadow-color);
+    transform: scale(1.03);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    border-style: solid;
 }
 
 .standard-input-area .file-upload-area .upload-content {
@@ -49,12 +52,14 @@
     padding: 0.5rem;
     box-sizing: border-box;
     gap: 0.5rem;
+    transition: all 0.3s ease;
 }
 
 .standard-input-area .file-upload-area .upload-content i {
     font-size: 2.5rem;
     color: var(--text-muted);
     margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
 }
 
 .standard-input-area .file-upload-area .upload-content p {
@@ -62,11 +67,13 @@
     color: var(--text-primary);
     font-weight: 500;
     font-size: 1rem;
+    transition: all 0.3s ease;
 }
 
 .standard-input-area .file-upload-area .upload-content small {
     color: var(--text-muted);
     font-size: 0.85rem;
+    transition: all 0.3s ease;
 }
 
 .standard-input-area .file-upload-area .file-info-content {
@@ -185,6 +192,15 @@
 [data-theme="dark"] .standard-input-area .file-upload-area {
     background: var(--bg-secondary-dark);
     border-color: var(--border-color-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .standard-input-area .file-upload-area:hover {
+    background: var(--hover-bg-dark);
+    border-color: var(--accent-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    border-style: solid;
 }
 
 [data-theme="dark"] .standard-input-area .file-upload-area .file-info-content {
@@ -292,28 +308,34 @@
     border: 2px dashed var(--border-color);
     border-radius: 8px;
     background: var(--input-bg);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .standard-input-area.single-block .unified-input-area:hover {
     border-color: var(--accent-primary);
-    background: var(--hover-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-style: solid;
 }
 
 .standard-input-area.single-block .unified-input-area.dragover {
     border-color: var(--accent-primary);
-    background: var(--accent-light);
+    transform: scale(1.02);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    border-style: solid;
 }
 
 .standard-input-area.single-block .input-placeholder {
     text-align: center;
     color: var(--text-muted);
     pointer-events: none;
+    transition: all 0.3s ease;
 }
 
 .standard-input-area.single-block .input-placeholder i {
@@ -321,18 +343,23 @@
     margin-bottom: 0.5rem;
     display: block;
     color: var(--accent-primary);
+    transition: all 0.3s ease;
 }
 
 .standard-input-area.single-block .input-placeholder p {
     margin: 0.5rem 0;
     font-size: 1rem;
     font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .standard-input-area.single-block .input-placeholder small {
     font-size: 0.875rem;
     color: var(--text-muted);
+    transition: all 0.3s ease;
 }
+
+
 
 .standard-input-area.single-block .unified-input-area textarea {
     position: absolute;
@@ -406,16 +433,23 @@
 [data-theme="dark"] .standard-input-area.single-block .unified-input-area {
     background: var(--input-bg-dark);
     border-color: var(--border-color-dark);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .standard-input-area.single-block .unified-input-area:hover {
     background: var(--hover-bg-dark);
     border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    border-style: solid;
 }
 
 [data-theme="dark"] .standard-input-area.single-block .unified-input-area.dragover {
     background: var(--accent-light-dark);
     border-color: var(--accent-primary);
+    transform: scale(1.02);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    border-style: solid;
 }
 
 [data-theme="dark"] .standard-input-area.single-block .input-placeholder {
@@ -429,6 +463,7 @@
 [data-theme="dark"] .standard-input-area.single-block .input-placeholder small {
     color: var(--text-muted-dark);
 }
+
 
 [data-theme="dark"] .standard-input-area.single-block .unified-input-area textarea {
     background: transparent;
