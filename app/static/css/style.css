@@ -1909,12 +1909,12 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #0f1419 0%, #1a202c 50%, #2d3748 100%);
+    background: var(--bg-primary);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10000;
-    transition: opacity 0.8s ease, visibility 0.8s ease;
+    transition: all 0.8s ease;
     overflow: hidden;
 }
 
@@ -1949,28 +1949,120 @@ body.loading {
 
 .loading-logo i {
     font-size: 6rem;
-    color: #00d4ff;
+    color: var(--primary-color);
     animation: logoPulse 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
+    filter: drop-shadow(0 0 20px var(--shadow-color));
     background: transparent !important;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
     text-shadow: none !important;
-    -webkit-text-fill-color: #00d4ff !important;
+    -webkit-text-fill-color: var(--primary-color) !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
 }
 
-/* Simplified animation */
+/* Enhanced animation with theme-aware effects */
 @keyframes logoPulse {
     0%, 100% { 
         transform: scale(1);
         opacity: 1;
+        filter: drop-shadow(0 0 20px var(--shadow-color));
     }
     50% { 
         transform: scale(1.1);
         opacity: 0.8;
+        filter: drop-shadow(0 0 30px var(--shadow-color));
+    }
+}
+
+/* Dark mode specific animation */
+@keyframes logoPulseDark {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 1;
+        filter: drop-shadow(0 0 20px rgba(248, 250, 252, 0.3));
+    }
+    50% { 
+        transform: scale(1.1);
+        opacity: 0.8;
+        filter: drop-shadow(0 0 30px rgba(248, 250, 252, 0.5));
+    }
+}
+
+/* Light mode specific animation */
+@keyframes logoPulseLight {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 1;
+        filter: drop-shadow(0 0 20px rgba(15, 23, 42, 0.3));
+    }
+    50% { 
+        transform: scale(1.1);
+        opacity: 0.8;
+        filter: drop-shadow(0 0 30px rgba(15, 23, 42, 0.5));
+    }
+}
+
+/* Dark mode loading page styles */
+[data-theme="dark"] .loading-page {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+}
+
+[data-theme="dark"] .loading-logo i {
+    color: var(--primary-color);
+    animation: logoPulseDark 2s ease-in-out infinite;
+    -webkit-text-fill-color: var(--primary-color) !important;
+}
+
+/* Light mode loading page styles */
+[data-theme="light"] .loading-page {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+}
+
+[data-theme="light"] .loading-logo i {
+    color: var(--primary-color);
+    animation: logoPulseLight 2s ease-in-out infinite;
+    -webkit-text-fill-color: var(--primary-color) !important;
+}
+
+/* Loading page particle effects */
+.loading-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.loading-particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: loadingFloat 4s ease-in-out infinite;
+}
+
+.loading-particle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+.loading-particle:nth-child(2) { top: 30%; left: 20%; animation-delay: 1s; }
+.loading-particle:nth-child(3) { top: 40%; left: 80%; animation-delay: 2s; }
+.loading-particle:nth-child(4) { top: 60%; left: 15%; animation-delay: 3s; }
+.loading-particle:nth-child(5) { top: 70%; left: 85%; animation-delay: 4s; }
+.loading-particle:nth-child(6) { top: 15%; left: 70%; animation-delay: 5s; }
+
+@keyframes loadingFloat {
+    0%, 100% {
+        transform: translateY(0px) translateX(0px);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(-20px) translateX(10px);
+        opacity: 0.3;
     }
 }
 
@@ -3099,47 +3191,62 @@ body.loading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 15px;
 }
 
-.ai-header-content h5 {
+.ai-title-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ai-title-section i {
+    font-size: 20px;
+    color: var(--bg-primary);
+}
+
+.ai-title-section h5 {
     margin: 0;
     font-weight: 600;
     font-size: 18px;
-    flex: 1;
-    text-align: center;
+    color: var(--bg-primary);
 }
 
-.ai-header-content i {
-    font-size: 24px;
+.ai-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .ai-close-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--bg-primary);
+    font-size: 16px;
     cursor: pointer;
-    padding: 10px;
+    padding: 8px;
     border-radius: 50%;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
 }
 
 .ai-close-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
 }
 
 .ai-status {
     display: flex;
     align-items: center;
-    font-size: 14px;
+    font-size: 12px;
+    color: var(--bg-primary);
+    opacity: 0.9;
 }
 
 .status-indicator {
@@ -3147,7 +3254,7 @@ body.loading {
     height: 8px;
     background-color: #28a745;
     border-radius: 50%;
-    margin-right: 8px;
+    margin-right: 6px;
     animation: statusPulse 2s infinite;
     box-shadow: 0 0 8px rgba(40, 167, 69, 0.6) !important;
 }
@@ -3311,14 +3418,15 @@ body.loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--gradient-primary);
-    border: none;
+    background: var(--primary-color);
+    border: 2px solid var(--primary-color);
     flex-shrink: 0;
     box-sizing: border-box;
     transition: all 0.3s ease;
     position: relative;
     bottom: 0;
-    color: white;
+    color: var(--bg-primary);
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .ai-chat-input .ai-send-btn.stop-button {
@@ -3345,53 +3453,30 @@ body.loading {
 }
 
 .ai-chat-input .ai-send-btn i {
-    color: white;
+    color: var(--bg-primary);
 }
 
 .ai-chat-input .ai-send-btn:hover {
-    background: var(--gradient-primary);
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-    color: white;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    color: var(--bg-primary);
 }
 
 .ai-chat-input .ai-send-btn:hover i {
-    color: white;
+    color: var(--bg-primary);
 }
 
 .ai-chat-input .ai-send-btn:active {
     transform: scale(0.95);
-    color: white;
+    color: var(--bg-primary);
 }
 
 .ai-chat-input .ai-send-btn:active i {
-    color: white;
+    color: var(--bg-primary);
 }
 
-/* Light theme specific styles for send button */
-[data-theme="light"] .ai-chat-input .ai-send-btn {
-    color: white;
-}
-
-[data-theme="light"] .ai-chat-input .ai-send-btn i {
-    color: white;
-}
-
-[data-theme="light"] .ai-chat-input .ai-send-btn:hover {
-    color: white;
-}
-
-[data-theme="light"] .ai-chat-input .ai-send-btn:hover i {
-    color: white;
-}
-
-[data-theme="light"] .ai-chat-input .ai-send-btn:active {
-    color: white;
-}
-
-[data-theme="light"] .ai-chat-input .ai-send-btn:active i {
-    color: white;
-}
 
 
 
@@ -3582,6 +3667,58 @@ body.loading {
 [data-theme="dark"] .ai-sidebar {
     background: var(--card-bg);
     border-right-color: var(--border-color);
+}
+
+/* Dark mode AI sidebar header optimizations */
+[data-theme="dark"] .ai-sidebar-header {
+    background: var(--primary-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .ai-title-section i,
+[data-theme="dark"] .ai-title-section h5 {
+    color: var(--bg-primary);
+}
+
+[data-theme="dark"] .ai-status {
+    color: var(--bg-primary);
+}
+
+[data-theme="dark"] .ai-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--bg-primary);
+}
+
+[data-theme="dark"] .ai-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Light mode AI sidebar header optimizations */
+[data-theme="light"] .ai-sidebar-header {
+    background: var(--primary-color);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .ai-title-section i,
+[data-theme="light"] .ai-title-section h5 {
+    color: var(--bg-primary);
+}
+
+[data-theme="light"] .ai-status {
+    color: var(--bg-primary);
+}
+
+[data-theme="light"] .ai-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--bg-primary);
+}
+
+[data-theme="light"] .ai-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Ensure button consistency across themes */
