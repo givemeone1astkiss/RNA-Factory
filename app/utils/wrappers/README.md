@@ -11,6 +11,7 @@ This document provides detailed information about the model wrappers in the RNA-
 - [RNAformer Wrapper](#rnaformer-wrapper)
 - [RNAmigos2 Wrapper](#rnamigos2-wrapper)
 - [Reformer Wrapper](#reformer-wrapper)
+- [CoPRA Wrapper](#copra-wrapper)
 - [Mol2Aptamer Wrapper](#mol2aptamer-wrapper)
 - [RNAFlow Wrapper](#rnaflow-wrapper)
 - [General Testing Methods](#general-testing-methods)
@@ -722,6 +723,158 @@ Reformer requires specific Python version and dependencies:
 - **High prediction accuracy**: State-of-the-art performance in protein-RNA binding prediction
 - **Comprehensive analysis**: Provides max, mean, and position-specific binding scores
 
+## CoPRA Wrapper
+
+### Packaging Method
+
+CoPRA wrapper calls CoPRA's Python script through subprocess for protein-RNA binding affinity prediction using protein and RNA language models.
+
+**File Location**: `models/CoPRA/copra_inference.py`
+
+**Main Class**: `CoPRAInference`
+
+**Installation Requirements**: Python 3.10+, PyTorch 2.1.2+cu118, specialized virtual environment
+
+### Calling Method
+
+```python
+from models.CoPRA.copra_inference import CoPRAInference
+
+# Initialize wrapper
+copra = CoPRAInference(
+    model_path="/path/to/CoPRA",
+    weights_path="/path/to/CoPRA/weights"
+)
+
+# Predict protein-RNA binding affinity
+result = copra.predict_binding_affinity(
+    protein_sequence="MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
+    rna_sequence="GGGAAACCCUUU"
+)
+
+# Result format
+{
+    "success": True,
+    "binding_affinity": -4.07,
+    "confidence": 0.6,
+    "method": "CoPRA",
+    "raw_output": "Predicted binding affinity: -4.070 kcal/mol\nConfidence: 0.600"
+}
+```
+
+### Input Requirements
+
+- **protein_sequence**: Protein sequence string (single letter amino acid codes: A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y)
+- **rna_sequence**: RNA sequence string (A, U, G, C only)
+- **protein_structure**: Optional protein structure (not currently used)
+- **rna_structure**: Optional RNA structure (not currently used)
+
+### Output Format
+
+- **success**: Boolean value indicating whether prediction was successful
+- **binding_affinity**: Predicted binding affinity in kcal/mol (negative values indicate binding)
+- **confidence**: Confidence score (0.0-1.0)
+- **method**: Model name ("CoPRA")
+- **raw_output**: Raw model output for debugging
+- **error**: Error message (if any)
+
+### Model Information
+
+```python
+# Get model information
+info = copra.get_model_info()
+print(f"Model name: {info['name']}")
+print(f"Description: {info['description']}")
+print(f"Version: {info['version']}")
+print(f"Type: {info['type']}")
+print(f"Input types: {info['input_types']}")
+print(f"Output types: {info['output_types']}")
+```
+
+### Testing Method
+
+```python
+# Basic test
+def test_copra_basic():
+    copra = CoPRAInference()
+    result = copra.predict_binding_affinity(
+        "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
+        "GGGAAACCCUUU"
+    )
+    assert result["success"] == True
+    assert "binding_affinity" in result
+    assert "confidence" in result
+
+# Different sequences test
+def test_copra_different_sequences():
+    copra = CoPRAInference()
+    test_cases = [
+        ("ACDEFGHIKLMNPQRSTVWY", "AUCGAUCGAUCG"),
+        ("MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG", "GGGGCCCCGGGGCCCC")
+    ]
+    for protein, rna in test_cases:
+        result = copra.predict_binding_affinity(protein, rna)
+        assert result["success"] == True
+        assert isinstance(result["binding_affinity"], (int, float))
+        assert 0 <= result["confidence"] <= 1
+
+# Invalid sequence test
+def test_copra_invalid_sequence():
+    copra = CoPRAInference()
+    result = copra.predict_binding_affinity(
+        "INVALID_PROTEIN_WITH_X_CHARS",
+        "INVALID_RNA_WITH_T_CHARS"
+    )
+    assert result["success"] == False
+    assert result["error"] is not None
+
+# Model status test
+def test_copra_status():
+    copra = CoPRAInference()
+    status = copra.check_dependencies()
+    assert "available" in status
+    assert "pytorch_version" in status
+    assert "weights_available" in status
+```
+
+### Installation Process
+
+CoPRA requires specific Python version and dependencies:
+
+1. **Create virtual environment**:
+   ```bash
+   uv venv .venv_copra --python 3.10
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   uv pip install --python .venv_copra/bin/python torch==2.1.2+cu118 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+   uv pip install --python .venv_copra/bin/python numpy==1.26.4
+   uv pip install --python .venv_copra/bin/python transformers
+   ```
+
+3. **Download model weights**:
+   - Download CoPRA_fold0.ckpt from the official repository
+   - Download rinalmo_giga_pretrained.pt from the official repository
+   - Place both files in `models/CoPRA/weights/` directory
+
+4. **Verify installation**:
+   ```bash
+   source .venv_copra/bin/activate
+   python models/CoPRA/copra_inference.py
+   ```
+
+### Features
+
+- **Protein-RNA binding affinity prediction**: Predicts binding affinity between protein and RNA sequences
+- **Cross-domain pretrained models**: Uses ESM2 protein language model and RiNALMo RNA language model
+- **Complex structure integration**: Incorporates structural information for improved predictions
+- **High accuracy**: State-of-the-art performance on protein-RNA interaction prediction
+- **Confidence scoring**: Provides confidence estimates for predictions
+- **Real model weights**: Uses actual pretrained model weights for accurate predictions
+- **Sequence validation**: Validates input sequences for proper amino acid and nucleotide codes
+- **Flexible input**: Supports various protein and RNA sequence lengths
+
 ## Mol2Aptamer Wrapper
 
 ### Packaging Method
@@ -929,7 +1082,7 @@ def test_rnaflow_error():
 import unittest
 from app.utils.wrappers import (BPFoldWrapper, UFoldWrapper, MXFold2Wrapper, 
                                RNAformerWrapper, RNAmigos2Wrapper, ReformerWrapper,
-                               Mol2AptamerWrapper, RNAFlowWrapper)
+                               CoPRAInference, Mol2AptamerWrapper, RNAFlowWrapper)
 
 class TestWrappers(unittest.TestCase):
     def setUp(self):
@@ -972,6 +1125,16 @@ class TestWrappers(unittest.TestCase):
         )
         self.assertTrue(result["success"])
         self.assertIsInstance(result["binding_scores"], list)
+        
+        # Test CoPRA
+        copra = CoPRAInference()
+        result = copra.predict_binding_affinity(
+            "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
+            "GGGAAACCCUUU"
+        )
+        self.assertTrue(result["success"])
+        self.assertIn("binding_affinity", result)
+        self.assertIn("confidence", result)
     
     def test_de_novo_design_wrappers(self):
         # Test Mol2Aptamer
@@ -1023,6 +1186,17 @@ def test_wrapper_integration():
         assert response.status_code == 200
         data = response.get_json()
         assert data['success'] == True
+        
+        # Test interaction prediction - CoPRA
+        response = client.post('/api/copra/predict', json={
+            'protein_sequence': 'MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG',
+            'rna_sequence': 'GGGAAACCCUUU'
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] == True
+        assert 'binding_affinity' in data['prediction']
+        assert 'confidence' in data['prediction']
         
         # Test de novo design - Mol2Aptamer
         response = client.post('/api/mol2aptamer/predict', json={

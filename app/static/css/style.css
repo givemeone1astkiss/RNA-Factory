@@ -36,6 +36,7 @@
     --scrollbar-track: #f1f5f9;
     --scrollbar-thumb: #cbd5e1;
     --scrollbar-thumb-hover: #94a3b8;
+    --input-bg: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -74,6 +75,7 @@
     --scrollbar-track: #1e2634;
     --scrollbar-thumb: #475569;
     --scrollbar-thumb-hover: #64748b;
+    --input-bg: #1e2634;
 }
 
 * {
@@ -4029,6 +4031,129 @@ body.loading {
 .markdown-content .token.important,
 .markdown-content .token.variable {
     color: var(--accent-info);
+}
+
+/* CoPRA Model Styles */
+.copra-input {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.copra-parameters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.copra-parameter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.copra-parameter label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.copra-parameter .form-select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.copra-parameter .form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 144, 220, 0.1);
+}
+
+.copra-parameter .form-select option {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Dark mode styles for CoPRA */
+[data-theme="dark"] .copra-parameter .form-select {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .copra-parameter .form-select option {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Mobile responsiveness for CoPRA */
+@media (max-width: 768px) {
+    .copra-parameters {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+/* Global form-select styles for better dark mode support */
+.form-select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 144, 220, 0.1);
+}
+
+.form-select option {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    padding: 0.5rem;
+}
+
+/* Dark mode specific form-select styles */
+[data-theme="dark"] .form-select {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-select option {
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Ensure select dropdown has proper contrast in all browsers */
+select.form-select {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+}
+
+select.form-select option {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+}
+
+/* Additional dark mode fixes for select elements */
+[data-theme="dark"] select.form-select {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] select.form-select option {
+    background-color: var(--input-bg);
+    color: var(--text-primary);
 }
 
 

@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     showLoadingPage();
     initializeApp();
     initializeTheme();
+    
+    // Reset scroll position to top on page load/refresh
+    window.scrollTo(0, 0);
 });
 
 // Show loading page with simplified animation
@@ -314,6 +317,13 @@ function clearInputAreas() {
         // Reset parameters to default values
         document.getElementById('reformerRbpName').value = 'U2AF2';
         document.getElementById('reformerCellLine').value = 'HepG2';
+    }
+    
+    // Clear CoPRA specific inputs (parameters only, input areas handled by standard-input-area)
+    const copraInput = document.getElementById('copraInput');
+    if (copraInput) {
+        // Reset parameters to default values
+        document.getElementById('copraConfidenceThreshold').value = '0.7';
     }
     
     // Clear any result sections
@@ -626,6 +636,7 @@ function adjustInputInterface() {
     const rnaflowInput = document.getElementById('rnaflowInput');
     const rnaframeflowInput = document.getElementById('rnaframeflowInput');
     const reformerInput = document.getElementById('reformerInput');
+    const copraInput = document.getElementById('copraInput');
     const fileAcceptInfo = document.getElementById('fileAcceptInfo');
     
     // Get general input areas by ID
@@ -640,6 +651,7 @@ function adjustInputInterface() {
     if (rnaflowInput) rnaflowInput.style.display = 'none';
     if (rnaframeflowInput) rnaframeflowInput.style.display = 'none';
     if (reformerInput) reformerInput.style.display = 'none';
+    if (copraInput) copraInput.style.display = 'none';
     
     // Show general input areas by default
     if (rnaSequencesInput) rnaSequencesInput.style.display = 'flex';
@@ -730,6 +742,20 @@ function adjustInputInterface() {
                 // Initialize cell line options
                 updateReformerCellLineOptions();
             }
+        }, 100);
+    } else if (currentModel.id === 'copra') {
+        // CoPRA model has specific input interface
+        if (copraInput) {
+            copraInput.style.display = 'flex';
+        }
+        // Hide general input areas for CoPRA
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports protein and RNA sequence input';
+        
+        // Initialize CoPRA single block input areas when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('copraProteinUnifiedInput', 'copraProteinSequence', 'copraProteinFileInput', 'copraProteinPlaceholder');
+            initializeSingleBlockInput('copraRnaUnifiedInput', 'copraRnaSequence', 'copraRnaFileInput', 'copraRnaPlaceholder');
         }, 100);
     } else {
         // Other models (BPFold, UFold, MXFold2, RNAformer)
@@ -962,8 +988,8 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, and Reformer, skip general input validation as they have their own validation
-    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer') {
+    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, and CoPRA, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
@@ -1095,6 +1121,16 @@ async function runAnalysis() {
             } else {
                 throw new Error(result.error);
             }
+        } else if (currentModel.id === 'copra') {
+            const result = await runCoPRAAnalysis();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'CoPRA Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
         } else {
             // For models other than BPFold, show a message that they are not yet implemented
             const result = {
@@ -1182,6 +1218,8 @@ function displayResults(result) {
         if (downloadActions) {
             downloadActions.style.display = 'flex';
         }
+    } else if (currentModel.id === 'copra') {
+        html = displayCoPRAResults(result);
     } else {
         html = displayDefaultResults(result.result);
     }
@@ -4933,6 +4971,40 @@ function displayReformerResults(result) {
     return html;
 }
 
+// Display CoPRA Results
+function displayCoPRAResults(result) {
+    if (!result.success) {
+        return `<div class="error-message">Error: ${result.error}</div>`;
+    }
+    
+    const prediction = result.prediction || {};
+    const bindingAffinity = prediction.binding_affinity || 0;
+    const confidence = prediction.confidence || 0;
+    const unit = prediction.unit || 'kcal/mol';
+    
+    // Store results globally for download functionality
+    window.currentResult = result;
+    
+    let html = '<div class="rnamigos2-results">';
+    
+    // Summary information - only binding affinity and confidence
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-dna"></i>Binding Affinity Prediction Results</h6>
+            <div class="sequence-info">
+                <div class="sequence-info-stats">
+                    <div class="sequence-length">Binding Affinity: ${bindingAffinity.toFixed(3)} ${unit}</div>
+                    <div class="sequence-length">Confidence: ${(confidence * 100).toFixed(1)}%</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    html += '</div>';
+    
+    return html;
+}
+
 // Download all Reformer results
 function downloadAllReformerResults() {
     // Get the current result data from the global result storage
@@ -5030,7 +5102,102 @@ function openGitHub() {
     window.open('https://github.com/givemeone1astkiss/RNA-Factory', '_blank');
 }
 
+// CoPRA Analysis Functions
+async function runCoPRAAnalysis() {
+    try {
+        // Get input data from CoPRA specific input areas
+        const proteinSequence = document.getElementById('copraProteinSequence')?.value?.trim();
+        const rnaSequence = document.getElementById('copraRnaSequence')?.value?.trim();
+        
+        if (!proteinSequence || !rnaSequence) {
+            return {
+                success: false,
+                error: 'Both protein sequence and RNA sequence are required for CoPRA analysis'
+            };
+        }
+        
+        // Validate sequences
+        if (!isValidProteinSequence(proteinSequence)) {
+            return {
+                success: false,
+                error: 'Invalid protein sequence. Only standard amino acid codes (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y) are allowed.'
+            };
+        }
+        
+        if (!isValidRnaSequence(rnaSequence)) {
+            return {
+                success: false,
+                error: 'Invalid RNA sequence. Only A, U, G, C are allowed.'
+            };
+        }
+        
+        // Call CoPRA API
+        const response = await fetch('/api/copra/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                protein_sequence: proteinSequence,
+                rna_sequence: rnaSequence
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Format result for display
+            return {
+                success: true,
+                result: {
+                    model_type: 'protein_rna_interaction',
+                    binding_affinity: result.prediction.binding_affinity,
+                    confidence: result.prediction.confidence,
+                    unit: result.prediction.unit,
+                    protein_sequence: result.input.protein_sequence,
+                    rna_sequence: result.input.rna_sequence,
+                    method: result.model,
+                    metadata: result.metadata
+                }
+            };
+        } else {
+            return {
+                success: false,
+                error: result.error || 'CoPRA prediction failed'
+            };
+        }
+        
+    } catch (error) {
+        return {
+            success: false,
+            error: `CoPRA analysis failed: ${error.message}`
+        };
+    }
+}
+
+// Validation functions
+function isValidProteinSequence(sequence) {
+    const validAA = /^[ACDEFGHIKLMNPQRSTVWY]+$/i;
+    return validAA.test(sequence);
+}
+
+function isValidRnaSequence(sequence) {
+    const validBases = /^[AUCG]+$/i;
+    return validBases.test(sequence);
+}
+
 // Initialize banner scroll effects when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeBannerScroll();
+});
+
+// Ensure scroll position is reset when page is fully loaded
+window.addEventListener('load', function() {
+    // Reset scroll position to top after all resources are loaded
+    window.scrollTo(0, 0);
+    
+    // Also reset scroll position after a short delay to handle any dynamic content
+    setTimeout(function() {
+        window.scrollTo(0, 0);
+    }, 100);
 });

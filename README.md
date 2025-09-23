@@ -61,6 +61,14 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Provides binding site identification and confidence scoring
 - [GitHub](https://github.com/xilinshen/Reformer) | [Paper](https://www.sciencedirect.com/science/article/pii/S2666389924003222)
 
+**CoPRA**
+- State-of-the-art predictor of protein-RNA binding affinity based on protein language model and RNA language model
+- Uses ESM2 protein language model and RiNALMo RNA language model with complex structure as input
+- Pre-trained on PRI30k dataset and fine-tuned on PRA310 for high accuracy
+- Provides binding affinity prediction in kcal/mol with confidence scoring
+- Supports protein and RNA sequence input for comprehensive interaction analysis
+- [GitHub](https://github.com/hanrthu/CoPRA) | [Paper](https://arxiv.org/abs/2409.03773)
+
 #### De Novo Design Models
 
 **Mol2Aptamer**
@@ -85,7 +93,7 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 
 ### 🔧 Platform Capabilities
 
-- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences, cDNA sequences
+- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, SMILES strings, protein sequences, cDNA sequences, RNA sequences
 - **Unified Interface**: Consistent user experience across all models with standardized input areas
 - **Real-time Processing**: Fast analysis with progress tracking
 - **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, PDB, and more
@@ -109,6 +117,7 @@ RNA-Factory/
 │   │   ├── rnaformer_routes.py  # RNAformer API endpoints
 │   │   ├── rnamigos2_routes.py  # RNAmigos2 API endpoints
 │   │   ├── reformer_routes.py   # Reformer API endpoints
+│   │   ├── copra_routes.py      # CoPRA API endpoints
 │   │   ├── mol2aptamer_routes.py # Mol2Aptamer API endpoints
 │   │   ├── rnaflow_routes.py    # RNAFlow API endpoints
 │   │   ├── rnaframeflow_routes.py # RNA-FrameFlow API endpoints
@@ -223,6 +232,13 @@ RESTful API endpoints for:
 3. Select RBP (RNA-binding protein) type from 150+ options
 4. Choose cell line (HepG2, K562, or MCF-7)
 5. Run analysis to get single-base resolution binding scores
+
+#### CoPRA
+1. Select CoPRA for protein-RNA binding affinity prediction
+2. Input protein sequence (single letter amino acid codes)
+3. Input RNA sequence (A, U, G, C only)
+4. Configure confidence threshold (Low/Medium/High/Very High)
+5. Run analysis to get binding affinity prediction in kcal/mol with confidence score
 
 ### De Novo Design
 

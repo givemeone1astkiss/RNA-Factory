@@ -29,6 +29,7 @@ def create_app(config_name="default"):
     from app.api.rnaflow_routes import rnaflow_bp
     from app.api.rnaframeflow_routes import rnaframeflow_bp
     from app.api.reformer_routes import reformer_bp
+    from app.api.copra_routes import copra_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -41,6 +42,7 @@ def create_app(config_name="default"):
     app.register_blueprint(rnaflow_bp, url_prefix="/api/rnaflow")
     app.register_blueprint(rnaframeflow_bp, url_prefix="/api/rnaframeflow")
     app.register_blueprint(reformer_bp, url_prefix="/api/reformer")
+    app.register_blueprint(copra_bp, url_prefix="/api/copra")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -312,6 +314,34 @@ def preload_models(app):
                 "environment_type": "uv",
                 "environment_path": "/home/zhangliqin/RNA-Factory/.venv_reformer",
                 "architecture_image": "/static/images/reformer.png"
+            },
+            {
+                "id": "copra",
+                "name": "CoPRA",
+                "type": "protein_rna_interaction",
+                "category": "interaction_prediction",
+                "category_name": "Interaction Prediction",
+                "description": "CoPRA is a state-of-the-art predictor of protein-RNA binding affinity based on protein language model and RNA language model with complex structure as input. Pre-trained on PRI30k dataset and fine-tuned on PRA310.",
+                "input_types": ["protein_sequence", "rna_sequence"],
+                "output_types": ["binding_affinity", "confidence_score"],
+                "model_path": "models/CoPRA/copra_inference.py",
+                "weights_path": "models/CoPRA/weights",
+                "input_description": "Requires protein sequence and RNA sequence for binding affinity prediction",
+                "output_description": "Outputs protein-RNA binding affinity in kcal/mol with confidence score",
+                "github_url": "https://github.com/hanrthu/CoPRA",
+                "paper_url": "https://arxiv.org/abs/2409.03773",
+                "features": [
+                    "Protein-RNA binding affinity prediction",
+                    "Cross-domain pretrained models",
+                    "Complex structure integration",
+                    "ESM2 protein language model",
+                    "RiNALMo RNA language model",
+                    "State-of-the-art performance"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_copra",
+                "architecture_image": "/static/images/copra.png"
             }
         ]
 

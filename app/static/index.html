@@ -481,6 +481,66 @@
                                 </div>
                             </div>
 
+                            <!-- CoPRA Specific Input Area -->
+                            <div class="input-method copra-input" id="copraInput" style="display: none;">
+                                <!-- Protein Sequence Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-dna"></i>
+                                        <h6>Protein Sequence</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="copraProteinInputArea">
+                                        <div class="unified-input-area" id="copraProteinUnifiedInput">
+                                            <div class="input-placeholder" id="copraProteinPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter protein sequence or drag files here</p>
+                                                <small>FASTA, TXT supported</small>
+                                            </div>
+                                            <textarea id="copraProteinSequence" rows="4" placeholder="Enter protein sequence (single letter amino acid codes)&#10;Example:&#10;MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG&#10;ACDEFGHIKLMNPQRSTVWY" style="display: none;"></textarea>
+                                            <input type="file" id="copraProteinFileInput" accept=".fasta,.fa,.txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RNA Sequence Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-dna"></i>
+                                        <h6>RNA Sequence</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="copraRnaInputArea">
+                                        <div class="unified-input-area" id="copraRnaUnifiedInput">
+                                            <div class="input-placeholder" id="copraRnaPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter RNA sequence or drag files here</p>
+                                                <small>FASTA, TXT supported</small>
+                                            </div>
+                                            <textarea id="copraRnaSequence" rows="4" placeholder="Enter RNA sequence (A, U, G, C only)&#10;Example:&#10;GGGAAACCCUUU&#10;AUCGAUCGAUCGAUCG" style="display: none;"></textarea>
+                                            <input type="file" id="copraRnaFileInput" accept=".fasta,.fa,.txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Analysis Parameters Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cogs"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="copra-parameters">
+                                        <div class="copra-parameter">
+                                            <label for="copraConfidenceThreshold">Confidence Threshold</label>
+                                            <select id="copraConfidenceThreshold" class="form-select">
+                                                <option value="0.5">Low (0.5)</option>
+                                                <option value="0.7" selected>Medium (0.7)</option>
+                                                <option value="0.8">High (0.8)</option>
+                                                <option value="0.9">Very High (0.9)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- RNAFlow Specific Input Area -->
                             <div class="rnaflow-input" id="rnaflowInput" style="display: none;">
                                 <!-- Protein Sequence Input Section -->

@@ -251,7 +251,7 @@
 .rnamigos2-results .sequence-length {
     display: inline-block;
     background: var(--accent-primary);
-    color: white;
+    color: var(--text-primary);
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.8rem;
@@ -261,21 +261,35 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 为每条信息分配不同的颜色 */
+/* 为每条信息分配不同的颜色，确保文字对比度 */
 .rnamigos2-results .sequence-info-stats .sequence-length:nth-child(1) {
     background: #28a745; /* 绿色 - Best Score */
+    color: white;
 }
 
 .rnamigos2-results .sequence-info-stats .sequence-length:nth-child(2) {
-    background: #ffc107; /* 黄色 - Worst Score */
+    background: #17a2b8; /* 青色 - Confidence */
+    color: white;
 }
 
 .rnamigos2-results .sequence-info-stats .sequence-length:nth-child(3) {
-    background: #17a2b8; /* 青色 - Average Score */
+    background: #6f42c1; /* 紫色 - Average Score */
+    color: white;
 }
 
 .rnamigos2-results .sequence-info-stats .sequence-length:nth-child(4) {
-    background: #6f42c1; /* 紫色 - Total Ligands */
+    background: #dc3545; /* 红色 - Total Ligands */
+    color: white;
+}
+
+.rnamigos2-results .sequence-info-stats .sequence-length:nth-child(5) {
+    background: #fd7e14; /* 橙色 - 其他信息 */
+    color: white;
+}
+
+.rnamigos2-results .sequence-info-stats .sequence-length:nth-child(6) {
+    background: #20c997; /* 青绿色 - 其他信息 */
+    color: white;
 }
 
 .rnamigos2-results .interactions-table {
