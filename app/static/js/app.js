@@ -4982,3 +4982,55 @@ function downloadAllReformerResults() {
     
     showNotification('Reformer results downloaded successfully!', 'success');
 }
+
+// Banner scroll effects
+function initializeBannerScroll() {
+    const bannerSection = document.getElementById('bannerSection');
+    
+    if (!bannerSection) return;
+    
+    let isScrolled = false;
+    const scrollThreshold = 50; // 增加阈值，使切换更平滑
+    
+    function handleScroll() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > scrollThreshold && !isScrolled) {
+            bannerSection.classList.add('scrolled');
+            isScrolled = true;
+        } else if (scrollTop <= scrollThreshold && isScrolled) {
+            bannerSection.classList.remove('scrolled');
+            isScrolled = false;
+        }
+    }
+    
+    // Throttle scroll event for better performance
+    let ticking = false;
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(handleScroll);
+            ticking = true;
+        }
+    }
+    
+    function onScroll() {
+        ticking = false;
+        requestTick();
+    }
+    
+    // Add scroll listener
+    window.addEventListener('scroll', onScroll, { passive: true });
+    
+    // Initial check
+    handleScroll();
+}
+
+// GitHub button functionality
+function openGitHub() {
+    window.open('https://github.com/givemeone1astkiss/RNA-Factory', '_blank');
+}
+
+// Initialize banner scroll effects when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeBannerScroll();
+});
