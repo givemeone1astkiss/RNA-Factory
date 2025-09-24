@@ -501,7 +501,7 @@ class RNADesignRAGSystem:
         
         return added_count
 
-    def search_documents(self, query: str, k: int = 5, include_images: bool = True) -> List[Dict[str, Any]]:
+    def search_documents(self, query: str, k: int = 30, include_images: bool = True) -> List[Dict[str, Any]]:
         """Search documents using multimodal retrieval"""
         try:
             results = []
@@ -518,45 +518,59 @@ class RNADesignRAGSystem:
                 text_results['metadatas'][0],
                 text_results['distances'][0]
             )):
+                # Calculate similarity score (higher is better)
+                similarity_score = 1 - distance
                 results.append({
                     "type": "text",
                     "content": doc,
                     "metadata": metadata,
-                    "score": 1 - distance,
+                    "score": similarity_score,
                     "rank": i + 1
                 })
             
             # Image search if requested
             if include_images:
-                image_results = self.image_collection.query(
-                    query_texts=[query],
-                    n_results=k
-                )
+                try:
+                    # Use text embedding for image search to avoid dimension mismatch
+                    image_results = self.image_collection.query(
+                        query_embeddings=[query_embedding.tolist()],
+                        n_results=k
+                    )
+                except Exception as e:
+                    logger.warning(f"Image search failed due to dimension mismatch: {e}")
+                    # Skip image search if there's a dimension mismatch
+                    image_results = {'documents': [[]], 'metadatas': [[]], 'distances': [[]]}
                 
                 for i, (doc, metadata, distance) in enumerate(zip(
                     image_results['documents'][0],
                     image_results['metadatas'][0],
                     image_results['distances'][0]
                 )):
+                    similarity_score = 1 - distance
                     results.append({
                         "type": "image",
                         "content": doc,
                         "metadata": metadata,
-                        "score": 1 - distance,
+                        "score": similarity_score,
                         "rank": i + 1
                     })
             
             # Sort by score
             results.sort(key=lambda x: x['score'], reverse=True)
             
-            logger.info(f"Found {len(results)} results for query: {query[:50]}...")
+            # Debug logging
+            logger.info(f"Search query: '{query}'")
+            logger.info(f"Found {len(results)} results")
+            for i, result in enumerate(results[:3]):  # Log top 3 results
+                logger.info(f"Result {i+1}: score={result['score']:.3f}, type={result['type']}, content_preview={result['content'][:100]}...")
+            
             return results[:k]
             
         except Exception as e:
             logger.error(f"Search failed: {e}")
             return []
 
-    def get_rag_context(self, query: str, max_chunks: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
+    def get_rag_context(self, query: str, max_chunks: int = 15) -> Tuple[str, List[Dict[str, Any]]]:
         """Get RAG context for a query with citations (text-only for compatibility)"""
         try:
             results = self.search_documents(query, k=max_chunks, include_images=False)
@@ -585,19 +599,35 @@ class RNADesignRAGSystem:
                 citation = self._format_citation(result, citation_number)
                 citations.append(citation)
                 
-                # Add to context
-                context_parts.append(f"[{citation_number}] {result['content']}")
-                citation_number += 1
+                # Add to context with better formatting
+                content = result['content'].strip()
+                if content:
+                    context_parts.append(f"[{citation_number}] {content}")
+                    citation_number += 1
             
             context = "\n\n".join(context_parts)
+            
+            # Add a summary header to make the context more useful
+            if context:
+                context = f"""RELEVANT LITERATURE FOR QUERY: '{query}'
+
+{context}
+
+IMPORTANT INSTRUCTIONS:
+- The above literature contains relevant information about the query
+- Use this information to provide a comprehensive and accurate answer
+- Include specific details, metrics, and technical information from the literature
+- If the literature contains tables, figures, or performance data, incorporate these details into your response
+- Base your answer primarily on the provided literature context"""
+            
+            logger.info(f"RAG context generated: {len(context)} characters, {len(citations)} citations")
             return context, citations
             
         except Exception as e:
             logger.error(f"Failed to get RAG context: {e}")
             return "No relevant context found.", []
-
-    def get_multimodal_context(self, query: str, max_text_chunks: int = 3, 
-                              max_images: int = 2) -> Tuple[str, List[Dict[str, Any]]]:
+    def get_multimodal_context(self, query: str, max_text_chunks: int = 5, 
+                              max_images: int = 3) -> Tuple[str, List[Dict[str, Any]]]:
         """Get multimodal context including both text and images"""
         try:
             results = self.search_documents(query, k=max_text_chunks + max_images, include_images=True)

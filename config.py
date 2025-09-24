@@ -1,37 +1,49 @@
 import os
-from pathlib import Path
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
 
 class Config:
-    """Application Configuration Class"""
-
-    # Base paths
-    BASE_DIR = Path(__file__).parent
-    MODEL_FOLDER = BASE_DIR / "models"
-
+    """Base configuration class"""
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    MODEL_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+    TEMP_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp')
+    
+    # AI Assistant Configuration
+    DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
+    DEEPSEEK_BASE_URL = os.environ.get('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
+    
+    # RAG Configuration
+    CHROMA_PERSIST_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'chroma_db')
+    DATA_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+    
+    # Model Configuration
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    
+    # Logging
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
 
 class DevelopmentConfig(Config):
-    """Development Environment Configuration"""
-    DEBUG = False
+    """Development configuration"""
+    DEBUG = True
     TESTING = False
-
 
 class ProductionConfig(Config):
-    """Production Environment Configuration"""
+    """Production configuration"""
     DEBUG = False
     TESTING = False
-
 
 class TestingConfig(Config):
-    """Testing Environment Configuration"""
-    TESTING = False
-    DEBUG = False
-
+    """Testing configuration"""
+    DEBUG = True
+    TESTING = True
+    WTF_CSRF_ENABLED = False
 
 # Configuration dictionary
 config = {
-    "development": DevelopmentConfig,
-    "production": ProductionConfig,
-    "testing": TestingConfig,
-    "default": DevelopmentConfig,
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
 }

@@ -31,6 +31,7 @@ def create_app(config_name="default"):
     from app.api.reformer_routes import reformer_bp
     from app.api.copra_routes import copra_bp
     from app.api.ribodiffusion_routes import ribodiffusion_bp
+    from app.api.rnampnn_routes import rnampnn_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -45,6 +46,7 @@ def create_app(config_name="default"):
     app.register_blueprint(reformer_bp, url_prefix="/api/reformer")
     app.register_blueprint(copra_bp, url_prefix="/api/copra")
     app.register_blueprint(ribodiffusion_bp, url_prefix="/api/ribodiffusion")
+    app.register_blueprint(rnampnn_bp, url_prefix="/api/rnampnn")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -344,6 +346,33 @@ def preload_models(app):
                 "environment_type": "uv",
                 "environment_path": "/home/zhangliqin/RNA-Factory/.venv_copra",
                 "architecture_image": "/static/images/copra.png"
+            },
+            {
+                "id": "rnampnn",
+                "name": "RNAMPNN-X",
+                "type": "rna_design",
+                "category": "de_novo_design",
+                "category_name": "De Novo Design",
+                "description": "RNAMPNN is a graph neural network-based RNA refolding algorithm to recover RNA sequences from structural information. It uses message passing neural networks to predict RNA sequences from 3D coordinates.",
+                "input_types": ["pdb"],
+                "output_types": ["rna_sequence", "confidence_scores"],
+                "model_path": "utils/wrappers/rnampnn_wrapper.py",
+                "weights_path": "models/RNA-MPNN/out/checkpoints/RNAMPNN-X",
+                "input_description": "Requires PDB file containing RNA 3D structure with coordinates for atoms: P, O5', C5', C4', C3', O3', N1, N9",
+                "output_description": "Outputs predicted RNA sequence (A, U, C, G) with confidence scores for each position",
+                "github_url": "https://github.com/givemeone1astkiss/RNA-MPNN",
+                "features": [
+                    "Graph neural network-based prediction",
+                    "Message passing neural networks",
+                    "3D structure to sequence mapping",
+                    "High accuracy sequence recovery",
+                    "Support for various RNA structures",
+                    "Confidence scoring for predictions"
+                ],
+                "environment_required": True,
+                "environment_type": "venv",
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_rnampnn",
+                "architecture_image": "/static/images/rnampnn.jpg"
             },
             {
                 "id": "ribodiffusion",

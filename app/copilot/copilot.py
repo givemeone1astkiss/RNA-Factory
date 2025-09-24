@@ -182,24 +182,40 @@ class RNADesignAssistant:
             # Get RAG context and citations - automatically use documents from data directory
             if self.multimodal and hasattr(self.rag_system, 'get_multimodal_context'):
                 rag_context, citations = self.rag_system.get_multimodal_context(
-                    last_message, max_text_chunks=3, max_images=2
+                    last_message, max_text_chunks=15, max_images=5
                 )
             else:
-                rag_context, citations = self.rag_system.get_rag_context(last_message, max_chunks=3)
+                rag_context, citations = self.rag_system.get_rag_context(last_message, max_chunks=15)
+            
+            # Debug logging for RAG retrieval
+            logger.info(f"RAG retrieval results: {len(citations)} citations found")
+            if citations:
+                for i, citation in enumerate(citations):
+                    logger.info(f"Citation {i+1}: score={citation.get('score', 'N/A')}, title={citation.get('title', 'N/A')}")
             
             # Check if we have meaningful context
-            # Consider it has literature if we have citations with reasonable scores
+            # Very permissive threshold - accept any citations with reasonable scores
             has_literature = (
                 len(citations) > 0 and
-                any(citation.get("score", 0) > -0.8 for citation in citations)  # Reasonable similarity threshold
+                any(citation.get("score", 0) > -0.5 for citation in citations)  # Accept even negative similarities
             )
+            
+            # Additional check: if we have any context at all, consider it literature
+            if not has_literature and rag_context and rag_context != "No relevant documents found.":
+                has_literature = True
+                logger.info("RAG context found but no citations - still considering as literature")
+            
+            # Final fallback: if we have any citations at all, consider it literature
+            if not has_literature and len(citations) > 0:
+                has_literature = True
+                logger.info("Found citations with low scores - still considering as literature")
             
             # Update state with RAG context
             state["rag_context"] = rag_context
             state["citations"] = citations
             state["has_literature"] = has_literature
             
-            logger.info(f"Retrieved RAG context with {len(citations)} citations (multimodal: {self.multimodal})")
+            logger.info(f"Final RAG decision: has_literature={has_literature}, context_length={len(rag_context) if rag_context else 0}")
             
         except Exception as e:
             logger.error(f"RAG context retrieval failed: {e}")
@@ -237,7 +253,8 @@ class RNADesignAssistant:
         
         # Enhance context with RAG information
         if rag_context and rag_context != "No relevant documents found.":
-            context += f"\n\nRELEVANT LITERATURE CONTEXT:\n{rag_context}"
+            # Add RAG context with clear instructions
+            context += f"\n\nCRITICAL: You have access to relevant literature. Use the following information to answer the user's question. DO NOT say 'no relevant literature found' - use the provided literature:\n\n{rag_context}"
         
         # Use the RNA design system prompt from prompts.py
         system_prompt = RNA_DESIGN_SYSTEM_PROMPT.format(context=context)
@@ -279,7 +296,8 @@ class RNADesignAssistant:
         
         # Enhance context with RAG information
         if rag_context and rag_context != "No relevant documents found.":
-            context += f"\n\nRELEVANT LITERATURE CONTEXT:\n{rag_context}"
+            # Add RAG context with clear instructions
+            context += f"\n\nCRITICAL: You have access to relevant literature. Use the following information to answer the user's question. DO NOT say 'no relevant literature found' - use the provided literature:\n\n{rag_context}"
         
         # Use the general bioinfo system prompt from prompts.py
         system_prompt = GENERAL_BIOINFO_SYSTEM_PROMPT.format(context=context)
@@ -431,6 +449,9 @@ class RNADesignAssistant:
             
             # Check if we have literature support for RNA design and general bioinfo
             has_literature = state.get("has_literature", False)
+            
+            # Debug logging for streaming
+            logger.info(f"Streaming RAG check: has_literature={has_literature}, response_type={response_type}")
             
             if response_type in ["rna_design", "general_bioinfo"] and not has_literature:
                 # Use the literature reference required message for streaming

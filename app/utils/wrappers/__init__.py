@@ -14,6 +14,7 @@ from .copra_wrapper import CoPRAWrapper
 from .ribodiffusion_wrapper import RiboDiffusionWrapper
 from .mol2aptamer_wrapper import Mol2AptamerWrapper
 from .rnaframeflow_wrapper import RNAFrameFlowWrapper
+from .rnampnn_wrapper import RNAMPNNWrapper
 
 __all__ = [
     "BPFoldWrapper", 
@@ -26,5 +27,6 @@ __all__ = [
     "CoPRAWrapper",
     "RiboDiffusionWrapper",
     "Mol2AptamerWrapper",
-    "RNAFrameFlowWrapper"
+    "RNAFrameFlowWrapper",
+    "RNAMPNNWrapper"
 ]

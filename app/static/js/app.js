@@ -368,13 +368,10 @@ function clearTempFolder() {
     })
     .then(response => {
         if (response.ok) {
-            console.log('Temp folder cleared successfully');
-        } else {
-            console.warn('Failed to clear temp folder:', response.status);
         }
     })
     .catch(error => {
-        console.warn('Error clearing temp folder:', error);
+        // Error clearing temp folder
     });
 }
 
@@ -673,6 +670,7 @@ function adjustInputInterface() {
     const reformerInput = document.getElementById('reformerInput');
     const copraInput = document.getElementById('copraInput');
     const ribodiffusionInput = document.getElementById('ribodiffusionInput');
+    const rnampnnInput = document.getElementById('rnampnnInput');
     const fileAcceptInfo = document.getElementById('fileAcceptInfo');
     
     // Get general input areas by ID
@@ -689,6 +687,7 @@ function adjustInputInterface() {
     if (reformerInput) reformerInput.style.display = 'none';
     if (copraInput) copraInput.style.display = 'none';
     if (ribodiffusionInput) ribodiffusionInput.style.display = 'none';
+    if (rnampnnInput) rnampnnInput.style.display = 'none';
     
     // Show general input areas by default
     if (rnaSequencesInput) rnaSequencesInput.style.display = 'flex';
@@ -806,6 +805,19 @@ function adjustInputInterface() {
         // Initialize RiboDiffusion single block input areas when model is selected
         setTimeout(() => {
             initializeSingleBlockInput('ribodiffusionPdbUnifiedInput', 'ribodiffusionPdbContent', 'ribodiffusionPdbFileInput', 'ribodiffusionPdbPlaceholder');
+        }, 100);
+    } else if (currentModel.id === 'rnampnn') {
+        // RNAMPNN model has specific input interface
+        if (rnampnnInput) {
+            rnampnnInput.style.display = 'flex';
+        }
+        // Hide general input areas for RNAMPNN
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports PDB format';
+        
+        // Initialize RNAMPNN single block input areas when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('rnampnnPdbUnifiedInput', 'rnampnnPdbContent', 'rnampnnPdbFileInput', 'rnampnnPdbPlaceholder');
         }, 100);
     } else {
         // Other models (BPFold, UFold, MXFold2, RNAformer)
@@ -1038,8 +1050,8 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, CoPRA, and RiboDiffusion, skip general input validation as they have their own validation
-    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra' && currentModel.id !== 'ribodiffusion') {
+    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, CoPRA, RiboDiffusion, and RNAMPNN, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra' && currentModel.id !== 'ribodiffusion' && currentModel.id !== 'rnampnn') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
@@ -1191,6 +1203,16 @@ async function runAnalysis() {
             } else {
                 throw new Error(result.error);
             }
+        } else if (currentModel.id === 'rnampnn') {
+            const result = await runRNAMPNNAnalysis();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'RNAMPNN Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
         } else {
             // For models other than BPFold, show a message that they are not yet implemented
             const result = {
@@ -1245,8 +1267,8 @@ function displayResults(result) {
     const resultContent = document.getElementById('resultContent');
     
     // Check for result data (different models use different field names)
-    // Skip this check for Reformer and RiboDiffusion models as they have different data structures
-    if (currentModel.id !== 'reformer' && currentModel.id !== 'ribodiffusion' && !result.result && !result.results) {
+    // Skip this check for Reformer, RiboDiffusion, and RNAMPNN models as they have different data structures
+    if (currentModel.id !== 'reformer' && currentModel.id !== 'ribodiffusion' && currentModel.id !== 'rnampnn' && !result.result && !result.results) {
         resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
         showResultSection(); // Always show result section
         return;
@@ -1254,6 +1276,13 @@ function displayResults(result) {
     
     // Special check for RiboDiffusion
     if (currentModel.id === 'ribodiffusion' && !result.data) {
+        resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
+        showResultSection(); // Always show result section
+        return;
+    }
+    
+    // Special check for RNAMPNN
+    if (currentModel.id === 'rnampnn' && !result.prediction && !result.predictions) {
         resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
         showResultSection(); // Always show result section
         return;
@@ -1290,6 +1319,13 @@ function displayResults(result) {
     } else if (currentModel.id === 'ribodiffusion') {
         html = displayRiboDiffusionResults(result);
         // Show download button for RiboDiffusion
+        const downloadActions = document.getElementById('downloadActions');
+        if (downloadActions) {
+            downloadActions.style.display = 'flex';
+        }
+    } else if (currentModel.id === 'rnampnn') {
+        html = displayRNAMPNNResults(result);
+        // Show download button for RNAMPNN
         const downloadActions = document.getElementById('downloadActions');
         if (downloadActions) {
             downloadActions.style.display = 'flex';
@@ -2939,6 +2975,8 @@ function downloadAllResults() {
             downloadAllReformerResults();
         } else if (currentModel.id === 'ribodiffusion') {
             downloadAllRiboDiffusionResults();
+        } else if (currentModel.id === 'rnampnn') {
+            downloadAllRNAMPNNResults();
         } else {
             alert('Download not supported for this model');
         }
@@ -3356,7 +3394,6 @@ function downloadAllRNAFrameFlowResults() {
                     const relativePath = pathParts.slice(samplesIndex + 1).join('/');
                     const downloadUrl = `/api/rnaframeflow/download/${relativePath}`;
                     
-                    console.log(`Downloading PDB file: ${downloadUrl}`);
                     
                     // Download main PDB file
                     const mainPdbPromise = fetch(downloadUrl)
@@ -3367,16 +3404,13 @@ function downloadAllRNAFrameFlowResults() {
                             return response.text();
                         })
                         .then(content => {
-                            console.log(`Successfully downloaded ${filename}, size: ${content.length} bytes`);
                             // Use actual PDB filename instead of index
                             const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
                             zip.file(actualFilename, content);
                         })
                         .catch(error => {
-                            console.error(`Error downloading ${filename}:`, error);
                             // If download fails, try using pdb_content
                             if (structure.pdb_content) {
-                                console.log(`Falling back to pdb_content for ${filename}`);
                                 const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
                                 zip.file(actualFilename, structure.pdb_content);
                             }
@@ -3386,31 +3420,26 @@ function downloadAllRNAFrameFlowResults() {
                     const trajFilename = filename.replace('.pdb', '_traj.pdb');
                     const trajDownloadUrl = downloadUrl.replace('.pdb', '_traj.pdb');
                     
-                    console.log(`Downloading trajectory file: ${trajDownloadUrl}`);
                     
                     const trajPdbPromise = fetch(trajDownloadUrl)
                         .then(response => {
                             if (!response.ok) {
-                                console.warn(`Trajectory file not found: ${trajFilename}`);
                                 return null; // Trajectory file may not exist, this is normal
                             }
                             return response.text();
                         })
                         .then(content => {
                             if (content) {
-                                console.log(`Successfully downloaded ${trajFilename}, size: ${content.length} bytes`);
                                 zip.file(trajFilename, content);
                             }
                         })
                         .catch(error => {
-                            console.warn(`Error downloading trajectory file ${trajFilename}:`, error);
                             // Trajectory file download failure does not affect main functionality
                         });
                     
                     // Wait for both files to download
                     return Promise.all([mainPdbPromise, trajPdbPromise]);
                 } else {
-                    console.error(`Invalid pdb_file_path format: ${structure.pdb_file_path}`);
                     // Fallback to using pdb_content
                     if (structure.pdb_content) {
                         const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
@@ -3420,7 +3449,6 @@ function downloadAllRNAFrameFlowResults() {
                 }
             } else if (structure.pdb_content) {
                 // Fallback to using pdb_content
-                console.log(`Using pdb_content for structure ${index + 1}`);
                 const actualFilename = structure.pdb_filename || `na_sample_${index}.pdb`;
                 zip.file(actualFilename, structure.pdb_content);
                 return Promise.resolve();
@@ -3443,11 +3471,9 @@ function downloadAllRNAFrameFlowResults() {
                 
                 showNotification('RNA-FrameFlow structures downloaded successfully!', 'success');
             }).catch(function(error) {
-                console.error('Error creating ZIP file:', error);
                 showNotification('Error creating download file', 'error');
             });
         }).catch(error => {
-            console.error('Error downloading PDB files:', error);
             showNotification('Error downloading structure files', 'error');
         });
         
@@ -4912,24 +4938,17 @@ async function runReformerAnalysis() {
     const rnaSequenceTextarea = document.getElementById('reformerSequence');
     const rnaSequenceFileInput = document.getElementById('reformerSequenceFileInput');
     
-    console.log('Reformer Analysis Debug:');
-    console.log('rnaSequenceInputArea:', rnaSequenceInputArea);
-    console.log('rnaSequenceTextarea:', rnaSequenceTextarea);
-    console.log('rnaSequenceFileInput:', rnaSequenceFileInput);
     
     let sequence = rnaSequenceTextarea ? rnaSequenceTextarea.value.trim() : '';
     
     // Check if file content is available
     if (rnaSequenceInputArea && rnaSequenceInputArea.hasAttribute('data-file-content')) {
         const fileContent = rnaSequenceInputArea.getAttribute('data-file-content').trim();
-        console.log('File content found:', fileContent ? 'Yes' : 'No');
         if (fileContent) {
             sequence = fileContent;
         }
     }
     
-    console.log('Final sequence length:', sequence.length);
-    console.log('Sequence preview:', sequence.substring(0, 50) + '...');
     
     // Validate input
     if (!sequence) {
@@ -5178,10 +5197,98 @@ async function runRiboDiffusionAnalysis() {
         return result;
         
     } catch (error) {
-        console.error('RiboDiffusion analysis error:', error);
         return {
             success: false,
             error: error.message || 'RiboDiffusion analysis failed'
+        };
+    }
+}
+
+// Run RNAMPNN analysis
+async function runRNAMPNNAnalysis() {
+    try {
+        // Get PDB content from textarea
+        const pdbContentElement = document.getElementById('rnampnnPdbContent');
+        let pdbContent = pdbContentElement?.value.trim();
+        
+        
+        // If no content in textarea, check if file was uploaded
+        if (!pdbContent) {
+            const unifiedInput = document.getElementById('rnampnnPdbUnifiedInput');
+            const fileContent = unifiedInput?.getAttribute('data-file-content');
+            if (fileContent) {
+                pdbContent = fileContent.trim();
+            }
+        }
+        
+        // If still no content, check if file was selected directly
+        let pdbFile = document.getElementById('rnampnnPdbFileInput')?.files[0];
+        
+        // If we have content (from textarea or uploaded file), create a file from content
+        if (pdbContent) {
+            const blob = new Blob([pdbContent], { type: 'text/plain' });
+            pdbFile = new File([blob], 'input.pdb', { type: 'text/plain' });
+        }
+        
+        if (!pdbContent && !pdbFile) {
+            return {
+                success: false,
+                error: 'PDB content or file is required for RNAMPNN analysis'
+            };
+        }
+        
+        
+        // Get number of sequences to generate
+        const numSamples = parseInt(document.getElementById('rnampnnNumSamples')?.value || '1');
+        
+        // Perform multiple predictions
+        const results = [];
+        for (let i = 0; i < numSamples; i++) {
+            
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('pdb_file', pdbFile);
+            
+            // Call RNAMPNN API
+            const response = await fetch('/api/rnampnn/predict', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                results.push(result);
+            } else {
+            }
+        }
+        
+        if (results.length === 0) {
+            return {
+                success: false,
+                error: 'All predictions failed'
+            };
+        }
+        
+        // Combine results
+        const combinedResult = {
+            success: true,
+            predictions: results,
+            num_generated: results.length,
+            requested: numSamples
+        };
+        
+        return combinedResult;
+        
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message || 'RNAMPNN analysis failed'
         };
     }
 }
@@ -5325,6 +5432,54 @@ function downloadAllReformerResults() {
     window.URL.revokeObjectURL(url);
     
     showNotification('Reformer results downloaded successfully!', 'success');
+}
+
+// Download all RNAMPNN results
+function downloadAllRNAMPNNResults() {
+    if (window.currentRNAMPNNResult && window.currentRNAMPNNResult.success) {
+        const result = window.currentRNAMPNNResult;
+        let csvContent = 'Sequence ID,Sequence Content,Avg Confidence\n';
+        
+        // Check if we have multiple predictions
+        if (result.predictions && result.predictions.length >= 1) {
+            // Multiple predictions
+            result.predictions.forEach((prediction, index) => {
+                const seq = prediction.prediction?.predicted_sequence || '';
+                const confidenceScores = prediction.prediction?.confidence_scores || [];
+                const avgConfidence = confidenceScores.length > 0 ? 
+                    (confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length * 100).toFixed(1) : 'N/A';
+                
+                csvContent += `Sequence ${index + 1},"${seq}",${avgConfidence}%\n`;
+            });
+        } else {
+            // Single prediction (backward compatibility)
+            const prediction = result.prediction || {};
+            const sequences = prediction.predicted_sequence ? [prediction.predicted_sequence] : [];
+            const confidenceScores = prediction.confidence_scores || [];
+            
+            if (sequences.length > 0) {
+                const avgConfidence = confidenceScores.length > 0 ? 
+                    (confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length * 100).toFixed(1) : 'N/A';
+                csvContent += `Sequence 1,"${sequences[0]}",${avgConfidence}%\n`;
+            }
+        }
+        
+        // Create and download CSV file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'rnampnn_sequences.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        showNotification('RNAMPNN sequences downloaded successfully', 'success');
+    } else {
+        showNotification('No RNAMPNN results available for download', 'warning');
+    }
 }
 
 // Banner scroll effects
@@ -5473,3 +5628,93 @@ window.addEventListener('load', function() {
         window.scrollTo(0, 0);
     }, 100);
 });
+
+// Display RNAMPNN results
+function displayRNAMPNNResults(result) {
+    if (!result.success) {
+        return `<div class="error-message">Error: ${result.error}</div>`;
+    }
+    
+    // Store results globally for download functionality
+    window.currentRNAMPNNResult = result;
+    
+    let html = '<div class="rnampnn-results">';
+    
+    // Check if we have multiple predictions (including single prediction from multiple inference)
+    if (result.predictions && result.predictions.length >= 1) {
+        // Display all sequences in a table
+        html += `
+            <div class="result-item">
+                <h6><i class="fas fa-dna"></i>Generated RNA Sequences</h6>
+                <div class="interactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sequence ID</th>
+                                <th>Sequence Content</th>
+                                <th>Avg Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        result.predictions.forEach((prediction, index) => {
+            const seq = prediction.prediction?.predicted_sequence || '';
+            const confidenceScores = prediction.prediction?.confidence_scores || [];
+            const avgConfidence = confidenceScores.length > 0 ? 
+                (confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length * 100).toFixed(1) : 'N/A';
+            
+            html += `
+                <tr>
+                    <td class="sequence-id-cell">Sequence ${index + 1}</td>
+                    <td class="sequence-cell">${seq}</td>
+                    <td class="confidence-cell">${avgConfidence}%</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+    } else {
+        // Single prediction (backward compatibility)
+        const prediction = result.prediction || (result.predictions && result.predictions[0]?.prediction) || {};
+        const sequences = prediction.predicted_sequence ? [prediction.predicted_sequence] : [];
+        const confidenceScores = prediction.confidence_scores || [];
+        
+        // Display predicted sequence
+        if (sequences.length > 0) {
+            html += `
+                <div class="result-item">
+                    <h6><i class="fas fa-dna"></i>Generated RNA Sequences</h6>
+                    <div class="interactions-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Sequence ID</th>
+                                    <th>Sequence Content</th>
+                                    <th>Avg Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="sequence-id-cell">Sequence 1</td>
+                                    <td class="sequence-cell">${sequences[0]}</td>
+                                    <td class="confidence-cell">${confidenceScores.length > 0 ? (confidenceScores.reduce((a, b) => a + b, 0) / confidenceScores.length * 100).toFixed(1) : 'N/A'}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    html += '</div>';
+    
+    return html;
+}

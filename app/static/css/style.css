@@ -3328,12 +3328,8 @@ body.loading {
 }
 
 .message-content {
-    background: var(--card-bg);
     padding: 15px;
-    border-radius: 18px;
     max-width: 480px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-color);
 }
 
 .ai-message.user .message-content {
@@ -3742,9 +3738,7 @@ body.loading {
 }
 
 [data-theme="dark"] .ai-chat-input .ai-input-field {
-    background: var(--bg-primary);
     color: var(--text-primary);
-    border-color: var(--border-color);
 }
 
 [data-theme="dark"] .ai-input-actions .btn {

@@ -19,6 +19,7 @@
     <link href="/static/css/rnaframeflow.css" rel="stylesheet">
     <link href="/static/css/reformer.css" rel="stylesheet">
     <link href="/static/css/ribodiffusion.css" rel="stylesheet">
+    <link href="/static/css/rnampnn.css" rel="stylesheet">
     <link href="/static/css/standard-input.css" rel="stylesheet">
 </head>
 <body>
@@ -480,6 +481,43 @@
                                                 <option value="K562">K562</option>
                                                 <option value="adrenal_gland">Adrenal Gland</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RNAMPNN Specific Input Area -->
+                            <div class="rnampnn-input" id="rnampnnInput" style="display: none;">
+                                <!-- PDB File Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cube"></i>
+                                        <h6>PDB Structure File</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="rnampnnPdbInputArea">
+                                        <div class="unified-input-area" id="rnampnnPdbUnifiedInput">
+                                            <div class="input-placeholder" id="rnampnnPdbPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter PDB content or drag files here</p>
+                                                <small>PDB format supported</small>
+                                            </div>
+                                            <textarea id="rnampnnPdbContent" rows="10" placeholder="Enter PDB content&#10;Example:&#10;HEADER    HYDROLASE/HYDROLASE INHIBITOR           01-JAN-98   1ABC&#10;ATOM      1  P   A  1      20.154  16.967  23.862  1.00 11.18           P&#10;ATOM      2  O5' A  1      19.030  16.206  23.258  1.00 10.35           O&#10;..." style="display: none;"></textarea>
+                                            <input type="file" id="rnampnnPdbFileInput" accept=".pdb" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Generation Parameters Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-cog"></i>
+                                        <h6>Options & Settings</h6>
+                                    </div>
+                                    <div class="parameters-grid">
+                                        <div class="parameter-group">
+                                            <label for="rnampnnNumSamples">Number of Sequences</label>
+                                            <input type="number" id="rnampnnNumSamples" min="1" max="10" value="1" placeholder="1">
+                                            <small>Number of RNA sequences to generate (1-10)</small>
                                         </div>
                                     </div>
                                 </div>
