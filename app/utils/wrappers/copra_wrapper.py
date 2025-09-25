@@ -44,9 +44,6 @@ class CoPRAWrapper:
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"CoPRA model directory not found at {self.model_path}")
         
-        logger.info(f"CoPRA wrapper initialized with model_path: {self.model_path}")
-        logger.info(f"CoPRA wrapper initialized with environment_path: {self.environment_path}")
-        logger.info(f"CoPRA wrapper using temp_dir: {self.temp_dir}")
     
     def predict_binding_affinity(self, 
                                 protein_sequence: str, 

@@ -172,8 +172,13 @@ class RNAformerWrapper:
                 pos1 = pairing_indices[i]
                 pos2 = pairing_indices[i + 1]
                 if 0 <= pos1 < length and 0 <= pos2 < length:
-                    dot_bracket[pos1] = '('
-                    dot_bracket[pos2] = ')'
+                    # Ensure the smaller position gets '(' and larger gets ')'
+                    if pos1 < pos2:
+                        dot_bracket[pos1] = '('
+                        dot_bracket[pos2] = ')'
+                    else:
+                        dot_bracket[pos1] = ')'
+                        dot_bracket[pos2] = '('
         
         return ''.join(dot_bracket)
     

@@ -14,6 +14,10 @@ class Config:
     DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
     DEEPSEEK_BASE_URL = os.environ.get('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
     
+    # HuggingFace Configuration
+    HF_ENDPOINT = os.environ.get('HF_ENDPOINT', 'https://huggingface.co')
+    HF_TOKEN = os.environ.get('HF_TOKEN')
+    
     # RAG Configuration
     CHROMA_PERSIST_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'chroma_db')
     DATA_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')

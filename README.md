@@ -69,6 +69,14 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - Supports protein and RNA sequence input for comprehensive interaction analysis
 - [GitHub](https://github.com/hanrthu/CoPRA) | [Paper](https://arxiv.org/abs/2409.03773)
 
+**DeepRPI**
+- Deep learning-based RNA-protein interaction prediction using ESM-2 protein language model and RNABert RNA language model
+- Features bidirectional cross-attention mechanism for enhanced interaction understanding
+- Provides interaction prediction (0/1) with probability scores and confidence levels
+- Supports protein sequences up to 500 amino acids and RNA sequences up to 220 nucleotides
+- High accuracy prediction with attention heatmap visualization capabilities
+- [GitHub](https://github.com/PekingHSC-iGEM/DeepRPI)
+
 #### De Novo Design Models
 
 **Mol2Aptamer**
@@ -101,7 +109,7 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 
 ### 🔧 Platform Capabilities
 
-- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, PDB structures, SMILES strings, protein sequences, cDNA sequences, RNA sequences
+- **Multi-format Input Support**: FASTA files, text input, mmCIF structures, PDB structures, SMILES strings, protein sequences, cDNA sequences, RNA sequences, protein-RNA interaction pairs
 - **Unified Interface**: Consistent user experience across all models with standardized input areas
 - **Real-time Processing**: Fast analysis with progress tracking
 - **Multiple Output Formats**: CT, BPSEQ, dot-bracket notation, CSV, PDB, and more
@@ -111,6 +119,10 @@ The platform includes a sophisticated AI assistant powered by LangGraph that pro
 - **Adaptive UI**: Dynamic input areas that adjust to content and file uploads
 - **Dark Mode Support**: Complete dark theme with consistent styling across all components
 - **Responsive Design**: Works on desktop and mobile devices
+- **Intelligent Agent System**: Automated model orchestration and multi-step analysis workflows
+- **AI-Powered Workflows**: Natural language-driven analysis with automatic tool selection
+- **Document Intelligence**: OCR and multimodal analysis of research papers and images
+- **Contextual Analysis**: Maintains conversation context and learns from user interactions
 
 ## Code Structure
 
@@ -126,6 +138,7 @@ RNA-Factory/
 │   │   ├── rnamigos2_routes.py  # RNAmigos2 API endpoints
 │   │   ├── reformer_routes.py   # Reformer API endpoints
 │   │   ├── copra_routes.py      # CoPRA API endpoints
+│   │   ├── deeprpi_routes.py    # DeepRPI API endpoints
 │   │   ├── mol2aptamer_routes.py # Mol2Aptamer API endpoints
 │   │   ├── rnaflow_routes.py    # RNAFlow API endpoints
 │   │   ├── rnaframeflow_routes.py # RNA-FrameFlow API endpoints
@@ -134,6 +147,7 @@ RNA-Factory/
 │   │   └── model_config_routes.py # Model configuration endpoints
 │   ├── copilot/                 # AI assistant and RAG system
 │   │   ├── copilot.py           # LangGraph-based AI assistant
+│   │   ├── agent.py             # Intelligent Agent system for model orchestration
 │   │   ├── rag.py               # Multimodal RAG system
 │   │   └── prompts.py           # AI prompts and templates
 │   ├── static/                  # Frontend assets
@@ -161,6 +175,20 @@ The AI assistant is built using LangGraph and provides:
 - **Tool Integration**: Seamless integration with platform models and external tools
 - **Context Management**: Maintains conversation context and user preferences
 - **Response Generation**: Generates structured, actionable responses
+
+#### Agent System (`app/copilot/agent.py`)
+
+The platform features an intelligent Agent system that orchestrates complex RNA analysis workflows:
+
+- **Model Orchestration**: Automatically selects and executes appropriate models based on user queries
+- **Multi-Model Analysis**: Coordinates multiple models for comprehensive RNA analysis (e.g., structure prediction + interaction analysis)
+- **Tool Management**: Manages 10+ integrated models including BPFold, UFold, MXFold2, RNAformer, RNAmigos2, Reformer, CoPRA, DeepRPI, Mol2Aptamer, RNAFlow, and RiboDiffusion
+- **Sequential Workflows**: Executes complex analysis pipelines with proper data flow between models
+- **Error Handling**: Robust error handling and fallback mechanisms for model failures
+- **Result Integration**: Combines results from multiple models into coherent analysis reports
+- **Dynamic Tool Selection**: Intelligently chooses the most appropriate tools based on input data and analysis requirements
+- **Progress Tracking**: Real-time progress updates during multi-step analysis workflows
+- **Resource Management**: Efficiently manages computational resources and model execution
 
 ### RAG System (`app/copilot/rag.py`)
 
@@ -249,6 +277,13 @@ RESTful API endpoints for:
 4. Configure confidence threshold (Low/Medium/High/Very High)
 5. Run analysis to get binding affinity prediction in kcal/mol with confidence score
 
+#### DeepRPI
+1. Select DeepRPI for RNA-protein interaction prediction
+2. Input protein sequence (amino acid codes, max 500 residues)
+3. Input RNA sequence (A, U, G, C nucleotides, max 220 bases)
+4. Run analysis to get interaction prediction (0/1) with probability and confidence scores
+5. View results with detailed interaction analysis
+
 ### De Novo Design
 
 #### Mol2Aptamer
@@ -281,10 +316,49 @@ RESTful API endpoints for:
 
 ### AI Assistant
 
+#### Basic Usage
 1. Access the AI assistant from the main interface
 2. Ask questions about RNA design, structure analysis, or general bioinformatics
 3. Upload documents for multimodal analysis
 4. Get expert guidance and recommendations
+
+#### Agent-Powered Analysis
+The AI assistant features an intelligent Agent system that can automatically orchestrate complex RNA analysis workflows:
+
+**Automatic Model Selection**
+- Upload RNA sequences and let the Agent automatically select appropriate models
+- The Agent analyzes your input and determines the best combination of tools
+- No need to manually choose between BPFold, UFold, MXFold2, or RNAformer
+
+**Multi-Model Workflows**
+- Request comprehensive analysis: "Analyze this RNA sequence for structure and interactions"
+- The Agent will automatically run multiple models in sequence
+- Get integrated results combining structure prediction, interaction analysis, and design recommendations
+
+**Intelligent Tool Orchestration**
+- Upload protein-RNA pairs for interaction analysis
+- The Agent automatically selects between Reformer, CoPRA, and DeepRPI based on your data
+- Coordinate structure prediction with interaction analysis for complete insights
+
+**Document-Based Analysis**
+- Upload research papers, PDFs, or images containing RNA sequences
+- The Agent extracts sequences and automatically runs appropriate analyses
+- Get comprehensive reports combining document insights with computational predictions
+
+**Custom Analysis Pipelines**
+- Request specific analysis workflows: "Design an RNA aptamer for this protein target"
+- The Agent orchestrates Mol2Aptamer, RNAFlow, and structure validation tools
+- Receive end-to-end solutions with multiple design candidates
+
+**Real-Time Progress Tracking**
+- Watch as the Agent executes multiple models in sequence
+- Get real-time updates on analysis progress
+- Receive detailed reports with results from all executed tools
+
+**Error Recovery and Fallbacks**
+- If one model fails, the Agent automatically tries alternative approaches
+- Robust error handling ensures you always get useful results
+- Intelligent fallback mechanisms maintain analysis quality
 
 ## Contributing
 

@@ -3,6 +3,7 @@ import os
 import json
 import logging
 from pathlib import Path
+from datetime import datetime
 
 from app.copilot import RNADesignAssistant
 
@@ -79,6 +80,7 @@ def ai_chat():
         message = data["message"].strip()
         context = data.get("context", {})
         stream = data.get("stream", False)
+        uploaded_files = data.get("uploaded_files", [])
 
         if not message:
             return (
@@ -102,9 +104,9 @@ def ai_chat():
         assistant = get_assistant()
         
         if stream:
-            return ai_chat_stream(assistant, message, context)
+            return ai_chat_stream(assistant, message, context, uploaded_files)
         else:
-            result = assistant.chat(message, context, stream=False)
+            result = assistant.chat(message, context, stream=False, uploaded_files=uploaded_files)
             return jsonify(result)
 
     except ValueError as e:
@@ -124,13 +126,13 @@ def ai_chat():
         )
 
 
-def ai_chat_stream(assistant, message, context):
+def ai_chat_stream(assistant, message, context, uploaded_files=None):
     """Handle streaming AI chat responses"""
 
     def generate():
         try:
             # Get streaming response from assistant
-            result = assistant.chat(message, context, stream=True)
+            result = assistant.chat(message, context, stream=True, uploaded_files=uploaded_files)
             
             if not result["success"]:
                 yield f"data: {json.dumps({'type': 'error', 'message': result.get('error', 'Unknown error')})}\n\n"
@@ -140,12 +142,19 @@ def ai_chat_stream(assistant, message, context):
             stream_generator = result.get("stream_generator")
             if stream_generator:
                 for chunk in stream_generator():
-                    # Note: Abort checking is handled by Flask's request handling
-                    # The AbortController in the frontend will cause the request to be aborted
-                    yield chunk
+                    # Simple check for client disconnection without using request context
+                    try:
+                        yield chunk
+                        # Force flush to ensure immediate delivery
+                        import sys
+                        if hasattr(sys.stdout, 'flush'):
+                            sys.stdout.flush()
+                    except (BrokenPipeError, ConnectionResetError):
+                        logger.info("Client disconnected, stopping stream")
+                        break
             else:
                 # Fallback to non-streaming response
-                non_stream_result = assistant.chat(message, context, stream=False)
+                non_stream_result = assistant.chat(message, context, stream=False, uploaded_files=uploaded_files)
                 if non_stream_result["success"]:
                     response = non_stream_result["response"]
                     # Send response as single chunk
@@ -433,5 +442,86 @@ def get_memory():
         })
     except Exception as e:
         logger.error(f"Get memory failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@copilot_bp.route("/stop", methods=["POST"])
+def stop_stream():
+    """Stop current streaming response"""
+    try:
+        assistant = get_assistant()
+        assistant.stop_current_stream()
+        return jsonify({
+            "success": True,
+            "message": "Streaming stopped"
+        })
+    except Exception as e:
+        logger.error(f"Stop stream failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@copilot_bp.route("/upload", methods=["POST"])
+def upload_file():
+    """Handle file uploads for AI analysis"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "message": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "message": "No file selected"}), 400
+        
+        # Read file content
+        content = file.read().decode('utf-8', errors='ignore')
+        
+        # Determine file type
+        file_type = file.content_type or 'text/plain'
+        if file.filename.endswith(('.fasta', '.fa')):
+            file_type = 'text/plain'
+        elif file.filename.endswith('.pdb'):
+            file_type = 'chemical/x-pdb'
+        elif file.filename.endswith('.cif'):
+            file_type = 'chemical/x-cif'
+        elif file.filename.endswith('.smiles'):
+            file_type = 'chemical/x-smiles'
+        
+        file_info = {
+            "name": file.filename,
+            "type": file_type,
+            "content": content,
+            "size": len(content),
+            "upload_time": datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            "success": True,
+            "file": file_info,
+            "message": f"File '{file.filename}' uploaded successfully"
+        })
+        
+    except Exception as e:
+        logger.error(f"File upload failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@copilot_bp.route("/agent/tools", methods=["GET"])
+def get_agent_tools():
+    """Get available agent tools"""
+    try:
+        assistant = get_assistant()
+        if not assistant.analysis_agent:
+            return jsonify({
+                "success": False,
+                "message": "Analysis agent not available"
+            }), 500
+        
+        tools_info = assistant.analysis_agent.get_available_tools()
+        return jsonify({
+            "success": True,
+            "tools": tools_info
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to get agent tools: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
 

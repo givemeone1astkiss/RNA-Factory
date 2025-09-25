@@ -12,6 +12,7 @@ This document provides detailed information about the model wrappers in the RNA-
 - [RNAmigos2 Wrapper](#rnamigos2-wrapper)
 - [Reformer Wrapper](#reformer-wrapper)
 - [CoPRA Wrapper](#copra-wrapper)
+- [DeepRPI Wrapper](#deeprpi-wrapper)
 - [Mol2Aptamer Wrapper](#mol2aptamer-wrapper)
 - [RNAFlow Wrapper](#rnaflow-wrapper)
 - [RiboDiffusion Wrapper](#ribodiffusion-wrapper)
@@ -876,6 +877,187 @@ CoPRA requires specific Python version and dependencies:
 - **Sequence validation**: Validates input sequences for proper amino acid and nucleotide codes
 - **Flexible input**: Supports various protein and RNA sequence lengths
 
+## DeepRPI Wrapper
+
+### Packaging Method
+
+DeepRPI wrapper calls DeepRPI's Python script through subprocess for RNA-protein interaction prediction using ESM-2 protein language model and RNABert RNA language model.
+
+**File Location**: `app/utils/wrappers/deeprpi_wrapper.py`
+
+**Main Class**: `DeepRPIWrapper`
+
+**Installation Requirements**: Python 3.10+, PyTorch with CUDA support, specialized virtual environment
+
+### Calling Method
+
+```python
+from app.utils.wrappers.deeprpi_wrapper import DeepRPIWrapper
+
+# Initialize wrapper
+wrapper = DeepRPIWrapper(
+    model_path="/path/to/DeepRPI",
+    environment_path="/path/to/.venv_deeprpi"
+)
+
+# Predict RNA-protein interaction
+result = wrapper.predict_interaction(
+    protein_sequence="MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL",
+    rna_sequence="AUCGAUCGAUCG",
+    plot_attention=False  # Set to True for attention heatmap generation
+)
+
+# Result format
+{
+    "success": True,
+    "prediction": 1,
+    "probability": 0.85,
+    "confidence": 0.85,
+    "protein_sequence": "MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL",
+    "rna_sequence": "AUCGAUCGAUCG",
+    "protein_length": 50,
+    "rna_length": 12,
+    "model_info": {
+        "model_name": "DeepRPI",
+        "version": "1.0.0",
+        "checkpoint_available": True
+    },
+    "error": None
+}
+```
+
+### Input Requirements
+
+- **protein_sequence**: Protein sequence string (amino acid codes, max 500 residues)
+- **rna_sequence**: RNA sequence string (A, U, G, C nucleotides, max 220 bases)
+- **plot_attention**: Whether to generate attention heatmaps (optional, default: False)
+- **output_dir**: Output directory for attention plots (optional)
+
+### Output Format
+
+- **success**: Boolean value indicating whether prediction was successful
+- **prediction**: Interaction prediction (0 for no interaction, 1 for interaction)
+- **probability**: Probability score (0.0-1.0) indicating likelihood of interaction
+- **confidence**: Confidence level (0.0-1.0) based on prediction certainty
+- **protein_sequence**: Input protein sequence
+- **rna_sequence**: Input RNA sequence
+- **protein_length**: Length of protein sequence
+- **rna_length**: Length of RNA sequence
+- **model_info**: Model information including name, version, and checkpoint status
+- **error**: Error message (if any)
+
+### Model Information
+
+```python
+# Get model information
+info = wrapper.get_model_info()
+print(f"Model name: {info['model_name']}")
+print(f"Version: {info['version']}")
+print(f"Description: {info['description']}")
+print(f"Checkpoint available: {info['checkpoint_available']}")
+print(f"Max protein length: {info['max_protein_length']}")
+print(f"Max RNA length: {info['max_rna_length']}")
+```
+
+### Testing Method
+
+```python
+# Basic test
+def test_deeprpi_basic():
+    wrapper = DeepRPIWrapper()
+    result = wrapper.predict_interaction(
+        "MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL",
+        "AUCGAUCGAUCG"
+    )
+    assert result["success"] == True
+    assert "prediction" in result
+    assert "probability" in result
+    assert "confidence" in result
+
+# Different sequences test
+def test_deeprpi_different_sequences():
+    wrapper = DeepRPIWrapper()
+    test_cases = [
+        ("ACDEFGHIKLMNPQRSTVWY", "AUCGAUCGAUCG"),
+        ("MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL", "GGGGCCCCGGGGCCCC")
+    ]
+    for protein, rna in test_cases:
+        result = wrapper.predict_interaction(protein, rna)
+        assert result["success"] == True
+        assert isinstance(result["prediction"], int)
+        assert 0 <= result["probability"] <= 1
+        assert 0 <= result["confidence"] <= 1
+
+# Invalid sequence test
+def test_deeprpi_invalid_sequence():
+    wrapper = DeepRPIWrapper()
+    result = wrapper.predict_interaction(
+        "INVALID_PROTEIN_WITH_X_CHARS",
+        "INVALID_RNA_WITH_T_CHARS"
+    )
+    assert result["success"] == False
+    assert result["error"] is not None
+
+# Length validation test
+def test_deeprpi_length_validation():
+    wrapper = DeepRPIWrapper()
+    # Test protein too long
+    long_protein = "A" * 501
+    result = wrapper.predict_interaction(long_protein, "AUCG")
+    assert result["success"] == False
+    assert "too long" in result["error"].lower()
+    
+    # Test RNA too long
+    long_rna = "A" * 221
+    result = wrapper.predict_interaction("ACDEFGHIKLMNPQRSTVWY", long_rna)
+    assert result["success"] == False
+    assert "too long" in result["error"].lower()
+
+# Model status test
+def test_deeprpi_status():
+    wrapper = DeepRPIWrapper()
+    info = wrapper.get_model_info()
+    assert "model_name" in info
+    assert "version" in info
+    assert "checkpoint_available" in info
+```
+
+### Installation Process
+
+DeepRPI requires specific Python version and dependencies:
+
+1. **Create virtual environment**:
+   ```bash
+   uv venv .venv_deeprpi --python 3.10
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   uv pip install --python .venv_deeprpi/bin/python torch==2.1.0 transformers==4.21.0
+   uv pip install --python .venv_deeprpi/bin/python -r models/DeepRPI/requirements.txt
+   ```
+
+3. **Download model weights**:
+   - Download model checkpoint from the official repository
+   - Place `model_checkpoint.ckpt` in `models/DeepRPI/` directory
+
+4. **Verify installation**:
+   ```bash
+   source .venv_deeprpi/bin/activate
+   python models/DeepRPI/predict.py --help
+   ```
+
+### Features
+
+- **Deep learning-based prediction**: Uses ESM-2 protein language model and RNABert RNA language model
+- **Bidirectional cross-attention mechanism**: Enhanced interaction understanding through cross-attention
+- **High accuracy prediction**: State-of-the-art performance in RNA-protein interaction prediction
+- **Attention visualization**: Optional attention heatmap generation for interpretability
+- **Sequence validation**: Validates input sequences for proper amino acid and nucleotide codes
+- **Length constraints**: Supports protein sequences up to 500 residues and RNA sequences up to 220 bases
+- **Real model weights**: Uses actual pretrained model weights for accurate predictions
+- **Confidence scoring**: Provides confidence estimates for predictions
+
 ## Mol2Aptamer Wrapper
 
 ### Packaging Method
@@ -1263,7 +1445,7 @@ RiboDiffusion requires specific Python version and dependencies:
 import unittest
 from app.utils.wrappers import (BPFoldWrapper, UFoldWrapper, MXFold2Wrapper, 
                                RNAformerWrapper, RNAmigos2Wrapper, ReformerWrapper,
-                               CoPRAWrapper, Mol2AptamerWrapper, RNAFlowWrapper, RiboDiffusionWrapper)
+                               CoPRAWrapper, DeepRPIWrapper, Mol2AptamerWrapper, RNAFlowWrapper, RiboDiffusionWrapper)
 
 class TestWrappers(unittest.TestCase):
     def setUp(self):
@@ -1315,6 +1497,17 @@ class TestWrappers(unittest.TestCase):
         )
         self.assertTrue(result["success"])
         self.assertIn("binding_affinity", result)
+        self.assertIn("confidence", result)
+        
+        # Test DeepRPI
+        deeprpi = DeepRPIWrapper()
+        result = deeprpi.predict_interaction(
+            "MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL",
+            "AUCGAUCGAUCG"
+        )
+        self.assertTrue(result["success"])
+        self.assertIn("prediction", result)
+        self.assertIn("probability", result)
         self.assertIn("confidence", result)
     
     def test_de_novo_design_wrappers(self):
@@ -1388,6 +1581,19 @@ def test_wrapper_integration():
         assert data['success'] == True
         assert 'binding_affinity' in data['prediction']
         assert 'confidence' in data['prediction']
+        
+        # Test interaction prediction - DeepRPI
+        response = client.post('/api/deeprpi/predict', json={
+            'protein_sequence': 'MKLLILTCLVAVALARPKHPIKHQGLPQEVLNENLLRFFVAPFPEVFGKEKVNEL',
+            'rna_sequence': 'AUCGAUCGAUCG',
+            'plot_attention': False
+        })
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] == True
+        assert 'prediction' in data
+        assert 'probability' in data
+        assert 'confidence' in data
         
         # Test de novo design - Mol2Aptamer
         response = client.post('/api/mol2aptamer/predict', json={

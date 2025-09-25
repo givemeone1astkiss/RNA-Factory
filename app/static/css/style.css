@@ -1558,11 +1558,13 @@ body {
     .main-container {
         flex-direction: column;
         padding: 1rem;
+        top: 100vh;
     }
     
     .sidebar {
         width: 100%;
         position: static;
+        margin-top: 6rem;
     }
     
     .input-methods {
@@ -3076,6 +3078,99 @@ body.loading {
     align-items: center;
 }
 
+/* Tool Status Indicator Styles */
+
+
+.tool-calling-text {
+    color: #626366;
+    font-size: 14px;
+    font-style: italic;
+    margin: 2px 0;
+}
+
+/* Dark theme for tool status */
+[data-theme="dark"] .tool-calling-text {
+    color: #6b7280;
+}
+
+/* AI Chat Messages - Fixed width to prevent overflow */
+.ai-chat-messages {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.ai-message {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.ai-user{
+    padding-left: 52px;
+}
+
+.ai-assistant{
+    padding-right: 52px;
+}
+
+.ai-message .message-content {
+    max-width: 100%;
+    overflow-x: auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Ensure code blocks and long text don't overflow */
+.ai-message .message-content pre,
+.ai-message .message-content code {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* RNA sequence display */
+.ai-message .message-content .rna-sequence {
+    max-width: 100%;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Ensure all content in AI messages respects container width */
+.ai-message .message-content * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Specific handling for long sequences and structures */
+.ai-message .message-content .sequence-display,
+.ai-message .message-content .structure-display {
+    max-width: 100%;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: var(--bg-secondary);
+    padding: 8px 0;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+/* Ensure tables don't overflow */
+.ai-message .message-content table {
+    max-width: 100%;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
+.ai-message .message-content td,
+.ai-message .message-content th {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
 @media (max-width: 768px) {
     .ai-assistant-toggle {
         margin-right: 8px;
@@ -3100,6 +3195,10 @@ body.loading {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.tool-status-container{
+    margin-bottom: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -3313,7 +3412,7 @@ body.loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 12px;
+    margin-right: 12px;
     flex-shrink: 0;
 }
 
@@ -3328,7 +3427,7 @@ body.loading {
 }
 
 .message-content {
-    padding: 15px;
+    padding: 15px 0;
     max-width: 480px;
 }
 
@@ -3358,10 +3457,17 @@ body.loading {
 
 .ai-chat-input .ai-input-container {
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
     gap: 12px;
     margin-bottom: 15px;
     position: relative;
+}
+
+.ai-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
 }
 
 .ai-chat-input .ai-input-field {
@@ -3456,6 +3562,118 @@ body.loading {
     color: var(--bg-primary);
 }
 
+/* File Upload Styles */
+.ai-file-upload-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px dashed var(--border-color);
+    border-radius: 20px;
+    background: rgba(37, 99, 235, 0.05);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+/* Drag over effect for textarea only */
+.ai-input-field.drag-over {
+    border-color: var(--accent-primary) !important;
+    background: rgba(37, 99, 235, 0.05) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.ai-file-upload-content {
+    text-align: center;
+    color: var(--accent-primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.ai-file-upload-content i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Upload button removed - only drag and drop functionality */
+
+.ai-uploaded-files {
+    margin-top: 10px;
+    padding: 10px;
+    background: transparent;
+    border-radius: 8px;
+}
+
+.ai-uploaded-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: transparent;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: #28a745;
+}
+
+.ai-uploaded-file:last-child {
+    margin-bottom: 0;
+}
+
+.ai-file-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.ai-file-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #28a745;
+    font-size: 1.5rem;
+}
+
+.ai-file-details {
+    flex: 1;
+}
+
+.ai-file-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #28a745;
+    margin-bottom: 2px;
+}
+
+.ai-file-size {
+    font-size: 12px;
+    color: #a0aec0;
+    opacity: 0.8;
+}
+
+.ai-file-remove {
+    background: none;
+    border: none;
+    color: #28a745;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.ai-file-remove:hover {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
 
 
 
@@ -3503,11 +3721,12 @@ body.loading {
     }
     
     .main-container {
-        padding-top: calc(2rem + 70px); /* Adjust for medium screen navbar */
+        padding-top: calc(2rem + 70px);
+        top: 100vh; /* Adjust for medium screen navbar */
     }
     
     .sidebar {
-        top: calc(2rem + 70px); /* Adjust for medium screen navbar */
+        margin-top: 1rem;
     }
     
     .ai-sidebar {
@@ -3732,13 +3951,38 @@ body.loading {
     border-top-color: var(--border-color);
 }
 
-[data-theme="dark"] .message-content {
-    background: var(--card-bg);
-    border-color: var(--border-color);
-}
 
 [data-theme="dark"] .ai-chat-input .ai-input-field {
     color: var(--text-primary);
+}
+
+/* Dark theme support for AI uploaded files */
+[data-theme="dark"] .ai-uploaded-file {
+    background: transparent;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+[data-theme="dark"] .ai-file-icon {
+    color: #28a745;
+}
+
+[data-theme="dark"] .ai-file-name {
+    color: #28a745;
+}
+
+[data-theme="dark"] .ai-file-size {
+    color: #a0aec0;
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .ai-file-remove {
+    color: #28a745;
+}
+
+[data-theme="dark"] .ai-file-remove:hover {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
 }
 
 [data-theme="dark"] .ai-input-actions .btn {
@@ -3785,7 +4029,7 @@ body.loading {
 }
 
 .markdown-content p {
-    margin: 0.8em 0;
+    margin: 0 0 0.8em;
     line-height: 1.6;
 }
 

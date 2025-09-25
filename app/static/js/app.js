@@ -102,8 +102,7 @@ function updateSendButton() {
 }
 
 // Stop AI response
-function stopAIResponse() {
-
+async function stopAIResponse() {
     // Force stop immediately - set flags first
     isAIResponding = false;
     shouldStopStreaming = true;
@@ -111,17 +110,69 @@ function stopAIResponse() {
     
     // Abort the request
     if (currentAbortController) {
-
         currentAbortController.abort();
         currentAbortController = null;
+    }
+    
+    // Call backend stop endpoint
+    try {
+        await fetch('/api/copilot/stop', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    } catch (error) {
+        console.log('Stop request failed:', error);
     }
     
     // Remove typing indicator if present
     removeTypingIndicator();
     
-    // Add stopped message immediately
-    addMessageToChat('assistant', 'Response stopped by user.');
+    // Add stopped message to current AI message instead of creating new message
+    addStoppedMessageToCurrentAI();
+}
 
+// Add stopped message to current AI message
+function addStoppedMessageToCurrentAI() {
+    const chatMessages = document.getElementById('aiChatMessages');
+    const aiMessages = chatMessages.querySelectorAll('.ai-message.ai-assistant');
+    
+    if (aiMessages.length > 0) {
+        // Get the last AI message
+        const lastAIMessage = aiMessages[aiMessages.length - 1];
+        const messageContent = lastAIMessage.querySelector('.message-content .markdown-content');
+        
+        if (messageContent) {
+            // Get current content
+            let currentContent = messageContent.innerHTML;
+            
+            // Add stopped message as a continuation
+            const stoppedMessage = '<p style="color: #ff6b6b; font-style: italic; margin-top: 10px;"><em>Response stopped by user.</em></p>';
+            currentContent += stoppedMessage;
+            
+            // Update the content
+            messageContent.innerHTML = currentContent;
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Update the last entry in chat history
+            if (aiChatHistory.length > 0) {
+                const lastEntry = aiChatHistory[aiChatHistory.length - 1];
+                if (lastEntry.sender === 'assistant') {
+                    // Extract text content from HTML for history
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = currentContent;
+                    const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                    lastEntry.content = textContent;
+                }
+            }
+        }
+    } else {
+        // Fallback: if no AI message found, create a new one
+        addMessageToChat('assistant', 'Response stopped by user.');
+    }
 }
 
 // Initialize theme from localStorage
@@ -671,6 +722,7 @@ function adjustInputInterface() {
     const copraInput = document.getElementById('copraInput');
     const ribodiffusionInput = document.getElementById('ribodiffusionInput');
     const rnampnnInput = document.getElementById('rnampnnInput');
+    const deeprpiInput = document.getElementById('deeprpiInput');
     const fileAcceptInfo = document.getElementById('fileAcceptInfo');
     
     // Get general input areas by ID
@@ -688,6 +740,7 @@ function adjustInputInterface() {
     if (copraInput) copraInput.style.display = 'none';
     if (ribodiffusionInput) ribodiffusionInput.style.display = 'none';
     if (rnampnnInput) rnampnnInput.style.display = 'none';
+    if (deeprpiInput) deeprpiInput.style.display = 'none';
     
     // Show general input areas by default
     if (rnaSequencesInput) rnaSequencesInput.style.display = 'flex';
@@ -818,6 +871,20 @@ function adjustInputInterface() {
         // Initialize RNAMPNN single block input areas when model is selected
         setTimeout(() => {
             initializeSingleBlockInput('rnampnnPdbUnifiedInput', 'rnampnnPdbContent', 'rnampnnPdbFileInput', 'rnampnnPdbPlaceholder');
+        }, 100);
+    } else if (currentModel.id === 'deeprpi') {
+        // DeepRPI model has specific input interface
+        if (deeprpiInput) {
+            deeprpiInput.style.display = 'flex';
+        }
+        // Hide general input areas for DeepRPI
+        if (rnaSequencesInput) rnaSequencesInput.style.display = 'none';
+        fileAcceptInfo.textContent = 'Supports protein and RNA sequence input';
+        
+        // Initialize DeepRPI single block input areas when model is selected
+        setTimeout(() => {
+            initializeSingleBlockInput('deeprpiProteinUnifiedInput', 'deeprpiProteinSequence', 'deeprpiProteinFileInput', 'deeprpiProteinPlaceholder');
+            initializeSingleBlockInput('deeprpiRnaUnifiedInput', 'deeprpiRnaSequence', 'deeprpiRnaFileInput', 'deeprpiRnaPlaceholder');
         }, 100);
     } else {
         // Other models (BPFold, UFold, MXFold2, RNAformer)
@@ -1050,8 +1117,8 @@ async function runAnalysis() {
     // Declare variables in the correct scope
     let inputFile, inputText;
     
-    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, CoPRA, RiboDiffusion, and RNAMPNN, skip general input validation as they have their own validation
-    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra' && currentModel.id !== 'ribodiffusion' && currentModel.id !== 'rnampnn') {
+    // For RNAmigos2, Mol2Aptamer, RNAFlow, RNA-FrameFlow, Reformer, CoPRA, RiboDiffusion, RNAMPNN, and DeepRPI, skip general input validation as they have their own validation
+    if (currentModel.id !== 'rnamigos2' && currentModel.id !== 'mol2aptamer' && currentModel.id !== 'rnaflow' && currentModel.id !== 'rnaframeflow' && currentModel.id !== 'reformer' && currentModel.id !== 'copra' && currentModel.id !== 'ribodiffusion' && currentModel.id !== 'rnampnn' && currentModel.id !== 'deeprpi') {
         // For other models, use general input validation
         inputFile = document.getElementById('inputFile').files[0];
         inputText = document.getElementById('inputText').value.trim();
@@ -1213,6 +1280,16 @@ async function runAnalysis() {
             } else {
                 throw new Error(result.error);
             }
+        } else if (currentModel.id === 'deeprpi') {
+            const result = await runDeepRPIAnalysis();
+            
+            if (result.success) {
+                displayResults(result);
+                addToHistory(currentModel, 'DeepRPI Analysis', result);
+                showNotification('Analysis completed!', 'success');
+            } else {
+                throw new Error(result.error);
+            }
         } else {
             // For models other than BPFold, show a message that they are not yet implemented
             const result = {
@@ -1267,8 +1344,8 @@ function displayResults(result) {
     const resultContent = document.getElementById('resultContent');
     
     // Check for result data (different models use different field names)
-    // Skip this check for Reformer, RiboDiffusion, and RNAMPNN models as they have different data structures
-    if (currentModel.id !== 'reformer' && currentModel.id !== 'ribodiffusion' && currentModel.id !== 'rnampnn' && !result.result && !result.results) {
+    // Skip this check for Reformer, RiboDiffusion, RNAMPNN, and DeepRPI models as they have different data structures
+    if (currentModel.id !== 'reformer' && currentModel.id !== 'ribodiffusion' && currentModel.id !== 'rnampnn' && currentModel.id !== 'deeprpi' && !result.result && !result.results) {
         resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
         showResultSection(); // Always show result section
         return;
@@ -1283,6 +1360,13 @@ function displayResults(result) {
     
     // Special check for RNAMPNN
     if (currentModel.id === 'rnampnn' && !result.prediction && !result.predictions) {
+        resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
+        showResultSection(); // Always show result section
+        return;
+    }
+    
+    // Special check for DeepRPI
+    if (currentModel.id === 'deeprpi' && result.prediction === undefined && result.probability === undefined) {
         resultContent.innerHTML = '<div class="alert alert-warning">No result data</div>';
         showResultSection(); // Always show result section
         return;
@@ -1330,6 +1414,9 @@ function displayResults(result) {
         if (downloadActions) {
             downloadActions.style.display = 'flex';
         }
+    } else if (currentModel.id === 'deeprpi') {
+        html = displayDeepRPIResults(result);
+        // No download button for DeepRPI
     } else {
         html = displayDefaultResults(result.result);
     }
@@ -1443,6 +1530,149 @@ function displayRNAmigos2Results(results) {
     return html;
 }
 
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
+}
+
 // Display RNAformer results
 function displayRNAformerResults(results) {
     if (!results || results.length === 0) {
@@ -1488,6 +1718,149 @@ function displayRNAformerResults(results) {
     }
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 // Add to history
@@ -1786,12 +2159,14 @@ window.clearHistory = clearHistory;
 window.toggleTheme = toggleTheme;
 window.toggleAIAssistant = toggleAIAssistant;
 window.sendAIMessage = sendAIMessage;
+window.handleAISendButtonClick = handleAISendButtonClick;
 window.clearAIChat = clearAIChat;
 window.toggleCategoryDropdown = toggleCategoryDropdown;
 
 // AI Assistant Functions
 let aiChatHistory = [];
 let isAIAssistantOpen = false;
+let uploadedFiles = [];
 
 // Toggle AI Assistant sidebar
 function toggleAIAssistant() {
@@ -1808,6 +2183,11 @@ function toggleAIAssistant() {
         
         // Check AI service status
         checkAIStatus();
+        
+        // Initialize file upload when AI assistant is opened
+        setTimeout(() => {
+            initializeFileUpload();
+        }, 100);
         
         // Focus on input
         setTimeout(() => {
@@ -1826,6 +2206,7 @@ function handleClickOutside(event) {
     const aiSidebar = document.getElementById('aiSidebar');
     const aiAssistantToggle = document.getElementById('aiAssistantToggle');
     
+    // Don't close if clicking on AI sidebar elements
     if (isAIAssistantOpen && 
         !aiSidebar.contains(event.target) && 
         !aiAssistantToggle.contains(event.target)) {
@@ -1900,20 +2281,28 @@ function setStatusIndicator(status) {
     }
 }
 
+// Handle AI send button click
+function handleAISendButtonClick(event) {
+    // Prevent event bubbling to avoid closing the sidebar
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    if (isAIResponding) {
+        // Stop the current response
+        stopAIResponse();
+    } else {
+        // Send new message
+        sendAIMessage();
+    }
+}
+
 // Send AI message
 async function sendAIMessage() {
     const messageInput = document.getElementById('aiMessageInput');
     const message = messageInput.value.trim();
     
-    if (!message) return;
-    
-    // Check if AI is already responding
-    if (isAIResponding) {
-        // Stop the current response
-
-        stopAIResponse();
-        return;
-    }
+    if (!message && uploadedFiles.length === 0) return;
 
     // Add user message to chat
     addMessageToChat('user', message);
@@ -1942,7 +2331,8 @@ async function sendAIMessage() {
             body: JSON.stringify({
                 message: message,
                 context: getCurrentContext(),
-                stream: true  // Use streaming for real-time output
+                stream: true,  // Use streaming for real-time output
+                uploaded_files: uploadedFiles
             }),
             signal: currentAbortController.signal
         });
@@ -1961,6 +2351,12 @@ async function sendAIMessage() {
             
             const messageContent = document.createElement('div');
             messageContent.className = 'message-content';
+            
+            // Create tool status container for tool calling indicators
+            const toolStatusContainer = document.createElement('div');
+            toolStatusContainer.className = 'tool-status-container';
+            toolStatusContainer.style.display = 'none';
+            messageContent.appendChild(toolStatusContainer);
             
             // Create markdown container for streaming content
             const markdownContainer = document.createElement('div');
@@ -1983,7 +2379,6 @@ async function sendAIMessage() {
             let isAborted = false;
             if (currentAbortController) {
                 currentAbortController.signal.addEventListener('abort', () => {
-
                     isAborted = true;
                     reader.cancel();
                 });
@@ -1992,7 +2387,6 @@ async function sendAIMessage() {
             while (true) {
                 // Check if request was aborted
                 if (shouldStopStreaming || isAborted || (currentAbortController && currentAbortController.signal.aborted)) {
-
                     reader.cancel();
                     break;
                 }
@@ -2015,7 +2409,6 @@ async function sendAIMessage() {
                 const result = await Promise.race([readPromise, abortPromise]);
                 
                 if (result.aborted || shouldStopStreaming) {
-
                     reader.cancel();
                     break;
                 }
@@ -2061,6 +2454,18 @@ async function sendAIMessage() {
 
                                 // Scroll to bottom
                                 chatMessages.scrollTop = chatMessages.scrollHeight;
+                            } else if (data.type === 'tool_status') {
+                                // Handle tool calling status
+                                if (data.status === 'calling') {
+                                    // Show tool calling indicator
+                                    showToolCallingIndicator(data.message);
+                                } else if (data.status === 'completed') {
+                                    // Show tool completion status
+                                    showToolCompletionStatus(data.message);
+                                } else if (data.status === 'skipped') {
+                                    // Show tool skipped status
+                                    showToolSkippedStatus(data.message);
+                                }
                             } else if (data.type === 'complete') {
                                 // Streaming complete
 
@@ -2089,7 +2494,7 @@ async function sendAIMessage() {
         
         // Check if it was aborted by user
         if (error.name === 'AbortError') {
-            addMessageToChat('assistant', 'Response stopped by user.');
+            addStoppedMessageToCurrentAI();
         } else {
             addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again later.');
         }
@@ -2099,6 +2504,79 @@ async function sendAIMessage() {
         shouldStopStreaming = false; // Reset stop flag
         updateSendButton();
         currentAbortController = null;
+        
+        // Clear uploaded files after sending
+        uploadedFiles = [];
+        updateUploadedFilesDisplay();
+    }
+}
+
+// Show tool calling indicator
+function showToolCallingIndicator(message) {
+    // Find the current AI message container
+    const chatMessages = document.getElementById('aiChatMessages');
+    const currentAIMessage = chatMessages.querySelector('.ai-message.ai-assistant:last-child');
+    
+    if (currentAIMessage) {
+        const toolStatusContainer = currentAIMessage.querySelector('.tool-status-container');
+        if (toolStatusContainer) {
+            toolStatusContainer.style.display = 'block';
+            
+            // Add the tool calling text
+            const toolCallingDiv = document.createElement('div');
+            toolCallingDiv.className = 'tool-calling-text';
+            toolCallingDiv.textContent = message;
+            toolStatusContainer.appendChild(toolCallingDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+}
+
+// Show tool completion status
+function showToolCompletionStatus(message) {
+    // Find the current AI message container
+    const chatMessages = document.getElementById('aiChatMessages');
+    const currentAIMessage = chatMessages.querySelector('.ai-message.ai-assistant:last-child');
+    
+    if (currentAIMessage) {
+        const toolStatusContainer = currentAIMessage.querySelector('.tool-status-container');
+        if (toolStatusContainer) {
+            toolStatusContainer.style.display = 'block';
+            
+            // Add the tool completion text
+            const toolCallingDiv = document.createElement('div');
+            toolCallingDiv.className = 'tool-calling-text';
+            toolCallingDiv.textContent = message;
+            toolStatusContainer.appendChild(toolCallingDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+}
+
+// Show tool skipped status
+function showToolSkippedStatus(message) {
+    // Find the current AI message container
+    const chatMessages = document.getElementById('aiChatMessages');
+    const currentAIMessage = chatMessages.querySelector('.ai-message.ai-assistant:last-child');
+    
+    if (currentAIMessage) {
+        const toolStatusContainer = currentAIMessage.querySelector('.tool-status-container');
+        if (toolStatusContainer) {
+            toolStatusContainer.style.display = 'block';
+            
+            // Add the tool skipped text
+            const toolCallingDiv = document.createElement('div');
+            toolCallingDiv.className = 'tool-calling-text';
+            toolCallingDiv.textContent = message;
+            toolStatusContainer.appendChild(toolCallingDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     }
 }
 
@@ -2222,6 +2700,14 @@ function clearAIChat() {
     
     // Clear history
     aiChatHistory = [];
+    
+    // Clear uploaded files
+    uploadedFiles = [];
+    updateUploadedFilesDisplay();
+    
+    // Reset AI responding state
+    isAIResponding = false;
+    updateSendButton();
 }
 
 // Handle Enter key in AI input and auto-resize
@@ -2237,6 +2723,7 @@ document.addEventListener('DOMContentLoaded', function() {
         aiMessageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
+                e.stopPropagation(); // Prevent event bubbling
                 sendAIMessage();
             }
         });
@@ -2729,6 +3216,149 @@ function displayUFoldResults(results) {
     return html;
 }
 
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
+}
+
 function displayMXFold2Results(results) {
     if (!results || results.length === 0) {
         return '<div class="alert alert-warning">No results available</div>';
@@ -2773,6 +3403,149 @@ function displayMXFold2Results(results) {
     }
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 // BPFold specific functions
@@ -2950,6 +3723,149 @@ function displayBPFoldResults(results) {
     }
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 // Download all results based on current model
@@ -3957,6 +4873,149 @@ function displayRNAFrameFlowResults(results) {
     }
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }// Display Mol2Aptamer results
 function displayMol2AptamerResults(results) {
     if (!results || !results.results || results.results.length === 0) {
@@ -4057,6 +5116,149 @@ function displayMol2AptamerResults(results) {
     }
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 
@@ -4233,6 +5435,149 @@ function displayRNAFlowResults(results) {
     }
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 // Standard Input Area - Universal input area management
@@ -5076,6 +6421,149 @@ function displayReformerResults(result) {
     return html;
 }
 
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
+}
+
 // Display CoPRA Results
 function displayCoPRAResults(result) {
     if (!result.success) {
@@ -5108,6 +6596,149 @@ function displayCoPRAResults(result) {
     html += '</div>';
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 // Run RiboDiffusion analysis
@@ -5343,6 +6974,149 @@ function displayRiboDiffusionResults(result) {
     html += '</div>';
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }
 
 // Download all RiboDiffusion results
@@ -5717,4 +7491,378 @@ function displayRNAMPNNResults(result) {
     html += '</div>';
     
     return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
+}
+
+// DeepRPI Analysis Function
+async function runDeepRPIAnalysis() {
+    try {
+        // Get input values
+        const proteinSequence = document.getElementById('deeprpiProteinSequence').value.trim();
+        const rnaSequence = document.getElementById('deeprpiRnaSequence').value.trim();
+        const plotAttention = false; // Default to false, no user option needed
+        
+        console.log('DeepRPI Analysis - Protein:', proteinSequence);
+        console.log('DeepRPI Analysis - RNA:', rnaSequence);
+        
+        // Validate inputs
+        if (!proteinSequence || !rnaSequence) {
+            throw new Error('Both protein and RNA sequences are required');
+        }
+        
+        // Prepare request data
+        const requestData = {
+            protein_sequence: proteinSequence,
+            rna_sequence: rnaSequence,
+            plot_attention: plotAttention
+        };
+        
+        // Make API call
+        const response = await fetch('/api/deeprpi/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || 'DeepRPI prediction failed');
+        }
+        
+        // Store current result for download
+        window.currentDeepRPIResult = result;
+        
+        return result;
+        
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message || 'DeepRPI analysis failed'
+        };
+    }
+}
+
+// Display DeepRPI Results
+function displayDeepRPIResults(result) {
+    console.log('Displaying DeepRPI Results:', result);
+    
+    if (!result || !result.success) {
+        console.log('DeepRPI Results - No success or no result');
+        return '<div class="no-results-placeholder"><i class="fas fa-exclamation-triangle"></i><p>No result data</p></div>';
+    }
+    
+    const prediction = result.prediction || 0;
+    const probability = result.probability || 0;
+    
+    console.log('DeepRPI Results - Prediction:', prediction, 'Probability:', probability);
+    
+    // Store results globally for download functionality
+    window.currentDeepRPIResult = result;
+    
+    let html = '<div class="rnamigos2-results">';
+    
+    // Summary information - only interaction prediction and probability
+    html += `
+        <div class="result-item">
+            <h6><i class="fas fa-dna"></i>Interaction Prediction Results</h6>
+            <div class="sequence-info">
+                <div class="sequence-info-stats">
+                    <div class="sequence-length">Interaction: ${prediction === 1 ? 'Yes' : 'No'}</div>
+                    <div class="sequence-length">Probability: ${(probability * 100).toFixed(1)}%</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    html += '</div>';
+    
+    return html;
+}
+
+// File upload functions
+function initializeFileUpload() {
+    const fileInput = document.getElementById('aiFileInput');
+    const uploadArea = document.getElementById('aiFileUploadArea');
+    const messageInput = document.getElementById('aiMessageInput');
+    
+    if (!fileInput || !uploadArea || !messageInput) return;
+    
+    // File input change event (for programmatic file selection)
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop events only on message input area (textarea)
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const messageInput = document.getElementById('aiMessageInput');
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+    
+    const files = e.dataTransfer.files;
+    handleFiles(files);
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    handleFiles(files);
+}
+
+function handleFiles(files) {
+    const validTypes = ['.txt', '.fasta', '.fa', '.pdb', '.cif', '.smiles'];
+    
+    for (let file of files) {
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        if (!validTypes.includes(fileExt)) {
+            showNotification(`File type ${fileExt} is not supported. Please upload .txt, .fasta, .fa, .pdb, .cif, or .smiles files.`, 'error');
+            continue;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            showNotification(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            continue;
+        }
+        
+        uploadFile(file);
+    }
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/copilot/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles.push(data.file);
+            updateUploadedFilesDisplay();
+            showNotification(`File ${file.name} uploaded successfully`, 'success');
+        } else {
+            showNotification(`Failed to upload ${file.name}: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showNotification(`Failed to upload ${file.name}`, 'error');
+    });
+}
+
+function updateUploadedFilesDisplay() {
+    const container = document.getElementById('aiUploadedFiles');
+    if (!container) return;
+    
+    if (uploadedFiles.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="ai-uploaded-file">
+            <div class="ai-file-info">
+                <div class="ai-file-icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="ai-file-details">
+                    <div class="ai-file-name">${file.name}</div>
+                    <div class="ai-file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+            <button class="ai-file-remove" onclick="removeUploadedFile(${index})" title="Remove file">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateUploadedFilesDisplay();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Initialize file upload when AI assistant is opened
+function initializeAIFileUpload() {
+    if (isAIAssistantOpen) {
+        initializeFileUpload();
+    }
 }

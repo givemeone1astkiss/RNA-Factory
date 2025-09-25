@@ -2,6 +2,10 @@ from flask import Flask
 from config import config
 import os
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +36,7 @@ def create_app(config_name="default"):
     from app.api.copra_routes import copra_bp
     from app.api.ribodiffusion_routes import ribodiffusion_bp
     from app.api.rnampnn_routes import rnampnn_bp
+    from app.api.deeprpi_routes import deeprpi_bp
     from app.api.model_config_routes import model_config_bp
 
     app.register_blueprint(copilot_bp, url_prefix="/api/copilot")
@@ -47,6 +52,7 @@ def create_app(config_name="default"):
     app.register_blueprint(copra_bp, url_prefix="/api/copra")
     app.register_blueprint(ribodiffusion_bp, url_prefix="/api/ribodiffusion")
     app.register_blueprint(rnampnn_bp, url_prefix="/api/rnampnn")
+    app.register_blueprint(deeprpi_bp, url_prefix="/api/deeprpi")
     app.register_blueprint(model_config_bp, url_prefix="/api")
 
     # Preload models
@@ -401,6 +407,33 @@ def preload_models(app):
                 "environment_type": "uv",
                 "environment_path": "/home/zhangliqin/RNA-Factory/.venv_ribodiffusion",
                 "architecture_image": "/static/images/ribodiffusion.png"
+            },
+            {
+                "id": "deeprpi",
+                "name": "DeepRPI",
+                "type": "protein_rna_interaction",
+                "category": "interaction_prediction",
+                "category_name": "Interaction Prediction",
+                "description": "DeepRPI is a deep learning-based RNA-protein interaction prediction tool that leverages pretrained protein language models (ESM) and RNA language models (RNABert) with bidirectional cross-attention mechanism.",
+                "input_types": ["protein_sequence", "rna_sequence"],
+                "output_types": ["interaction_prediction", "probability", "confidence", "attention_maps"],
+                "model_path": "utils/wrappers/deeprpi_wrapper.py",
+                "weights_path": "models/DeepRPI",
+                "input_description": "Requires protein sequence (amino acids) and RNA sequence (nucleotides). Maximum protein length: 500, maximum RNA length: 220.",
+                "output_description": "Outputs interaction prediction (0/1), probability score, confidence level, and attention heatmaps",
+                "github_url": "https://github.com/PekingHSC-iGEM/DeepRPI",
+                "features": [
+                    "Deep learning-based prediction",
+                    "ESM-2 protein language model",
+                    "RNABert RNA language model",
+                    "Bidirectional cross-attention mechanism",
+                    "Attention heatmap visualization",
+                    "High accuracy interaction prediction"
+                ],
+                "environment_required": True,
+                "environment_type": "uv",
+                "environment_path": "/home/zhangliqin/RNA-Factory/.venv_deeprpi",
+                "architecture_image": "/static/images/deeprpi.png"
             }
         ]
 

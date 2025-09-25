@@ -20,6 +20,7 @@
     <link href="/static/css/reformer.css" rel="stylesheet">
     <link href="/static/css/ribodiffusion.css" rel="stylesheet">
     <link href="/static/css/rnampnn.css" rel="stylesheet">
+    <link href="/static/css/deeprpi.css" rel="stylesheet">
     <link href="/static/css/standard-input.css" rel="stylesheet">
 </head>
 <body>
@@ -132,10 +133,22 @@
                 
                 <div class="ai-chat-input">
                     <div class="ai-input-container">
-                        <textarea class="ai-input-field" id="aiMessageInput" placeholder="Type your message here..." rows="1"></textarea>
-                        <button class="ai-send-btn" id="aiSendButton" onclick="sendAIMessage()" title="Send Message">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                        <div class="ai-input-wrapper">
+                            <textarea class="ai-input-field" id="aiMessageInput" placeholder="Type your message here or drag files to upload..." rows="1"></textarea>
+                            <div class="ai-file-upload-area" id="aiFileUploadArea">
+                                <div class="ai-file-upload-content">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Drag files here to upload</span>
+                                    <input type="file" id="aiFileInput" multiple accept=".txt,.fasta,.fa,.pdb,.cif,.smiles" style="display: none;">
+                                </div>
+                            </div>
+                            <button class="ai-send-btn" id="aiSendButton" onclick="handleAISendButtonClick(event)" title="Send Message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ai-uploaded-files" id="aiUploadedFiles" style="display: none;">
+                        <!-- Uploaded files will be displayed here -->
                     </div>
                 </div>
             </div>
@@ -581,6 +594,48 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- DeepRPI Specific Input Area -->
+                            <div class="input-method deeprpi-input" id="deeprpiInput" style="display: none;">
+                                <!-- Protein Sequence Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-dna"></i>
+                                        <h6>Protein Sequence</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="deeprpiProteinInputArea">
+                                        <div class="unified-input-area" id="deeprpiProteinUnifiedInput">
+                                            <div class="input-placeholder" id="deeprpiProteinPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter protein sequence or drag files here</p>
+                                                <small>FASTA, TXT supported</small>
+                                            </div>
+                                            <textarea id="deeprpiProteinSequence" rows="4" placeholder="Enter protein sequence (amino acid sequence)&#10;Example:&#10;MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG&#10;ACDEFGHIKLMNPQRSTVWY" style="display: none;"></textarea>
+                                            <input type="file" id="deeprpiProteinFileInput" accept=".fasta,.fa,.txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RNA Sequence Input Section -->
+                                <div class="input-method">
+                                    <div class="method-header">
+                                        <i class="fas fa-dna"></i>
+                                        <h6>RNA Sequence</h6>
+                                    </div>
+                                    <div class="standard-input-area single-block" id="deeprpiRnaInputArea">
+                                        <div class="unified-input-area" id="deeprpiRnaUnifiedInput">
+                                            <div class="input-placeholder" id="deeprpiRnaPlaceholder">
+                                                <i class="fas fa-edit"></i>
+                                                <p>Click to enter RNA sequence or drag files here</p>
+                                                <small>FASTA, TXT supported</small>
+                                            </div>
+                                            <textarea id="deeprpiRnaSequence" rows="4" placeholder="Enter RNA sequence (nucleotide sequence)&#10;Example:&#10;GGGAAACCCUUU&#10;AUCGAUCGAUCG" style="display: none;"></textarea>
+                                            <input type="file" id="deeprpiRnaFileInput" accept=".fasta,.fa,.txt" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <!-- RiboDiffusion Specific Input Area -->

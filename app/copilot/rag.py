@@ -96,10 +96,36 @@ class RNADesignRAGSystem:
         self.chroma_db_path.mkdir(exist_ok=True)
         self.images_directory.mkdir(exist_ok=True)
         
-        # Initialize models
-        self.text_embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-        self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        # Initialize models with local paths
+        try:
+            # Try to load from local models directory first
+            local_sentence_model_path = Path("models/all-MiniLM-L6-v2")
+            if local_sentence_model_path.exists():
+                self.text_embedder = SentenceTransformer(str(local_sentence_model_path))
+                logger.info("Loaded SentenceTransformer from local models directory")
+            else:
+                self.text_embedder = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+                logger.info("Loaded SentenceTransformer from Hugging Face (local not found)")
+        except Exception as e:
+            logger.error(f"Failed to load SentenceTransformer: {e}")
+            raise
+        
+        # Initialize CLIP model with local path
+        try:
+            local_clip_model_path = Path("models/clip-vit-base-patch32")
+            if local_clip_model_path.exists():
+                self.clip_model = CLIPModel.from_pretrained(str(local_clip_model_path))
+                self.clip_processor = CLIPProcessor.from_pretrained(str(local_clip_model_path))
+                logger.info("Loaded CLIP model from local models directory")
+            else:
+                self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+                self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+                logger.info("Loaded CLIP model from Hugging Face (local not found)")
+        except Exception as e:
+            logger.error(f"Failed to load CLIP model: {e}")
+            # Fallback: disable image processing
+            self.clip_model = None
+            self.clip_processor = None
         
         # Initialize ChromaDB
         self.chroma_client = chromadb.PersistentClient(
@@ -123,7 +149,7 @@ class RNADesignRAGSystem:
         self.images_metadata = {}
         self._load_metadata()
         
-        logger.info("RAG system initialized successfully")
+        # RAG system initialized successfully
 
     def _load_metadata(self):
         """Load metadata from JSON files"""
@@ -134,7 +160,7 @@ class RNADesignRAGSystem:
                     data = json.load(f)
                     self.documents_metadata = data.get("documents", {})
                     self.images_metadata = data.get("images", {})
-                logger.info(f"Loaded metadata: {len(self.documents_metadata)} documents, {len(self.images_metadata)} images")
+                # Loaded metadata successfully
             except Exception as e:
                 logger.error(f"Failed to load metadata: {e}")
                 self.documents_metadata = {}
@@ -149,7 +175,7 @@ class RNADesignRAGSystem:
                     "documents": self.documents_metadata,
                     "images": self.images_metadata
                 }, f, indent=4)
-            logger.info("Metadata saved successfully")
+            # Metadata saved successfully
         except Exception as e:
             logger.error(f"Failed to save metadata: {e}")
 
@@ -184,7 +210,7 @@ class RNADesignRAGSystem:
                                 "chunk_id": f"{pdf_path.stem}_page_{page_num}_chunk_{i//(chunk_size - chunk_overlap)}"
                             })
             
-            logger.info(f"Extracted {len(text_chunks)} text chunks from {pdf_path.name}")
+            # Extracted text chunks from PDF
             return text_chunks
             
         except Exception as e:
@@ -225,7 +251,7 @@ class RNADesignRAGSystem:
                 
                 extracted_images.append(image_info)
             
-            logger.info(f"Extracted {len(extracted_images)} images from {pdf_path.name}")
+            # Extracted images from PDF
             return extracted_images
             
         except Exception as e:
@@ -235,6 +261,9 @@ class RNADesignRAGSystem:
     def _generate_image_description(self, image: Image.Image) -> str:
         """Generate description for image using CLIP"""
         try:
+            if not self.clip_model or not self.clip_processor:
+                return "Image from PDF document (CLIP not available)"
+                
             # Resize image if too large
             if image.size[0] > 512 or image.size[1] > 512:
                 image = image.resize((512, 512), Image.Resampling.LANCZOS)
@@ -264,6 +293,10 @@ class RNADesignRAGSystem:
     def _get_image_embeddings(self, images: List[Image.Image]) -> np.ndarray:
         """Get image embeddings using CLIP"""
         try:
+            if not self.clip_model or not self.clip_processor:
+                logger.warning("CLIP model not available, skipping image embeddings")
+                return np.array([])
+                
             embeddings = []
             for image in images:
                 # Resize image if needed
@@ -332,7 +365,7 @@ class RNADesignRAGSystem:
             if chunks and chunks[0].startswith('#'):
                 metadata['title'] = chunks[0].replace('#', '').strip()
             
-            logger.info(f"Extracted {len(chunks)} text chunks from {file_path.name}")
+            # Extracted text chunks from markdown
             return chunks, metadata
             
         except Exception as e:
@@ -354,10 +387,10 @@ class RNADesignRAGSystem:
 
         doc_hash = self._calculate_file_hash(file_path_obj)
         if doc_hash in self.documents_metadata:
-            logger.info(f"Document {file_path_obj.name} already exists")
+            # Document already exists
             return True
 
-        logger.info(f"Processing document: {file_path_obj.name}")
+        # Processing document
         
         try:
             text_chunks = []
@@ -420,7 +453,7 @@ class RNADesignRAGSystem:
                         metadatas=metadatas
                     )
                     
-                    logger.info(f"Added {len(text_chunks)} text chunks to ChromaDB")
+                    # Added text chunks to ChromaDB
 
             # Process image chunks (only for PDF files)
             if image_chunks and file_extension == ".pdf":
@@ -452,7 +485,7 @@ class RNADesignRAGSystem:
                         metadatas=metadatas
                     )
                     
-                    logger.info(f"Added {len(image_chunks)} image chunks to ChromaDB")
+                    # Added image chunks to ChromaDB
 
             # Update metadata
             self.documents_metadata[doc_hash] = {
@@ -471,7 +504,7 @@ class RNADesignRAGSystem:
             
             self._save_metadata()
             
-            logger.info(f"Successfully processed document: {file_path_obj.name}")
+            # Successfully processed document
             return True
             
         except Exception as e:
@@ -494,7 +527,7 @@ class RNADesignRAGSystem:
                 if self.add_document(str(file_path)):
                     added_count += 1
             
-            logger.info(f"Added {added_count} documents from directory")
+            # Added documents from directory
         finally:
             # Clear building state when done
             self.is_building = False
@@ -528,8 +561,8 @@ class RNADesignRAGSystem:
                     "rank": i + 1
                 })
             
-            # Image search if requested
-            if include_images:
+            # Image search if requested and CLIP model is available
+            if include_images and self.clip_model is not None:
                 try:
                     # Use text embedding for image search to avoid dimension mismatch
                     image_results = self.image_collection.query(
@@ -540,6 +573,9 @@ class RNADesignRAGSystem:
                     logger.warning(f"Image search failed due to dimension mismatch: {e}")
                     # Skip image search if there's a dimension mismatch
                     image_results = {'documents': [[]], 'metadatas': [[]], 'distances': [[]]}
+            else:
+                # Skip image search if CLIP model is not available
+                image_results = {'documents': [[]], 'metadatas': [[]], 'distances': [[]]}
                 
                 for i, (doc, metadata, distance) in enumerate(zip(
                     image_results['documents'][0],
@@ -558,11 +594,7 @@ class RNADesignRAGSystem:
             # Sort by score
             results.sort(key=lambda x: x['score'], reverse=True)
             
-            # Debug logging
-            logger.info(f"Search query: '{query}'")
-            logger.info(f"Found {len(results)} results")
-            for i, result in enumerate(results[:3]):  # Log top 3 results
-                logger.info(f"Result {i+1}: score={result['score']:.3f}, type={result['type']}, content_preview={result['content'][:100]}...")
+            # Search completed
             
             return results[:k]
             
@@ -620,7 +652,7 @@ IMPORTANT INSTRUCTIONS:
 - If the literature contains tables, figures, or performance data, incorporate these details into your response
 - Base your answer primarily on the provided literature context"""
             
-            logger.info(f"RAG context generated: {len(context)} characters, {len(citations)} citations")
+            # RAG context generated
             return context, citations
             
         except Exception as e:
@@ -753,7 +785,7 @@ IMPORTANT INSTRUCTIONS:
             # In production, you'd want more sophisticated handling
             self._save_metadata()
             
-            logger.info(f"Removed document: {file_path}")
+            # Removed document
             return True
             
         except Exception as e:
