@@ -119,7 +119,7 @@ class RNAAnalysisAgent:
             "ribodiffusion": {
                 "name": "RiboDiffusion",
                 "description": "RNA inverse folding from protein structures using diffusion",
-                "endpoint": "/api/ribodiffusion/predict",
+                "endpoint": "/api/ribodiffusion/inverse_fold",
                 "input_types": ["pdb"],
                 "output_types": ["rna_sequences", "fasta_files"],
                 "category": "de_novo_design"
@@ -178,12 +178,27 @@ class RNAAnalysisAgent:
             }
     
     def _extract_sequences_from_files(self, files: List[Dict[str, Any]]) -> List[str]:
-        """Extract RNA sequences from uploaded files"""
+        """Extract RNA sequences from uploaded files stored in temp folder"""
         sequences = []
+        logger.info(f"Extracting sequences from {len(files)} uploaded files")
         
         for file_info in files:
+            logger.info(f"Processing file: {file_info.get('name', 'Unknown')} (type: {file_info.get('type', 'Unknown')})")
+            
+            # Read file content from temp folder
+            temp_path = file_info.get("temp_path")
+            if not temp_path or not os.path.exists(temp_path):
+                logger.warning(f"File not found in temp folder: {temp_path}")
+                continue
+                
+            try:
+                with open(temp_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+            except Exception as e:
+                logger.error(f"Failed to read file {temp_path}: {e}")
+                continue
+            
             if file_info.get("type") == "text/plain" or file_info.get("name", "").endswith(('.txt', '.fasta', '.fa')):
-                content = file_info.get("content", "")
                 # Extract sequences from FASTA format
                 if content.startswith('>'):
                     lines = content.split('\n')
@@ -193,12 +208,15 @@ class RNAAnalysisAgent:
                             sequence += line.strip()
                     if sequence:
                         sequences.append(sequence)
+                        logger.info(f"Extracted FASTA sequence: {sequence[:50]}...")
                 else:
                     # Treat as plain text sequence
                     cleaned = ''.join(c for c in content if c.upper() in 'ATCGU')
                     if cleaned:
                         sequences.append(cleaned)
+                        logger.info(f"Extracted plain text sequence: {cleaned[:50]}...")
         
+        logger.info(f"Successfully extracted {len(sequences)} sequences from files")
         return sequences
     
     def _extract_sequences_from_text(self, text: str) -> Dict[str, List[str]]:
@@ -258,51 +276,91 @@ class RNAAnalysisAgent:
         tools = []
         reasoning = []
         
-        # Check for structure prediction requests
-        if any(keyword in request_lower for keyword in ['structure', 'fold', 'secondary', 'base pair', 'helix']):
-            if sequences:
-                tools.extend(['bpfold', 'ufold', 'mxfold2', 'rnaformer'])
-                reasoning.append("RNA sequences detected for structure prediction")
-            else:
-                reasoning.append("Structure prediction requested but no sequences provided")
+        # Analyze uploaded files first
+        file_types = [f.get("name", "").lower() for f in files or []]
+        pdb_files = [f for f in files or [] if f.get("name", "").endswith('.pdb')]
+        fasta_files = [f for f in files or [] if f.get("name", "").endswith(('.fasta', '.fa'))]
+        cif_files = [f for f in files or [] if f.get("name", "").endswith('.cif')]
+        smiles_files = [f for f in files or [] if 'smiles' in f.get("name", "").lower()]
         
-        # Check for interaction prediction requests
-        if any(keyword in request_lower for keyword in ['interaction', 'binding', 'protein', 'ligand', 'affinity']):
-            if any(f.get("name", "").endswith('.cif') for f in files or []):
-                tools.append('rnamigos2')
-                reasoning.append("mmCIF structure file detected for ligand interaction analysis")
-            if sequences:
-                # Only add tools that can work with available data
-                tools.extend(['copra', 'deeprpi'])
-                reasoning.append("Sequences available for protein-RNA interaction analysis")
-                
-                # Check if we have specific RBP and cell line information for Reformer
-                if any(keyword in request_lower for keyword in ['rbp', 'rna-binding protein', 'u2af2', 'hepg2', 'cell line', 'specific protein']):
-                    tools.append('reformer')
-                    reasoning.append("RBP and cell line information detected for Reformer analysis")
+        logger.info(f"File analysis - PDB: {len(pdb_files)}, FASTA: {len(fasta_files)}, CIF: {len(cif_files)}, SMILES: {len(smiles_files)}")
         
-        # Check for design requests
-        if any(keyword in request_lower for keyword in ['design', 'generate', 'create', 'aptamer', 'backbone']):
-            if any('smiles' in f.get("name", "").lower() for f in files or []):
-                tools.append('mol2aptamer')
-                reasoning.append("SMILES file detected for aptamer generation")
-            if any(f.get("name", "").endswith('.pdb') for f in files or []):
+        # Priority 1: File-based analysis (files take precedence over text sequences)
+        if pdb_files:
+            # PDB files for RNA design
+            if any(keyword in request_lower for keyword in ['design', 'generate', 'create', 'sequence', 'rna']):
                 tools.extend(['ribodiffusion', 'rnampnn'])
-                reasoning.append("PDB structure file detected for RNA design")
-            if any(keyword in request_lower for keyword in ['protein', 'conditioned']):
-                tools.append('rnaflow')
-                reasoning.append("Protein-conditioned RNA design requested")
-            if any(keyword in request_lower for keyword in ['3d', 'backbone', 'structure']):
-                tools.append('rnaframeflow')
-                reasoning.append("3D structure design requested")
+                reasoning.append(f"PDB structure file detected for RNA design ({len(pdb_files)} files)")
+            else:
+                # Default to RNA design if PDB files are present
+                tools.extend(['ribodiffusion', 'rnampnn'])
+                reasoning.append(f"PDB structure file detected - defaulting to RNA design ({len(pdb_files)} files)")
         
-        # If no specific tools identified, suggest general analysis
+        elif fasta_files:
+            # FASTA files for structure prediction
+            if any(keyword in request_lower for keyword in ['structure', 'fold', 'secondary', 'base pair', 'helix']):
+                tools.extend(['bpfold', 'ufold', 'mxfold2', 'rnaformer'])
+                reasoning.append(f"FASTA sequence file detected for structure prediction ({len(fasta_files)} files)")
+            else:
+                # Default to structure prediction if FASTA files are present
+                tools.extend(['bpfold', 'ufold', 'mxfold2', 'rnaformer'])
+                reasoning.append(f"FASTA sequence file detected - defaulting to structure prediction ({len(fasta_files)} files)")
+        
+        elif cif_files:
+            # CIF files for ligand interaction
+            tools.append('rnamigos2')
+            reasoning.append(f"mmCIF structure file detected for ligand interaction analysis ({len(cif_files)} files)")
+        
+        elif smiles_files:
+            # SMILES files for aptamer generation
+            tools.append('mol2aptamer')
+            reasoning.append(f"SMILES file detected for aptamer generation ({len(smiles_files)} files)")
+        
+        # Priority 2: Text-based analysis (if no files or additional analysis needed)
+        if not files or any(keyword in request_lower for keyword in ['also', 'additionally', 'and', 'plus']):
+            # Check for structure prediction requests
+            if any(keyword in request_lower for keyword in ['structure', 'fold', 'secondary', 'base pair', 'helix']):
+                if sequences:
+                    tools.extend(['bpfold', 'ufold', 'mxfold2', 'rnaformer'])
+                    reasoning.append("RNA sequences detected for structure prediction")
+                else:
+                    reasoning.append("Structure prediction requested but no sequences provided")
+            
+            # Check for interaction prediction requests
+            if any(keyword in request_lower for keyword in ['interaction', 'binding', 'protein', 'ligand', 'affinity']):
+                if sequences:
+                    tools.extend(['copra', 'deeprpi'])
+                    reasoning.append("Sequences available for protein-RNA interaction analysis")
+                    
+                    # Check if we have specific RBP and cell line information for Reformer
+                    if any(keyword in request_lower for keyword in ['rbp', 'rna-binding protein', 'u2af2', 'hepg2', 'cell line', 'specific protein']):
+                        tools.append('reformer')
+                        reasoning.append("RBP and cell line information detected for Reformer analysis")
+            
+            # Check for design requests
+            if any(keyword in request_lower for keyword in ['design', 'generate', 'create', 'aptamer', 'backbone']):
+                if any(keyword in request_lower for keyword in ['protein', 'conditioned']):
+                    tools.append('rnaflow')
+                    reasoning.append("Protein-conditioned RNA design requested")
+                if any(keyword in request_lower for keyword in ['3d', 'backbone', 'structure']):
+                    tools.append('rnaframeflow')
+                    reasoning.append("3D structure design requested")
+        
+        # Priority 3: Default analysis if no specific tools identified
         if not tools and sequences:
             tools = ['bpfold', 'ufold']
             reasoning.append("General RNA analysis with available sequences")
         
+        # Remove duplicate tools while preserving order
+        unique_tools = []
+        seen = set()
+        for tool in tools:
+            if tool not in seen:
+                unique_tools.append(tool)
+                seen.add(tool)
+        
         return {
-            "tools": tools,
+            "tools": unique_tools,
             "reasoning": "; ".join(reasoning) if reasoning else "No specific analysis identified",
             "data_available": {
                 "sequences": len(sequences),
@@ -372,6 +430,10 @@ class RNAAnalysisAgent:
         tool_info = self.available_tools[tool_id]
         endpoint = f"{self.base_url}{tool_info['endpoint']}"
         
+        # Check if this tool requires file upload
+        if tool_id in ['ribodiffusion', 'rnampnn'] and files:
+            return self._call_tool_with_file_upload(tool_id, tool_info, endpoint, files)
+        
         # Prepare request data based on tool requirements
         request_data = self._prepare_tool_request(tool_id, sequences, files, detailed_sequences)
         
@@ -381,6 +443,86 @@ class RNAAnalysisAgent:
                 json=request_data,
                 timeout=300  # 5 minute timeout
             )
+            
+            if response.status_code == 200:
+                return {
+                    "success": True,
+                    "data": response.json(),
+                    "tool_name": tool_info["name"],
+                    "category": tool_info["category"]
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"HTTP {response.status_code}: {response.text}",
+                    "tool_name": tool_info["name"]
+                }
+                
+        except requests.exceptions.Timeout:
+            return {
+                "success": False,
+                "error": "Request timeout - analysis took too long",
+                "tool_name": tool_info["name"]
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "tool_name": tool_info["name"]
+            }
+    
+    def _call_tool_with_file_upload(self, tool_id: str, tool_info: Dict[str, Any], endpoint: str, files: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Call a tool that requires file upload"""
+        try:
+            # Find PDB file
+            pdb_file_info = None
+            for file_info in files:
+                if file_info.get("name", "").endswith('.pdb'):
+                    pdb_file_info = file_info
+                    break
+            
+            if not pdb_file_info:
+                return {
+                    "success": False,
+                    "error": "No PDB file found for structure-based design",
+                    "tool_name": tool_info["name"]
+                }
+            
+            # Read file content from temp folder
+            temp_path = pdb_file_info.get("temp_path")
+            if not temp_path or not os.path.exists(temp_path):
+                return {
+                    "success": False,
+                    "error": f"PDB file not found in temp folder: {temp_path}",
+                    "tool_name": tool_info["name"]
+                }
+            
+            # Prepare file upload
+            with open(temp_path, 'rb') as f:
+                files_data = {
+                    'pdb_file': (pdb_file_info.get("name", "structure.pdb"), f, 'chemical/x-pdb')
+                }
+                
+                # Add parameters based on tool
+                data = {}
+                if tool_id == 'ribodiffusion':
+                    data = {
+                        'num_samples': 1,
+                        'sampling_steps': 50,
+                        'cond_scale': -1.0
+                    }
+                elif tool_id == 'rnampnn':
+                    data = {
+                        'num_sequences': 1,
+                        'temperature': 0.1
+                    }
+                
+                response = requests.post(
+                    endpoint,
+                    files=files_data,
+                    data=data,
+                    timeout=300  # 5 minute timeout
+                )
             
             if response.status_code == 200:
                 return {
@@ -424,24 +566,28 @@ class RNAAnalysisAgent:
                 if tool_id == 'bpfold':
                     request_data["output_format"] = "dbn"
             else:
-                # Use file data if available
+                # Use file data if available - read from temp folder
                 for file_info in files:
                     if file_info.get("type") == "text/plain":
-                        request_data = {
-                            "sequences": [file_info.get("content", "")],
-                            "input_type": "text"
-                        }
-                        break
+                        content = self._read_file_from_temp(file_info)
+                        if content:
+                            request_data = {
+                                "sequences": [content],
+                                "input_type": "text"
+                            }
+                            break
         
         elif tool_id == 'rnamigos2':
             # RNA-ligand interaction tool
             for file_info in files:
                 if file_info.get("name", "").endswith('.cif'):
-                    request_data = {
-                        "structure_file": file_info.get("content", ""),
-                        "ligands": ["C1=CC=CC=C1"]  # Default benzene for testing
-                    }
-                    break
+                    content = self._read_file_from_temp(file_info)
+                    if content:
+                        request_data = {
+                            "structure_file": content,
+                            "ligands": ["C1=CC=CC=C1"]  # Default benzene for testing
+                        }
+                        break
         
         elif tool_id == 'reformer':
             # Reformer tool - needs DNA sequence
@@ -480,11 +626,13 @@ class RNAAnalysisAgent:
             # Aptamer generation
             for file_info in files:
                 if 'smiles' in file_info.get("name", "").lower():
-                    request_data = {
-                        "smiles": file_info.get("content", ""),
-                        "num_sequences": 5
-                    }
-                    break
+                    content = self._read_file_from_temp(file_info)
+                    if content:
+                        request_data = {
+                            "smiles": content,
+                            "num_sequences": 5
+                        }
+                        break
         
         elif tool_id == 'rnaflow':
             # Protein-conditioned RNA design
@@ -504,12 +652,30 @@ class RNAAnalysisAgent:
             # Structure-based design
             for file_info in files:
                 if file_info.get("name", "").endswith('.pdb'):
-                    request_data = {
-                        "pdb_content": file_info.get("content", "")
-                    }
-                    break
+                    content = self._read_file_from_temp(file_info)
+                    if content:
+                        request_data = {
+                            "pdb_content": content
+                        }
+                        break
         
         return request_data
+    
+    def _read_file_from_temp(self, file_info: Dict[str, Any]) -> str:
+        """Read file content from temp folder"""
+        temp_path = file_info.get("temp_path")
+        if not temp_path or not os.path.exists(temp_path):
+            logger.warning(f"File not found in temp folder: {temp_path}")
+            return ""
+            
+        try:
+            with open(temp_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            logger.info(f"Successfully read file from temp: {temp_path}")
+            return content
+        except Exception as e:
+            logger.error(f"Failed to read file {temp_path}: {e}")
+            return ""
     
     def _generate_summary(self, tool_results: Dict[str, Any], analysis_plan: Dict[str, Any]) -> str:
         """Generate a summary of analysis results"""

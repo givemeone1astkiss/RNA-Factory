@@ -2311,6 +2311,16 @@ async function sendAIMessage() {
     // Reset textarea height after clearing
     autoResizeTextarea(messageInput);
     
+    // Store file IDs for cleanup after analysis
+    const fileIdsToCleanup = uploadedFiles.map(f => f.id).filter(id => id);
+    
+    // Store uploaded files for the request (before clearing)
+    const filesForRequest = [...uploadedFiles];
+    
+    // Clear uploaded files immediately after sending message
+    uploadedFiles = [];
+    updateUploadedFilesDisplay();
+    
     // Show typing indicator
     showTypingIndicator();
     
@@ -2332,7 +2342,7 @@ async function sendAIMessage() {
                 message: message,
                 context: getCurrentContext(),
                 stream: true,  // Use streaming for real-time output
-                uploaded_files: uploadedFiles
+                uploaded_files: filesForRequest
             }),
             signal: currentAbortController.signal
         });
@@ -2505,9 +2515,10 @@ async function sendAIMessage() {
         updateSendButton();
         currentAbortController = null;
         
-        // Clear uploaded files after sending
-        uploadedFiles = [];
-        updateUploadedFilesDisplay();
+        // Clean up temp files after analysis
+        if (typeof fileIdsToCleanup !== 'undefined' && fileIdsToCleanup.length > 0) {
+            cleanupTempFiles(fileIdsToCleanup);
+        }
     }
 }
 

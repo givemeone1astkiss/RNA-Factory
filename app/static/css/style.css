@@ -3171,12 +3171,6 @@ body.loading {
     overflow-wrap: break-word;
 }
 
-@media (max-width: 768px) {
-    .ai-assistant-toggle {
-        margin-right: 8px;
-    }
-}
-
 .ai-assistant-toggle .btn {
     border-radius: 20px;
     padding: 0.5rem 1rem;

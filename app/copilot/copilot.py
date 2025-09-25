@@ -273,6 +273,8 @@ class RNADesignAssistant:
         # Check if we have uploaded files or if the request suggests tool usage
         should_use_agent = self._should_use_agent(last_message)
         logger.info(f"Agent analysis check - uploaded_files: {len(uploaded_files)}, should_use_agent: {should_use_agent}")
+        if uploaded_files:
+            logger.info(f"Uploaded files details: {[f.get('name', 'Unknown') for f in uploaded_files]}")
         
         if not uploaded_files and not should_use_agent:
             # No files and no clear tool usage request, skip agent analysis
@@ -604,16 +606,42 @@ class RNADesignAssistant:
             for key, value in state["user_context"].items():
                 context_parts.append(f"{key}: {value}")
         
-        # Add uploaded files information
+        # Add uploaded files information with detailed context
         uploaded_files = state.get("uploaded_files", [])
         if uploaded_files:
-            context_parts.append("Uploaded files:")
-            for file_info in uploaded_files:
-                context_parts.append(f"- {file_info.get('name', 'Unknown')} ({file_info.get('type', 'Unknown type')})")
+            context_parts.append("=== UPLOADED FILES ===")
+            for i, file_info in enumerate(uploaded_files, 1):
+                file_name = file_info.get('name', 'Unknown')
+                file_type = file_info.get('type', 'Unknown type')
+                file_size = file_info.get('size', 0)
+                temp_path = file_info.get('temp_path', '')
+                file_id = file_info.get('id', '')
+                
+                context_parts.append(f"File {i}: {file_name}")
+                context_parts.append(f"  - Type: {file_type}")
+                context_parts.append(f"  - Size: {file_size} bytes")
+                context_parts.append(f"  - ID: {file_id}")
+                context_parts.append(f"  - Storage Path: {temp_path}")
+                
+                # Add file content preview for text files
                 if file_info.get('content'):
                     content = file_info['content'].strip()
                     if content:
-                        context_parts.append(f"  Content: {content}")
+                        # Show first 200 characters for preview
+                        preview = content[:200] + "..." if len(content) > 200 else content
+                        context_parts.append(f"  - Content Preview: {preview}")
+                
+                # Add specific file type analysis
+                if file_name.lower().endswith('.pdb'):
+                    context_parts.append(f"  - Analysis: This is a PDB structure file that can be used for RNA design tools like RiboDiffusion and RNAMPNN")
+                elif file_name.lower().endswith(('.fasta', '.fa')):
+                    context_parts.append(f"  - Analysis: This is a FASTA sequence file that can be used for structure prediction tools")
+                elif file_name.lower().endswith('.cif'):
+                    context_parts.append(f"  - Analysis: This is a CIF structure file that can be used for RNA-ligand interaction analysis")
+                elif file_name.lower().endswith('.smiles'):
+                    context_parts.append(f"  - Analysis: This is a SMILES file that can be used for aptamer generation")
+                
+                context_parts.append("")  # Empty line for readability
         
         return "\n".join(context_parts) if context_parts else "No specific context provided"
     

@@ -462,7 +462,7 @@ def stop_stream():
 
 @copilot_bp.route("/upload", methods=["POST"])
 def upload_file():
-    """Handle file uploads for AI analysis"""
+    """Handle file uploads for AI analysis - save to temp folder"""
     try:
         if 'file' not in request.files:
             return jsonify({"success": False, "message": "No file provided"}), 400
@@ -471,8 +471,20 @@ def upload_file():
         if file.filename == '':
             return jsonify({"success": False, "message": "No file selected"}), 400
         
-        # Read file content
-        content = file.read().decode('utf-8', errors='ignore')
+        # Ensure temp folder exists
+        from flask import current_app
+        temp_folder = current_app.config['TEMP_FOLDER']
+        os.makedirs(temp_folder, exist_ok=True)
+        
+        # Generate unique filename to avoid conflicts
+        import uuid
+        file_id = str(uuid.uuid4())
+        file_extension = os.path.splitext(file.filename)[1]
+        temp_filename = f"{file_id}{file_extension}"
+        temp_filepath = os.path.join(temp_folder, temp_filename)
+        
+        # Save file to temp folder
+        file.save(temp_filepath)
         
         # Determine file type
         file_type = file.content_type or 'text/plain'
@@ -485,13 +497,19 @@ def upload_file():
         elif file.filename.endswith('.smiles'):
             file_type = 'chemical/x-smiles'
         
+        # Get file size
+        file_size = os.path.getsize(temp_filepath)
+        
         file_info = {
+            "id": file_id,
             "name": file.filename,
             "type": file_type,
-            "content": content,
-            "size": len(content),
+            "temp_path": temp_filepath,
+            "size": file_size,
             "upload_time": datetime.now().isoformat()
         }
+        
+        logger.info(f"File uploaded and saved to temp: {temp_filepath}")
         
         return jsonify({
             "success": True,
@@ -523,5 +541,42 @@ def get_agent_tools():
         
     except Exception as e:
         logger.error(f"Failed to get agent tools: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@copilot_bp.route("/cleanup", methods=["POST"])
+def cleanup_temp_files():
+    """Clean up temporary files after analysis"""
+    try:
+        data = request.get_json()
+        file_ids = data.get("file_ids", [])
+        
+        if not file_ids:
+            return jsonify({"success": True, "message": "No files to clean up"})
+        
+        from flask import current_app
+        temp_folder = current_app.config['TEMP_FOLDER']
+        cleaned_files = []
+        
+        for file_id in file_ids:
+            # Find files with this ID in temp folder
+            for filename in os.listdir(temp_folder):
+                if filename.startswith(file_id):
+                    file_path = os.path.join(temp_folder, filename)
+                    try:
+                        os.remove(file_path)
+                        cleaned_files.append(filename)
+                        logger.info(f"Cleaned up temp file: {file_path}")
+                    except Exception as e:
+                        logger.error(f"Failed to clean up file {file_path}: {e}")
+        
+        return jsonify({
+            "success": True,
+            "message": f"Cleaned up {len(cleaned_files)} files",
+            "cleaned_files": cleaned_files
+        })
+        
+    except Exception as e:
+        logger.error(f"Cleanup failed: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
 
