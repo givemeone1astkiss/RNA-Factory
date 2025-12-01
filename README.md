@@ -2,6 +2,18 @@
 
 A comprehensive web platform for RNA analysis, structure prediction, and interaction prediction, featuring an AI-powered design assistant with multimodal RAG capabilities.
 
+## ⚠️ Important Notice
+
+**Before running the software, please ensure you complete the following preparations:**
+
+1. **Clone Open Source Model Repositories**: First clone the required open source model repositories to the `models` folder
+2. **Configure Virtual Environments**: Set up the main project virtual environment `.venv` and individual software model virtual environments `.venv_<software_name>` in the root directory according to `pyproject.toml`
+3. **Configure API Key**: Fill in your own `DEEPSEEK_API_KEY` in the `.env` file to run the software correctly
+
+For detailed configuration steps, please refer to the [Getting Started](#getting-started) section below.
+
+Given that the model used by this software requires substantial computational power for inference, we strongly advise against deploying it on personal computers.
+
 ## Overview
 
 RNA-Factory is an integrated platform that combines multiple state-of-the-art RNA analysis models with an intelligent AI assistant to provide comprehensive RNA research capabilities. The platform supports RNA secondary structure prediction, RNA-ligand interaction prediction, and offers an AI-powered design assistant with retrieval-augmented generation (RAG) for multimodal document processing.
@@ -222,27 +234,64 @@ RESTful API endpoints for:
 
 1. **Clone the repository**
 ```bash
-   git clone https://github.com/your-username/RNA-Factory.git
+   git clone https://github.com/givemeone1astkiss/RNA-Factory.git
    cd RNA-Factory
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -e .
 ```
 
-3. **Set up model environments**
+2. **Clone Required Open Source Model Repositories**
 ```bash
-   # Each model requires its own virtual environment
-   # The platform will automatically set up environments on first use
-   ```
+   # Clone each open source model repository to the models folder
+   # Please refer to each model's GitHub links for cloning
+   # For example:
+   # git clone https://github.com/heqin-zhu/BPfold.git models/BPfold
+   # git clone https://github.com/uci-cbcl/UFold.git models/UFold
+   # Clone other models to the models folder in the same way
+```
 
-4. **Run the application**
+3. **Configure Project Virtual Environments**
+```bash
+   # Configure the main project virtual environment according to pyproject.toml
+   python -m venv .venv
+   
+   # Activate the main virtual environment
+   # Windows:
+   .venv\Scripts\activate
+   # Linux/Mac:
+   source .venv/bin/activate
+   
+   # Install project dependencies
+   pip install -e .
+   
+   # Create independent virtual environments for each software model
+   # Note: Each model's environment configuration should be determined according to its own open source repository
+   # Please refer to each model's GitHub repository for specific installation and configuration requirements
+   python -m venv .venv_bpfold
+   python -m venv .venv_ufold
+   python -m venv .venv_mxfold2
+   python -m venv .venv_rnaformer
+   python -m venv .venv_rnamigos2
+   python -m venv .venv_reformer
+   python -m venv .venv_copra
+   python -m venv .venv_deeprpi
+   python -m venv .venv_mol2aptamer
+   python -m venv .venv_rnaflow
+   python -m venv .venv_rnaframeflow
+   python -m venv .venv_ribodiffusion
+```
+
+4. **Configure Environment Variables**
+```bash
+   # Create .env file in the root directory and fill in your DEEPSEEK_API_KEY
+   echo "DEEPSEEK_API_KEY=your_deepseek_api_key_here" > .env
+   # Please replace your_deepseek_api_key_here with your actual API key
+```
+
+5. **Run the Application**
 ```bash
    python run.py
-   ```
+```
 
-5. **Access the platform**
+6. **Access the Platform**
    Open your browser and navigate to `http://localhost:5000`
 
 ## Usage
@@ -360,10 +409,6 @@ The AI assistant features an intelligent Agent system that can automatically orc
 - Robust error handling ensures you always get useful results
 - Intelligent fallback mechanisms maintain analysis quality
 
-## Contributing
-
-We welcome contributions to RNA-Factory! Please feel free to submit issues, feature requests, or pull requests.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -372,7 +417,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Author**: Huaizhi Wang  
 **Email**: realwiseking@outlook.com
-
-## Acknowledgments
-
-We thank the developers of the integrated models and the open-source community for their valuable contributions to RNA research and machine learning.
